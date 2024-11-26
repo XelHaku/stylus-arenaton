@@ -38,7 +38,7 @@ sol_storage! {
 }
 
 /// Declare that `Counter` is a contract with the following external methods.
-#[public]
+#[external]
 impl Counter {
     /// Gets the number from storage.
     pub fn number(&self) -> U256 {
@@ -64,5 +64,11 @@ impl Counter {
     pub fn increment(&mut self) {
         let number = self.number.get();
         self.set_number(number + U256::from(1));
+    }
+
+      /// Increments `number` and updates its value in storage.
+    pub fn decrement(&mut self) {
+        let number = self.number.get();
+        self.set_number(number - U256::from(1));
     }
 }
