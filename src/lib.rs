@@ -77,6 +77,7 @@ extern crate alloc;
 
 // Modules and imports
 mod erc20;
+mod ownable;
 
 use crate::erc20::{Erc20, Erc20Error, Erc20Params};
 use alloy_primitives::{Address, U256};
@@ -103,7 +104,7 @@ sol_storage! {
 }
 
 #[public]
-#[inherit(Erc20<StylusTestTokenParams>)]
+#[inherit(Erc20<StylusTestTokenParams>,Ownable)]
 impl StylusTestToken {
     /// Mints tokens
     pub fn mint(&mut self, value: U256) -> Result<(), Erc20Error> {
