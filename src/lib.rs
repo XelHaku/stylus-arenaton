@@ -109,21 +109,25 @@ sol_storage! {
 #[public]
 #[inherit(Erc20<ATONParams>,Ownable)]
 impl ATON {
-    /// Mints tokens
-    pub fn mint(&mut self, value: U256) -> Result<(), Erc20Error> {
+     pub fn donateATON(&mut self, value: U256) -> Result<(), Erc20Error> {
         self.erc20.mint(msg::sender(), value)?;
         Ok(())
     }
+    // /// Mints tokens
+    // pub fn mint(&mut self, value: U256) -> Result<(), Erc20Error> {
+    //     self.erc20.mint(msg::sender(), value)?;
+    //     Ok(())
+    // }
 
-    /// Mints tokens to another address
-    pub fn mint_to(&mut self, to: Address, value: U256) -> Result<(), Erc20Error> {
-        self.erc20.mint(to, value)?;
-        Ok(())
-    }
+    // /// Mints tokens to another address
+    // pub fn mint_to(&mut self, to: Address, value: U256) -> Result<(), Erc20Error> {
+    //     self.erc20.mint(to, value)?;
+    //     Ok(())
+    // }
 
-    /// Burns tokens
-    pub fn burn(&mut self, value: U256) -> Result<(), Erc20Error> {
-        self.erc20.burn(msg::sender(), value)?;
-        Ok(())
-    }
+    // /// Burns tokens
+    // pub fn burn(&mut self, value: U256) -> Result<(), Erc20Error> {
+    //     self.erc20.burn(msg::sender(), value)?;
+    //     Ok(())
+    // }
 }
