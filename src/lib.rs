@@ -25,63 +25,16 @@
 #![cfg_attr(not(feature = "export-abi"), no_main)]
 extern crate alloc;
 
-/// Import items from the SDK. The prelude contains common traits and macros.
-
-// Define some persistent storage using the Solidity ABI.
-// `Counter` will be the entrypoint.
-// sol_storage! {
-//     #[entrypoint]
-//     pub struct Counter {
-//         uint256 number;
-//     }
-// }
-
-// /// Declare that `Counter` is a contract with the following external methods.
-// #[external]
-// impl Counter {
-//     /// Gets the number from storage.
-//     pub fn number(&self) -> U256 {
-//         self.number.get()
-//     }
-
-//     /// Sets a number in storage to a user-specified value.
-//     pub fn set_number(&mut self, new_number: U256) {
-//         self.number.set(new_number);
-//     }
-
-//     /// Sets a number in storage to a user-specified value.
-//     pub fn mul_number(&mut self, new_number: U256) {
-//         self.number.set(new_number * self.number.get());
-//     }
-
-//     /// Sets a number in storage to a user-specified value.
-//     pub fn add_number(&mut self, new_number: U256) {
-//         self.number.set(new_number + self.number.get());
-//     }
-
-//     /// Increments `number` and updates its value in storage.
-//     pub fn increment(&mut self) {
-//         let number = self.number.get();
-//         self.set_number(number + U256::from(1));
-//     }
-
-//     /// Increments `number` and updates its value in storage.
-//     pub fn decrement(&mut self) {
-//         let number = self.number.get();
-//         self.set_number(number - U256::from(1));
-//     }
-// }
-
-
-
 
 // Modules and imports
 mod erc20;
 mod ownable;
+use alloy_sol_types::sol;
 
-use crate::erc20::{Erc20, Erc20Error, Erc20Params};
+
+use crate::erc20::{Erc20, Erc20Params};
 use alloy_primitives::{Address, U256};
-use stylus_sdk::{msg, prelude::*};
+use stylus_sdk::{evm,msg, prelude::*};
 use ownable::Ownable;
 
 /// Immutable definitions
@@ -106,13 +59,63 @@ sol_storage! {
     }
 }
 
+sol! {
+    event DonateATON(address indexed sender, uint256 amount);
+    error ZeroEther(address sender);
+}
+
+/// Represents the ways methods may fail.
+#[derive(SolidityError)]
+pub enum ATONError {
+    ZeroEther(ZeroEther),
+}
+
+
 #[public]
 #[inherit(Erc20<ATONParams>,Ownable)]
 impl ATON {
-     pub fn donateATON(&mut self, value: U256) -> Result<(), Erc20Error> {
-        self.erc20.mint(msg::sender(), value)?;
-        Ok(())
-    }
+    /// Allows a user to donate Ether to mint ATON tokens.
+    /// The Ether is converted into ATON and credited to the sender's balance.
+    /// Emits a `DonateATON` event.
+    pub fn donateATON(&mut self) -> Result<(), ATONError> {
+        let amount = msg::value(); // Ether sent with the transaction
+        let sender = msg::sender(); // Address of the sender
+
+        // Ensure the transaction includes some Ether to donate
+        if amount == U256::from(0) {
+   return Err(ATONError::ZeroEther(ZeroEther {
+                sender
+            }));        }
+
+        // Mint equivalent ATON tokens to the sender
+        // self.erc20.mint(sender, amount)?;
+
+        // Emit the `DonateATON` event
+        evm::log(DonateATON { sender,amount });
+        Ok(())}}
+
+//           /**
+//    * @dev Allows a player to donate ATON tokens to the contract. The donated amount is converted to the
+//    * total commission pool, which can then be distributed to ATON holders.
+//    * @notice The function requires the transaction to include Ether. The Ether is converted into ATON
+//    * and credited to the contract, increasing the total ATON supply.
+//    */
+//   function donateATON() external payable {
+//     uint256 amount = msg.value;
+
+//     // Ensure the transaction includes some Ether to donate
+//     require(amount > 0, "Must send some Ether");
+
+//     // Mint an equivalent amount of ATON tokens to the contract address
+//     _mint(address(this), amount); // Ensure _mint is correctly defined
+
+//     // Add the donated amount to the total accumulated commission
+//     _accumulateCommission(amount);
+
+//     // Emit an event indicating that ATON tokens have been donated to the contract
+//     emit EventsLib.ATONDonated(msg.sender, amount);
+
+
     // /// Mints tokens
     // pub fn mint(&mut self, value: U256) -> Result<(), Erc20Error> {
     //     self.erc20.mint(msg::sender(), value)?;
@@ -130,4 +133,3 @@ impl ATON {
     //     self.erc20.burn(msg::sender(), value)?;
     //     Ok(())
     // }
-}
