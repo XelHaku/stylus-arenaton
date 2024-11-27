@@ -85,9 +85,9 @@ use stylus_sdk::{msg, prelude::*};
 use ownable::Ownable;
 
 /// Immutable definitions
-struct StylusTestTokenParams;
-impl Erc20Params for StylusTestTokenParams {
-    const NAME: &'static str = "StylusTestToken";
+struct ATONParams;
+impl Erc20Params for ATONParams {
+    const NAME: &'static str = "ATON";
     const SYMBOL: &'static str = "STTK";
     const DECIMALS: u8 = 18;
 }
@@ -97,18 +97,18 @@ impl Erc20Params for StylusTestTokenParams {
 // storage slots and types.
 sol_storage! {
     #[entrypoint]
-    struct StylusTestToken {
-        // Allows erc20 to access StylusTestToken's storage and make calls
+    struct ATON {
+        // Allows erc20 to access ATON's storage and make calls
         #[borrow]
-        Erc20<StylusTestTokenParams> erc20;
+        Erc20<ATONParams> erc20;
         #[borrow]
         Ownable owner;
     }
 }
 
 #[public]
-#[inherit(Erc20<StylusTestTokenParams>,Ownable)]
-impl StylusTestToken {
+#[inherit(Erc20<ATONParams>,Ownable)]
+impl ATON {
     /// Mints tokens
     pub fn mint(&mut self, value: U256) -> Result<(), Erc20Error> {
         self.erc20.mint(msg::sender(), value)?;
