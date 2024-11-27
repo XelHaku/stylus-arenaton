@@ -27,7 +27,8 @@ extern crate alloc;
 
 /// Import items from the SDK. The prelude contains common traits and macros.
 use stylus_sdk::{alloy_primitives::U256, prelude::*};
-
+mod erc20;
+use erc20::*;
 // Define some persistent storage using the Solidity ABI.
 // `Counter` will be the entrypoint.
 sol_storage! {
@@ -66,7 +67,7 @@ impl Counter {
         self.set_number(number + U256::from(1));
     }
 
-      /// Increments `number` and updates its value in storage.
+    /// Increments `number` and updates its value in storage.
     pub fn decrement(&mut self) {
         let number = self.number.get();
         self.set_number(number - U256::from(1));
