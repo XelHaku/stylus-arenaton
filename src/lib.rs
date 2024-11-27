@@ -82,6 +82,7 @@ mod ownable;
 use crate::erc20::{Erc20, Erc20Error, Erc20Params};
 use alloy_primitives::{Address, U256};
 use stylus_sdk::{msg, prelude::*};
+use ownable::Ownable;
 
 /// Immutable definitions
 struct StylusTestTokenParams;
@@ -100,6 +101,8 @@ sol_storage! {
         // Allows erc20 to access StylusTestToken's storage and make calls
         #[borrow]
         Erc20<StylusTestTokenParams> erc20;
+        #[borrow]
+        Ownable owner;
     }
 }
 

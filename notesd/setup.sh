@@ -77,7 +77,6 @@ sudo apt-get update && sudo apt-get install -y \
     libgbm-dev \
     libvulkan-dev \
     libgles2-mesa-dev
-cargo install --force cargo-stylus
 cargo install --force cargo-stylus cargo-stylus-check
 
 

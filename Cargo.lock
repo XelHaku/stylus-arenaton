@@ -2110,6 +2110,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "openzeppelin-stylus-proc"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0d054d27395c9929cf184cde23bf83cd05545d0f1c2e6180302f70f0c838ae2c"
+dependencies = [
+ "convert_case 0.6.0",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.89",
+]
+
+[[package]]
 name = "option-ext"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3134,6 +3146,7 @@ dependencies = [
  "eyre",
  "hex",
  "mini-alloc 0.4.2",
+ "openzeppelin-stylus-proc",
  "stylus-sdk",
  "tokio",
 ]
