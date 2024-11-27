@@ -1,6 +1,16 @@
 cargo stylus check
 cargo stylus export-abi
 cargo stylus deploy --private-key 9dc8c652a16755e58fe2ffae9991c895174f3746022b2a474f8d89694b4dc312 -e https://sepolia-rollup.arbitrum.io/rpc    
-cargo stylus verify --deployment-tx 0xd73c81a3cb4ccd58df3f1855ed67ed8c4982b153c725796212b8320161e41914 -e https://sepolia-rollup.arbitrum.io/rpc    
+cargo stylus verify --deployment-tx 0xb0955eea9676eba06554d6d7d4b1f92da8a211ccee12ab28e1ac50f60866cfc3 -e https://sepolia-rollup.arbitrum.io/rpc    
 
  cargo stylus cache bid 96c9cd6c626547df0048e8a2fb512f4401772f58 0 --private-key 9dc8c652a16755e58fe2ffae9991c895174f3746022b2a474f8d89694b4dc312 -e https://sepolia-rollup.arbitrum.io/rpc
+
+
+
+ sudo chown -R polar:polar /home/polar/git/stylus-arenaton
+
+ contract size: 13.0 KB
+deployed code at address: 0x1a4173b77e32a04900b08248b870a158d701cf03
+deployment tx hash: 0xb0955eea9676eba06554d6d7d4b1f92da8a211ccee12ab28e1ac50f60866cfc3
+
+https://sepolia.arbiscan.io/address/0x1a4173b77e32a04900b08248b870a158d701cf03#code
