@@ -1971,7 +1971,8 @@ dependencies = [
 [[package]]
 name = "mini-alloc"
 version = "0.6.0"
-source = "git+https://github.com/OffchainLabs/stylus-sdk-rs?branch=main#e56f4854f56fea574b88ee80314fc96e13f140a2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "14eacc4bfcf10da9b6d5185ef51b2dc75434afac34b4d8aabe40f6b141ee071c"
 dependencies = [
  "cfg-if 1.0.0",
 ]
@@ -2110,10 +2111,36 @@ dependencies = [
 ]
 
 [[package]]
+name = "openzeppelin-stylus"
+version = "0.2.0-alpha.1"
+source = "git+https://github.com/OpenZeppelin/rust-contracts-stylus#e256e7595e263c560b21ca07ab8f7e34ea5b8ed5"
+dependencies = [
+ "alloy-primitives",
+ "alloy-sol-macro",
+ "alloy-sol-macro-expander",
+ "alloy-sol-macro-input",
+ "alloy-sol-types",
+ "keccak-const",
+ "openzeppelin-stylus-proc 0.1.0 (git+https://github.com/OpenZeppelin/rust-contracts-stylus)",
+ "stylus-sdk",
+]
+
+[[package]]
 name = "openzeppelin-stylus-proc"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0d054d27395c9929cf184cde23bf83cd05545d0f1c2e6180302f70f0c838ae2c"
+dependencies = [
+ "convert_case 0.6.0",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.89",
+]
+
+[[package]]
+name = "openzeppelin-stylus-proc"
+version = "0.1.0"
+source = "git+https://github.com/OpenZeppelin/rust-contracts-stylus#e256e7595e263c560b21ca07ab8f7e34ea5b8ed5"
 dependencies = [
  "convert_case 0.6.0",
  "proc-macro2",
@@ -3146,7 +3173,8 @@ dependencies = [
  "eyre",
  "hex",
  "mini-alloc 0.4.2",
- "openzeppelin-stylus-proc",
+ "openzeppelin-stylus",
+ "openzeppelin-stylus-proc 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "stylus-sdk",
  "tokio",
 ]
@@ -3154,7 +3182,8 @@ dependencies = [
 [[package]]
 name = "stylus-proc"
 version = "0.6.0"
-source = "git+https://github.com/OffchainLabs/stylus-sdk-rs?branch=main#e56f4854f56fea574b88ee80314fc96e13f140a2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9fd02e91dffe7b73df84a861c992494d6b72054bc9a17fe73e147e34e9a64ef3"
 dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
@@ -3172,7 +3201,8 @@ dependencies = [
 [[package]]
 name = "stylus-sdk"
 version = "0.6.0"
-source = "git+https://github.com/OffchainLabs/stylus-sdk-rs?branch=main#e56f4854f56fea574b88ee80314fc96e13f140a2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "26042693706e29fb7e3cf3d71c99534ac97fca98b6f81ba77ab658022ab2e210"
 dependencies = [
  "alloy-primitives",
  "alloy-sol-types",

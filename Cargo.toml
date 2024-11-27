@@ -10,11 +10,11 @@ description = "Stylus hello world example"
 
 [dependencies]
 mini-alloc = "0.4.2"
-# stylus-sdk = "0.6.0"
-stylus-sdk = {git = "https://github.com/OffchainLabs/stylus-sdk-rs", branch = "main"}
+stylus-sdk = "0.6.0"
+# stylus-sdk = {git = "https://github.com/OffchainLabs/stylus-sdk-rs", branch = "main"}
 hex = "0.4.3"
 dotenv = "0.15.0"
-
+openzeppelin-stylus = { git = "https://github.com/OpenZeppelin/rust-contracts-stylus", features = ["std"] }
 
 alloy-primitives = { version = "=0.7.6", default-features = false }
 alloy-sol-types = { version = "=0.7.6", default-features = false }

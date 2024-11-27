@@ -14,6 +14,7 @@ use alloy_sol_types::sol;
 use core::marker::PhantomData;
 use stylus_sdk::{evm, msg, prelude::*};
 
+
 pub trait Erc20Params {
     /// Immutable token name
     const NAME: &'static str;
