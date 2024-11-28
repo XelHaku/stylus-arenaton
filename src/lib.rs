@@ -34,7 +34,7 @@ use alloy_sol_types::sol;
 
 use crate::erc20::{Erc20, Erc20Params};
 use alloy_primitives::{Address, U256};
-use stylus_sdk::{evm,msg, prelude::*};
+use stylus_sdk::{evm,msg,contract, prelude::*};
 use ownable::Ownable;
 
 /// Immutable definitions
@@ -92,10 +92,11 @@ impl ATON {
    return Err(ATONError::ZeroEther(ZeroEther {
                 sender
             }));        }
-
+self._accumulate_commission(amount);
         // Mint equivalent ATON tokens to the sender
-        // self.erc20.mint(sender, amount)?;
+        self.erc20.mint(contract::address(), amount);
 
+        
         // Emit the `DonateATON` event
         evm::log(DonateATON { sender,amount });
         Ok(())}}
@@ -110,7 +111,7 @@ impl ATON {
     ///
     /// # Note
     /// Assumes `total_supply()` is non-zero. If it is zero, this function will have no effect.
-  pub fn accumulate_commission(&mut self, new_commission_aton: U256) -> Result<(), ATONError> {
+  pub fn _accumulate_commission(&mut self, new_commission_aton: U256) -> Result<(), ATONError> {
         let total_supply_tokens = self.erc20.total_supply();
 
         // Ensure no division by zero
