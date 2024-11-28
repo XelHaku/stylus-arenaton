@@ -30,6 +30,7 @@ extern crate alloc;
 mod erc20;
 mod ownable;
 mod control;
+mod constants;
 use alloy_sol_types::sol;
 
 
@@ -37,7 +38,7 @@ use crate::erc20::{Erc20, Erc20Params};
 use alloy_primitives::{Address, U256};
 use stylus_sdk::{evm,msg,contract, prelude::*};
 use ownable::Ownable;
-use control::Control;
+use control::AccessControl;
 
 /// Immutable definitions
 struct ATONParams;
@@ -60,7 +61,8 @@ sol_storage! {
         Ownable owner;    
         
         #[borrow]
-        Control ownbbber;
+              AccessControl access;
+
 
           uint256  accumulated_commission_per_token;
 
@@ -83,8 +85,10 @@ pub enum ATONError {
 }
 
 
+
+
 #[public]
-#[inherit(Erc20<ATONParams>,Ownable)]
+#[inherit(Erc20<ATONParams>,Ownable,AccessControl)]
 impl ATON {
     /// Allows a user to donate Ether to mint ATON tokens.
     /// The Ether is converted into ATON and credited to the sender's balance.
