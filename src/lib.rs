@@ -36,7 +36,7 @@ use alloy_sol_types::sol;
 
 use crate::erc20::{Erc20, Erc20Params};
 use alloy_primitives::{Address, U256};
-use stylus_sdk::{evm,msg,contract, prelude::*};
+use stylus_sdk::{evm,msg,contract, prelude::*,call::transfer_eth};
 use ownable::Ownable;
 use control::AccessControl;
 
@@ -126,6 +126,23 @@ let _ = self.erc20.transfer_from(_player,contract::address(), _amount);
     
 
                 pub fn swap(&mut self,amount: U256) -> Result<(), Vec<u8>> {
+                    if amount == U256::from(0) {
+                        return Ok(()); // error
+                    }
+                    let balance_aton =self.erc20.balance_of(msg::sender());
+
+if balance_aton < amount {
+    return Ok(()); // error
+}
+let balance_eth = contract::balance();
+
+if balance_eth < amount {
+    return Ok(()); // error
+}
+
+
+ let _ = transfer_eth(msg::sender(), amount)?;                 // these two are equivalent
+
         // let _ = self.access.only_role(constants::ARENATON_ENGINE_ROLE.into())?;
 // let _ = self.erc20.transfer_from(_player,contract::address(), _amount);
         Ok(())
