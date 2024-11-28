@@ -69,6 +69,10 @@ sol_storage! {
   // Stores the total commission in ATON
   uint256  total_commission_in_aton;
     mapping(address => uint256) last_commission_per_token;
+    mapping(address => uint256) claimed_commissions;
+
+    
+
     }
 }
 
@@ -255,14 +259,6 @@ impl ATON {
 
         Ok(())
     }
-
-pub fn _player_comminsion(&mut self, player: Address) -> Result<U256, ATONError> {
-let PCT_DENOM: U256 = U256::from(10000000);
-
-    let _owed_per_token = self.accumulated_commission_per_token.get() - self.last_commission_per_token.get(player);
-    let _unclaimed_commission = (self.erc20.balance_of(player) * _owed_per_token * PCT_DENOM) / U256::from(10).pow(U256::from(ATONParams::DECIMALS));
-    Ok(_unclaimed_commission)
-  }
 //       /**
 //    * @dev Computes the unclaimed commission for a specified player based on their ATON token holdings.
 //    * @param player Address of the player.
@@ -270,16 +266,44 @@ let PCT_DENOM: U256 = U256::from(10000000);
 //    * @notice The calculation is based on the difference between the global accumulated commission per token
 //    * and the player's last recorded commission per token, scaled by the player's ATON holdings and adjusted by `pct_denom` for precision.
 //    */
-//   function _playerCommission(address player) internal view returns (uint256) {
-//     // Calculate the difference in commission per token since the last update for the player
-//     uint256 owedPerToken = accumulated_commission_per_token - last_commission_per_token[player];
+pub fn _player_commission(&mut self, player: Address) -> Result<U256, ATONError> {
+let pct_denom: U256 = U256::from(10000000);
 
-//     // Calculate the total commission owed to the player, scaling by `pct_denom` to maintain precision
-//     uint256 unclaimedCommission = (balanceOf(player) * owedPerToken * pct_denom) / (10 ** decimals());
+    let _owed_per_token = self.accumulated_commission_per_token.get() - self.last_commission_per_token.get(player);
+    let _unclaimed_commission = (self.erc20.balance_of(player) * _owed_per_token * pct_denom) / U256::from(10).pow(U256::from(ATONParams::DECIMALS));
+    Ok(_unclaimed_commission)
+  }
 
-//     // Return the unclaimed commission, adjusted by `pct_denom`, or 0 if no commission is owed
-//     return unclaimedCommission > 0 ? unclaimedCommission / pct_denom : 0;
-//   }
+
+  pub fn _distribute_commission(&mut self, player: Address) -> Result<U256, ATONError> {
+    let unclaimed_commission = self._player_commission(player);
+
+if unclaimed_commission > U256::from(0) {
+
+
+if player == contract::address() {
+    // Transfer commission to the owner when the contract itself is the player
+    self.erc20.transfer( self.owner, unclaimed_commission);
+    self.players.get(player).claimed_commissions += unclaimed_commission;
+
+} else {
+    // Transfer commission directly to the player
+    self.erc20.transfer( player, unclaimed_commission);
+    // self.claimed_commissions.get(player) += unclaimed_commission;
+  let _cc =  self.claimed_commissions.get(player);
+  self.claimed_commissions.set(player, _cc + unclaimed_commission);
+
+
+}
+}
+
+    // let pct_denom: U256 = U256::from(10000000);
+
+    // let _owed_per_token = self.accumulated_commission_per_token.get() - self.last_commission_per_token.get(player);
+    // let _unclaimed_commission = (self.erc20.balance_of(player) * _owed_per_token * pct_denom) / U256::from(10).pow(U256::from(ATONParams::DECIMALS));
+    Ok(U256::from(0) )
+  }
+
 }
 
 
