@@ -284,9 +284,31 @@ let pct_denom: U256 = U256::from(10000000);
         let unclaimed_commission = self._player_commission(player)?;
                             if unclaimed_commission > U256::from(0) {
             // Update claimed commissions
+
+  let _cc = self.claimed_commissions.get(player);
+            self.claimed_commissions.insert(player, _cc + unclaimed_commission);
            
         }
 
         Ok(unclaimed_commission)
     }
 }
+
+
+
+
+
+
+//     if (unclaimedCommission > 0) {
+
+//         // Transfer commission directly to the player
+//         super._transfer(address(this), player, unclaimedCommission); 
+//         players[player].claimedCommissionsByPlayer += unclaimedCommission; 
+
+
+//         self.balances.insert(address, address.balance());
+//     }
+
+//     // Update player's last known commission per token to the current accumulated value
+//     players[player].lastCommissionPerTokenForPlayer = accumulatedCommissionPerToken;
+//   }
