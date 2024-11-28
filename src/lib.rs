@@ -61,6 +61,7 @@ sol_storage! {
 
   // Stores the total commission in ATON
   uint256  total_commission_in_aton;
+    mapping(address => uint256) last_commission_per_token;
     }
 }
 
@@ -99,12 +100,56 @@ self._accumulate_commission(amount);
         
         // Emit the `DonateATON` event
         evm::log(DonateATON { sender,amount });
-        Ok(())}}
+        Ok(())}
+    
+    
+    
+    
+//       /**
+//    * @dev Retrieves a summary of a single player's data and includes global commission data,
+//    * as well as a batch of event IDs (either active or closed).
+//    * @param playerAddress The address of the player.
+//    * @return summary A PlayerSummary struct containing the player's summary data.
+//    * @return totalCommission The total commission in ATON.
+//    * @return accumulatedCommission The accumulated commission per token.
+//    */
+//   function playerSummary(
+//     address playerAddress
+//   )
+//     external
+//     view
+//     returns (AStructs.PlayerSummary memory summary, uint256 totalCommission, uint256 accumulatedCommission)
+//   {
+//     AStructs.Player storage player = players[playerAddress];
+
+//     // Populate the player's summary
+//     summary = AStructs.PlayerSummary({
+//       level: player.level, // Player's current level
+//       ethBalance: playerAddress.balance, // Player's ETH balance
+//       atonBalance: balanceOf(playerAddress), // Player's ATON token balance
+//       unclaimedCommission: _playerCommission(playerAddress), // Player's unclaimed commission
+//       claimedCommission: player.claimedCommissionsByPlayer // Player's total claimed commission
+//     });
+
+//     // Assign the global data to the return values
+//     totalCommission = totalCommissionInATON;
+//     accumulatedCommission = accumulatedCommissionPerToken;
+
+//     // Return the player's summary along with the global commission data
+//     return (summary, totalCommission, accumulatedCommission);
+//   }
+    
+    
+    
+    
+    
+    
+    }
 
 
 impl ATON {
     /// Accumulates commission generated from swaps and stores it as ATON tokens.
-    /// Updates the `accumulatedCommissionPerToken` and `totalCommissionInATON` fields.
+    /// Updates the `accumulated_commission_per_token` and `totalCommissionInATON` fields.
     ///
     /// # Parameters
     /// - `new_commission_aton`: The commission amount in ATON tokens to be accumulated.
@@ -138,7 +183,34 @@ impl ATON {
 
         Ok(())
     }
+
+pub fn _player_comminsion(&mut self, player: Address) -> Result<U256, ATONError> {
+let PCT_DENOM: U256 = U256::from(10000000);
+
+    let _owed_per_token = self.accumulated_commission_per_token.get() - self.last_commission_per_token.get(player);
+    let _unclaimed_commission = (self.erc20.balance_of(player) * _owed_per_token * PCT_DENOM) / U256::from(10).pow(U256::from(ATONParams::DECIMALS));
+    Ok(_unclaimed_commission)
+  }
+//       /**
+//    * @dev Computes the unclaimed commission for a specified player based on their ATON token holdings.
+//    * @param player Address of the player.
+//    * @return unclaimedCommission The amount of ATON tokens the player can claim as commission.
+//    * @notice The calculation is based on the difference between the global accumulated commission per token
+//    * and the player's last recorded commission per token, scaled by the player's ATON holdings and adjusted by `pct_denom` for precision.
+//    */
+//   function _playerCommission(address player) internal view returns (uint256) {
+//     // Calculate the difference in commission per token since the last update for the player
+//     uint256 owedPerToken = accumulated_commission_per_token - last_commission_per_token[player];
+
+//     // Calculate the total commission owed to the player, scaling by `pct_denom` to maintain precision
+//     uint256 unclaimedCommission = (balanceOf(player) * owedPerToken * pct_denom) / (10 ** decimals());
+
+//     // Return the unclaimed commission, adjusted by `pct_denom`, or 0 if no commission is owed
+//     return unclaimedCommission > 0 ? unclaimedCommission / pct_denom : 0;
+//   }
 }
+
+
 
 
 
