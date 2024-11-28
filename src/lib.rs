@@ -95,7 +95,7 @@ pub enum ATONError {
 #[inherit(Erc20<ATONParams>,Ownable,AccessControl)]
 impl ATON {
        pub fn transfer(&mut self, to: Address, value: U256) -> Result<bool, Erc20Error> {
-        self.erc20._transfer(msg::sender(), to, value)?;
+        self.erc20._transfer(msg::sender(), to, value)?; // _
         Ok(true)
     }
     /// Allows a user to donate Ether to mint ATON tokens.
@@ -270,7 +270,7 @@ impl ATON {
 //    * @notice The calculation is based on the difference between the global accumulated commission per token
 //    * and the player's last recorded commission per token, scaled by the player's ATON holdings and adjusted by `pct_denom` for precision.
 //    */
-pub fn _player_commission(&mut self, player: Address) -> Result<U256, ATONError> {
+pub fn _player_commission(&mut self, player: Address) -> Result<U256, Erc20Error> {
 let pct_denom: U256 = U256::from(10000000);
 
     let _owed_per_token = self.accumulated_commission_per_token.get() - self.last_commission_per_token.get(player);
@@ -280,35 +280,25 @@ let pct_denom: U256 = U256::from(10000000);
 
 
 /*************  ✨ Codeium Command 🌟  *************/
-    pub fn distribute_commission(&mut self, player: Address) -> Result<U256, ATONError> {
-        let unclaimed_commission = self._player_commission(player)?;
-                            if unclaimed_commission > U256::from(0) {
-            // Update claimed commissions
+//     pub fn distribute_commission(&mut self, player: Address) -> Result<U256, Erc20Error> {
+//         let unclaimed_commission = self._player_commission(player);
+//                             if unclaimed_commission > U256::from(0) {
+//             // Update claimed commissions
 
-  let _cc = self.claimed_commissions.get(player);
-            self.claimed_commissions.insert(player, _cc + unclaimed_commission);
+
+//             self.transfer(player, unclaimed_commission); // transfer(address from, address to, value)
+//   let _cc = self.claimed_commissions.get(player);
+//             self.claimed_commissions.insert(player, _cc + unclaimed_commission);
            
-        }
+//         }
 
-        Ok(unclaimed_commission)
+ 
     }
-}
+
+
+ 
 
 
 
 
 
-
-//     if (unclaimedCommission > 0) {
-
-//         // Transfer commission directly to the player
-//         super._transfer(address(this), player, unclaimedCommission); 
-//         players[player].claimedCommissionsByPlayer += unclaimedCommission; 
-
-
-//         self.balances.insert(address, address.balance());
-//     }
-
-//     // Update player's last known commission per token to the current accumulated value
-//     players[player].lastCommissionPerTokenForPlayer = accumulatedCommissionPerToken;
-//   }
