@@ -1,0 +1,6 @@
+cargo stylus check
+cargo stylus export-abi
+cargo stylus deploy --private-key 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659     
+cargo stylus verify --deployment-tx 0xd73c81a3cb4ccd58df3f1855ed67ed8c4982b153c725796212b8320161e41914     
+
+ cargo stylus cache bid 96c9cd6c626547df0048e8a2fb512f4401772f58 0 --private-key 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659 
