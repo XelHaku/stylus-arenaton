@@ -27,14 +27,14 @@ extern crate alloc;
 
 
 // Modules and imports
+mod constants;
+mod control;
 mod erc20;
 mod ownable;
-mod control;
-mod constants;
 use alloy_sol_types::sol;
 
 
-use crate::erc20::{Erc20, Erc20Params};
+use crate::erc20::{Erc20, Erc20Params,Erc20Error};
 use alloy_primitives::{Address, U256};
 use stylus_sdk::{evm,msg,contract, prelude::*,call::transfer_eth};
 use ownable::Ownable;
@@ -43,8 +43,8 @@ use control::AccessControl;
 /// Immutable definitions
 struct ATONParams;
 impl Erc20Params for ATONParams {
-    const NAME: &'static str = "ATON";
-    const SYMBOL: &'static str = "STTK";
+    const NAME: &'static str = "ATON STYLUS";
+    const SYMBOL: &'static str = "ATON";
     const DECIMALS: u8 = 18;
 }
 
@@ -94,6 +94,10 @@ pub enum ATONError {
 #[public]
 #[inherit(Erc20<ATONParams>,Ownable,AccessControl)]
 impl ATON {
+       pub fn transfer(&mut self, to: Address, value: U256) -> Result<bool, Erc20Error> {
+        self.erc20._transfer(msg::sender(), to, value)?;
+        Ok(true)
+    }
     /// Allows a user to donate Ether to mint ATON tokens.
     /// The Ether is converted into ATON and credited to the sender's balance.
     /// Emits a `DonateATON` event.
@@ -222,7 +226,7 @@ if balance_eth < amount {
 //     return true;
 //   }
 
-
+// Private Functions
 impl ATON {
     /// Accumulates commission generated from swaps and stores it as ATON tokens.
     /// Updates the `accumulated_commission_per_token` and `totalCommissionInATON` fields.
@@ -275,38 +279,14 @@ let pct_denom: U256 = U256::from(10000000);
   }
 
 
-  pub fn _distribute_commission(&mut self, player: Address) -> Result<U256, ATONError> {
-    let unclaimed_commission = self._player_commission(player);
+/*************  ✨ Codeium Command 🌟  *************/
+    pub fn distribute_commission(&mut self, player: Address) -> Result<U256, ATONError> {
+        let unclaimed_commission = self._player_commission(player)?;
+                            if unclaimed_commission > U256::from(0) {
+            // Update claimed commissions
+           
+        }
 
-if unclaimed_commission > U256::from(0) {
-
-
-if player == contract::address() {
-    // Transfer commission to the owner when the contract itself is the player
-    self.erc20.transfer( self.owner, unclaimed_commission);
-    self.players.get(player).claimed_commissions += unclaimed_commission;
-
-} else {
-    // Transfer commission directly to the player
-    self.erc20.transfer( player, unclaimed_commission);
-    // self.claimed_commissions.get(player) += unclaimed_commission;
-  let _cc =  self.claimed_commissions.get(player);
-  self.claimed_commissions.set(player, _cc + unclaimed_commission);
-
-
+        Ok(unclaimed_commission)
+    }
 }
-}
-
-    // let pct_denom: U256 = U256::from(10000000);
-
-    // let _owed_per_token = self.accumulated_commission_per_token.get() - self.last_commission_per_token.get(player);
-    // let _unclaimed_commission = (self.erc20.balance_of(player) * _owed_per_token * pct_denom) / U256::from(10).pow(U256::from(ATONParams::DECIMALS));
-    Ok(U256::from(0) )
-  }
-
-}
-
-
-
-
-

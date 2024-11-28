@@ -1,4 +1,3 @@
-/// Module containing constant values used in the project.
 
 
     pub const ARENATON_ENGINE_ROLE: [u8; 32] = [
