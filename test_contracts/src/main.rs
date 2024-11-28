@@ -1,75 +1,56 @@
 use ethers::prelude::*;
-use ethers::providers::{Provider, Http};
+use ethers::providers::{Http, Provider};
 use ethers::signers::LocalWallet;
 use ethers::types::Address;
+use ethers::contract::Contract;
 use dotenv::dotenv;
 use std::sync::Arc;
+use ethers::abi::Abi;
 
-abigen!(
-    IATON,
-    r#"
-    [
-        function debugMintAton() external
-        function transfer(address to, uint256 value) external returns (bool)
-        function donateAton() external
-        function stakeEth(address _player) external
-        function stakeAton(address _player, uint256 _amount) external
-        function swap(uint256 amount) external
-        error InsufficientBalance(address, uint256, uint256)
-        error InsufficientAllowance(address, address, uint256, uint256)
-        error ZeroEther(address)
-    ]
-    "#
-);
+// Add this line to import the necessary eyre types
+use eyre::{Result, WrapErr}; 
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Load environment variables from a .env file (if present)
+async fn main() -> Result<()> { // Use eyre::Result
+    // Load environment variables
     dotenv().ok();
 
-    // Replace with your actual RPC URL
-    let rpc_url = "http://127.0.0.1:8547";
-
-    // Load your private key securely from an environment variable
-    let private_key = std::env::var("PRIVATE_KEY")
-        .expect("Please set the PRIVATE_KEY environment variable");
-
-    // Create a provider
+    // RPC URL (Replace with your Ethereum node URL)
+    let rpc_url = std::env::var("RPC_URL").unwrap_or_else(|_| "http://127.0.0.1:8545".into());
     let provider = Provider::<Http>::try_from(rpc_url)?;
 
-    // Create a wallet from the private key
-    let wallet: LocalWallet = private_key.parse()?;
+    // Private Key (Replace with your private key, securely load it from ENV in production)
+    let private_key = std::env::var("PRIVATE_KEY_NODE")
+        .expect("Please set the PRIVATE_KEY_NODE environment variable");
+    let wallet: LocalWallet = private_key
+        .parse::<LocalWallet>()?
+        .with_chain_id(1337u64); // Use the correct chain ID (1337 in this case)
 
-    // Connect the wallet to the provider
-    let client = SignerMiddleware::new(provider, wallet);
-    let client = Arc::new(client);
+    // Combine wallet and provider
+    let signer = Arc::new(SignerMiddleware::new(provider, wallet));
 
-    // Contract address
-    let contract_address = "0xa6e41ffd769491a42a6e5ce453259b93983a22ef"
-        .parse::<Address>()?;
+    // Contract address (Replace with your contract address)
+    let contract_address: Address = "0x7e32b54800705876d3b5cfbc7d9c226a211f7c1a".parse()?; 
 
-    // Instantiate the contract
-    let contract = IATON::new(contract_address, client.clone());
+    // Contract ABI (Replace with the actual ABI)
+    // Make sure this is the correct ABI for the "increment" function
+    let abi: Abi = serde_json::from_str(r#"[{"inputs":[],"name":"increment","outputs":[],"stateMutability":"nonpayable","type":"function"}]"#)
+        .wrap_err("Error parsing ABI")?; 
 
-    // Set the amount of ETH to send with the transaction (10^-15 ETH)
-    let value = ethers::utils::parse_ether("0.000000000000001")?;
+    // Initialize the contract instance
+    let contract = Contract::new(contract_address, abi, signer.clone());
 
-    // Send the transaction calling debugMintAton with value
-    let tx = contract
-        .debug_mint_aton()
-        .value(value) // Set the value to send with the transaction
+    // Call the "increment" function on the smart contract
+    let method = contract.method::<_, ()>("increment", ())?; 
+    let tx = method
         .send()
-        .await?;
+        .await?; 
+
+    println!("Transaction hash: {:?}", tx.tx_hash());
 
     // Wait for the transaction to be mined
     let receipt = tx.await?;
-
-    // Check if the transaction was successful
-    if let Some(receipt) = receipt {
-        println!("Transaction succeeded in block: {:?}", receipt.block_number);
-    } else {
-        println!("Transaction pending or failed");
-    }
+    println!("Transaction receipt: {:?}", receipt);
 
     Ok(())
 }

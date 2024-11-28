@@ -7,3 +7,6 @@ edition = "2021"
 dotenv = "0.15.0"
 ethers = { version = "2.0.14", features = ["abigen"] }
 tokio = { version = "1.28.2", features = ["full"] }
+
+eyre = "0.6"
+serde_json = "1.0"
