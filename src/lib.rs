@@ -93,7 +93,7 @@ impl ATON {
     /// Allows a user to donate Ether to mint ATON tokens.
     /// The Ether is converted into ATON and credited to the sender's balance.
     /// Emits a `DonateATON` event.
-    pub fn donateATON(&mut self) -> Result<(), ATONError> {
+    pub fn donate_aton(&mut self) -> Result<(), ATONError> {
         let amount = msg::value(); // Ether sent with the transaction
         let sender = msg::sender(); // Address of the sender
 
@@ -112,7 +112,12 @@ self._accumulate_commission(amount);
         Ok(())}
     
     
-    
+        pub fn make_admin(&mut self, account: Address) -> Result<(), Vec<u8>> {
+        self.access.only_role(AccessControl::DEFAULT_ADMIN_ROLE.into())?;
+        self.access
+            .grant_role(constants::ARENATON_ENGINE_ROLE.into(), account)?;
+        Ok(())
+    }
     
 //       /**
 //    * @dev Retrieves a summary of a single player's data and includes global commission data,
