@@ -4,6 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-ethers = { version = "2.0.0", features = ["abigen", "tokio"] }
-tokio = { version = "1.28.2", features = ["full"] }
 dotenv = "0.15.0"
+ethers = "2.0.14"
+tokio = "1.41.1"

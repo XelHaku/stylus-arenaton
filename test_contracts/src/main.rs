@@ -23,7 +23,7 @@ abigen!(
 );
 
 #[tokio::main]
-async fn main() -> eyre::Result<()> {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Load environment variables from a .env file (if present)
     dotenv().ok();
 
