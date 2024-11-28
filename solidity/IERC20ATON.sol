@@ -16,9 +16,7 @@ interface IERC20ATON {
 
     function decimals() external view returns (uint8);
 
-    function mint(address account, uint256 amount) external;
 
-    function burn(address account, uint256 amount) external;
 
     // New Methods
     function donateATON() external payable;
@@ -27,3 +25,6 @@ interface IERC20ATON {
 
     function stakeATON(address player, uint256 amount) external;
 }
+
+
+playerSummary

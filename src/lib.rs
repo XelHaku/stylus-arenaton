@@ -102,9 +102,9 @@ impl ATON {
    return Err(ATONError::ZeroEther(ZeroEther {
                 sender
             }));        }
-self._accumulate_commission(amount);
+let _ = self._accumulate_commission(amount);
         // Mint equivalent ATON tokens to the sender
-        self.erc20.mint(contract::address(), amount);
+        let _ = self.erc20.mint(contract::address(), amount);
 
         
         // Emit the `DonateATON` event
@@ -112,12 +112,27 @@ self._accumulate_commission(amount);
         Ok(())}
     
     
-        pub fn stake_eth(&mut self, player: Address) -> Result<(), Vec<u8>> {
+        pub fn stake_eth(&mut self, _player: Address) -> Result<(), Vec<u8>> {
         self.access.only_role(constants::ARENATON_ENGINE_ROLE.into())?;
-self.erc20.mint(contract::address(), msg::value());
+let _ =  self.erc20.mint(contract::address(), msg::value());
+        Ok(())
+    }
+
+            pub fn stake_aton(&mut self, _player: Address,_amount: U256) -> Result<(), Vec<u8>> {
+        let _ = self.access.only_role(constants::ARENATON_ENGINE_ROLE.into())?;
+let _ = self.erc20.transfer_from(_player,contract::address(), _amount);
         Ok(())
     }
     
+
+                pub fn swap(&mut self,amount: U256) -> Result<(), Vec<u8>> {
+        // let _ = self.access.only_role(constants::ARENATON_ENGINE_ROLE.into())?;
+// let _ = self.erc20.transfer_from(_player,contract::address(), _amount);
+        Ok(())
+    }
+    
+
+
 //       /**
 //    * @dev Retrieves a summary of a single player's data and includes global commission data,
 //    * as well as a batch of event IDs (either active or closed).
@@ -158,6 +173,33 @@ self.erc20.mint(contract::address(), msg::value());
     
     
     }
+
+
+//      /**
+//    * @dev Swaps ATON tokens for ETH at a 1:1 ratio.
+//    * @param _amountAton The amount of ATON tokens to swap.
+//    * @return success True if the swap was successful.
+//    */
+//   function swap(uint256 _amountAton) external nonReentrant returns (bool success) {
+//     require(_amountAton > 0, "Swap amount must be greater than zero");
+//     require(balanceOf(msg.sender) >= _amountAton, "Insufficient ATON balance");
+//     require(address(this).balance >= _amountAton, "Contract has insufficient ETH balance");
+
+//     // Step 1: Transfer ATON tokens to the contract
+//     _distributeTransfer(msg.sender, address(this), _amountAton);
+
+//     // Step 2: Burn the ATON tokens from the contract to maintain the 1:1 swap mechanism
+//     _burn(address(this), _amountAton);
+
+//     // Step 3: Transfer Ether to the sender (after state changes)
+//     (bool sent, ) = msg.sender.call{ value: _amountAton }("");
+//     require(sent, "Failed to send ETH");
+
+//     // Emit the swap event after successful transfer
+//     emit EventsLib.Swap(msg.sender, _amountAton);
+
+//     return true;
+//   }
 
 
 impl ATON {

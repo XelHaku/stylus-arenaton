@@ -1971,7 +1971,8 @@ dependencies = [
 [[package]]
 name = "mini-alloc"
 version = "0.6.0"
-source = "git+https://github.com/OffchainLabs/stylus-sdk-rs?branch=main#e56f4854f56fea574b88ee80314fc96e13f140a2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "14eacc4bfcf10da9b6d5185ef51b2dc75434afac34b4d8aabe40f6b141ee071c"
 dependencies = [
  "cfg-if 1.0.0",
 ]
@@ -3154,7 +3155,8 @@ dependencies = [
 [[package]]
 name = "stylus-proc"
 version = "0.6.0"
-source = "git+https://github.com/OffchainLabs/stylus-sdk-rs?branch=main#e56f4854f56fea574b88ee80314fc96e13f140a2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9fd02e91dffe7b73df84a861c992494d6b72054bc9a17fe73e147e34e9a64ef3"
 dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
@@ -3172,7 +3174,8 @@ dependencies = [
 [[package]]
 name = "stylus-sdk"
 version = "0.6.0"
-source = "git+https://github.com/OffchainLabs/stylus-sdk-rs?branch=main#e56f4854f56fea574b88ee80314fc96e13f140a2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "26042693706e29fb7e3cf3d71c99534ac97fca98b6f81ba77ab658022ab2e210"
 dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
