@@ -112,10 +112,9 @@ self._accumulate_commission(amount);
         Ok(())}
     
     
-        pub fn make_admin(&mut self, account: Address) -> Result<(), Vec<u8>> {
-        self.access.only_role(AccessControl::DEFAULT_ADMIN_ROLE.into())?;
-        self.access
-            .grant_role(constants::ARENATON_ENGINE_ROLE.into(), account)?;
+        pub fn stake_eth(&mut self, player: Address) -> Result<(), Vec<u8>> {
+        self.access.only_role(constants::ARENATON_ENGINE_ROLE.into())?;
+self.erc20.mint(contract::address(), msg::value());
         Ok(())
     }
     
