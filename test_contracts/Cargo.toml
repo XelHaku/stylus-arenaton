@@ -12,5 +12,10 @@ eyre = "0.6"
 serde_json = "1.0"
 
 [[bin]]
-name = "test_contracts"
+name = "main"
 path = "src/main.rs"
+
+
+[[bin]]
+name = "debug_mint_aton"
+path = "debug_mint_aton/mod.rs"
