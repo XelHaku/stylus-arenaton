@@ -56,11 +56,17 @@ sol_storage! {
         Erc20<ATONParams> erc20;
         #[borrow]
         Ownable owner;
+
+          uint256  accumulated_commission_per_token;
+
+  // Stores the total commission in ATON
+  uint256  total_commission_in_aton;
     }
 }
 
 sol! {
     event DonateATON(address indexed sender, uint256 amount);
+    event Accumulate(uint256 new_commission, uint256 accumulated, uint256 total);
     error ZeroEther(address sender);
 }
 
@@ -94,42 +100,44 @@ impl ATON {
         evm::log(DonateATON { sender,amount });
         Ok(())}}
 
-//           /**
-//    * @dev Allows a player to donate ATON tokens to the contract. The donated amount is converted to the
-//    * total commission pool, which can then be distributed to ATON holders.
-//    * @notice The function requires the transaction to include Ether. The Ether is converted into ATON
-//    * and credited to the contract, increasing the total ATON supply.
-//    */
-//   function donateATON() external payable {
-//     uint256 amount = msg.value;
 
-//     // Ensure the transaction includes some Ether to donate
-//     require(amount > 0, "Must send some Ether");
+impl ATON {
+    /// Accumulates commission generated from swaps and stores it as ATON tokens.
+    /// Updates the `accumulatedCommissionPerToken` and `totalCommissionInATON` fields.
+    ///
+    /// # Parameters
+    /// - `new_commission_aton`: The commission amount in ATON tokens to be accumulated.
+    ///
+    /// # Note
+    /// Assumes `total_supply()` is non-zero. If it is zero, this function will have no effect.
+  pub fn accumulate_commission(&mut self, new_commission_aton: U256) -> Result<(), ATONError> {
+        let total_supply_tokens = self.erc20.total_supply();
 
-//     // Mint an equivalent amount of ATON tokens to the contract address
-//     _mint(address(this), amount); // Ensure _mint is correctly defined
+        // Ensure no division by zero
+        if total_supply_tokens > U256::from(0) {
+            // Update accumulated commission per token
+            let decimals = U256::from(10).pow(U256::from(ATONParams::DECIMALS));
+            let additional_commission = (new_commission_aton * decimals) / total_supply_tokens;
 
-//     // Add the donated amount to the total accumulated commission
-//     _accumulateCommission(amount);
+            // Access storage fields using `.get()` and `.set()`
+            let current_accumulated = self.accumulated_commission_per_token.get();
+            self.accumulated_commission_per_token.set(current_accumulated + additional_commission);
 
-//     // Emit an event indicating that ATON tokens have been donated to the contract
-//     emit EventsLib.ATONDonated(msg.sender, amount);
+            // Update total commission in ATON
+            let current_total = self.total_commission_in_aton.get();
+            self.total_commission_in_aton.set(current_total + new_commission_aton);
+
+            // Emit the `Accumulate` event
+            evm::log(Accumulate {
+                new_commission: new_commission_aton,
+                accumulated: self.accumulated_commission_per_token.get(),
+                total: self.total_commission_in_aton.get(),
+            });
+        }
+
+        Ok(())
+    }
+}
 
 
-    // /// Mints tokens
-    // pub fn mint(&mut self, value: U256) -> Result<(), Erc20Error> {
-    //     self.erc20.mint(msg::sender(), value)?;
-    //     Ok(())
-    // }
 
-    // /// Mints tokens to another address
-    // pub fn mint_to(&mut self, to: Address, value: U256) -> Result<(), Erc20Error> {
-    //     self.erc20.mint(to, value)?;
-    //     Ok(())
-    // }
-
-    // /// Burns tokens
-    // pub fn burn(&mut self, value: U256) -> Result<(), Erc20Error> {
-    //     self.erc20.burn(msg::sender(), value)?;
-    //     Ok(())
-    // }
