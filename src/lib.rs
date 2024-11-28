@@ -29,6 +29,7 @@ extern crate alloc;
 // Modules and imports
 mod erc20;
 mod ownable;
+mod control;
 use alloy_sol_types::sol;
 
 
@@ -36,6 +37,7 @@ use crate::erc20::{Erc20, Erc20Params};
 use alloy_primitives::{Address, U256};
 use stylus_sdk::{evm,msg,contract, prelude::*};
 use ownable::Ownable;
+use control::Control;
 
 /// Immutable definitions
 struct ATONParams;
@@ -55,7 +57,10 @@ sol_storage! {
         #[borrow]
         Erc20<ATONParams> erc20;
         #[borrow]
-        Ownable owner;
+        Ownable owner;    
+        
+        #[borrow]
+        Control ownbbber;
 
           uint256  accumulated_commission_per_token;
 
