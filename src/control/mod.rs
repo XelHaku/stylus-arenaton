@@ -183,11 +183,7 @@ impl AccessControl {
     /// # Events
     ///
     /// May emit a [`RoleGranted`] event.
-    pub fn grant_role(
-        &mut self,
-        role: B256,
-        account: Address,
-    ) -> Result<(), Error> {
+    pub fn grant_role(&mut self, role: B256, account: Address) -> Result<(), Error> {
         let admin_role = self.get_role_admin(role);
         self.only_role(admin_role)?;
         self._grant_role(role, account);
@@ -216,11 +212,7 @@ impl AccessControl {
     /// # Events
     ///
     /// May emit a [`RoleRevoked`] event.
-    pub fn revoke_role(
-        &mut self,
-        role: B256,
-        account: Address,
-    ) -> Result<(), Error> {
+    pub fn revoke_role(&mut self, role: B256, account: Address) -> Result<(), Error> {
         let admin_role = self.get_role_admin(role);
         self.only_role(admin_role)?;
         self._revoke_role(role, account);
@@ -253,15 +245,9 @@ impl AccessControl {
     ///
     /// If the calling account has its `role` revoked, emits a [`RoleRevoked`]
     /// event.
-    pub fn renounce_role(
-        &mut self,
-        role: B256,
-        confirmation: Address,
-    ) -> Result<(), Error> {
+    pub fn renounce_role(&mut self, role: B256, confirmation: Address) -> Result<(), Error> {
         if msg::sender() != confirmation {
-            return Err(Error::BadConfirmation(
-                AccessControlBadConfirmation {},
-            ));
+            return Err(Error::BadConfirmation(AccessControlBadConfirmation {}));
         }
 
         self._revoke_role(role, confirmation);
@@ -303,14 +289,13 @@ impl AccessControl {
     ///
     /// If [`msg::sender`] has not been granted `role`, then the error
     /// [`Error::UnauthorizedAccount`] is returned.
-    pub fn _check_role(
-        &self,
-        role: B256,
-        account: Address,
-    ) -> Result<(), Error> {
+    pub fn _check_role(&self, role: B256, account: Address) -> Result<(), Error> {
         if !self.has_role(role, account) {
             return Err(Error::UnauthorizedAccount(
-                AccessControlUnauthorizedAccount { account, needed_role: role },
+                AccessControlUnauthorizedAccount {
+                    account,
+                    needed_role: role,
+                },
             ));
         }
 
@@ -336,7 +321,11 @@ impl AccessControl {
             false
         } else {
             self._roles.setter(role).has_role.insert(account, true);
-            evm::log(RoleGranted { role, account, sender: msg::sender() });
+            evm::log(RoleGranted {
+                role,
+                account,
+                sender: msg::sender(),
+            });
             true
         }
     }
@@ -358,7 +347,11 @@ impl AccessControl {
     pub fn _revoke_role(&mut self, role: B256, account: Address) -> bool {
         if self.has_role(role, account) {
             self._roles.setter(role).has_role.insert(account, false);
-            evm::log(RoleRevoked { role, account, sender: msg::sender() });
+            evm::log(RoleRevoked {
+                role,
+                account,
+                sender: msg::sender(),
+            });
             true
         } else {
             false

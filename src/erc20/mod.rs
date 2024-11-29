@@ -103,8 +103,6 @@ impl<T: Erc20Params> Erc20<T> {
 
         Ok(())
     }
-
-
 }
 
 // These methods are public to other contracts
