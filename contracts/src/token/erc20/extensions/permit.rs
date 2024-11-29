@@ -64,7 +64,7 @@ pub enum Error {
 
 sol_storage! {
     /// State of a Permit Contract.
-    pub struct Erc20Permit<T: IEip712 + StorageType>{
+    pub struct Erc20<T: IEip712 + StorageType>{
         /// ERC-20 contract.
         Erc20 erc20;
 
@@ -79,10 +79,10 @@ sol_storage! {
 /// NOTE: Implementation of [`TopLevelStorage`] to be able use `&mut self` when
 /// calling other contracts and not `&mut (impl TopLevelStorage +
 /// BorrowMut<Self>)`. Should be fixed in the future by the Stylus team.
-unsafe impl<T: IEip712 + StorageType> TopLevelStorage for Erc20Permit<T> {}
+unsafe impl<T: IEip712 + StorageType> TopLevelStorage for Erc20<T> {}
 
 #[public]
-impl<T: IEip712 + StorageType> Erc20Permit<T> {
+impl<T: IEip712 + StorageType> Erc20<T> {
     /// Returns the current nonce for `owner`.
     ///
     /// # Arguments
