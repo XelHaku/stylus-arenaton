@@ -37,7 +37,7 @@ use crate::erc20::{Erc20, Erc20Error};
 use alloy_primitives::{Address, U256};
 use control::AccessControl;
 use ownable::Ownable;
-use stylus_sdk::{call::transfer_eth, contract, evm, msg};
+use stylus_sdk::{evm, msg};
 
 use stylus_sdk::prelude::*;
 
