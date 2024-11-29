@@ -93,10 +93,10 @@ pub enum ATONError {
 #[public]
 #[inherit(Erc20,Ownable,AccessControl)]
 impl ATON {
-    //     pub fn debug_mint_aton(&mut self) -> Result<bool, Vec<u8>> {
-    //         let _ = self.erc20.mint(msg::sender(), msg::value());
-    //         Ok(true)
-    //     }
+        pub fn debug_mint_aton(&mut self) -> Result<bool, Vec<u8>> {
+            let _ = self.erc20.mint(msg::sender(), msg::value());
+            Ok(true)
+        }
     //     // pub fn transfer(&mut self, to: Address, value: U256) -> Result<bool, Erc20Error> {
     //     //     self.erc20._transfer(msg::sender(), to, value)?; // _
     //     //     Ok(true)
