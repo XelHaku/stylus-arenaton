@@ -2,40 +2,34 @@
 //!
 //! The eponymous [`Erc20`] type provides all the standard methods,
 //! and is intended to be inherited by other contract types.
-//!
-//! You can configure the behavior of [`Erc20`] via the [`Erc20Params`] trait,
-//! which allows specifying the name, symbol, and decimals of the token.
-//!
+
 //! Note that this code is unaudited and not fit for production use.
 
 // Imported packages
 use alloy_primitives::{Address, U256};
 use alloy_sol_types::sol;
-use core::marker::PhantomData;
 use stylus_sdk::{evm, msg, prelude::*};
 
-pub trait Erc20Params {
-    /// Immutable token name
-    const NAME: &'static str;
+// pub trait Erc20Params {
+//     /// Immutable token name
+//     const NAME: &'static str;
 
-    /// Immutable token symbol
-    const SYMBOL: &'static str;
+//     /// Immutable token symbol
+//     const SYMBOL: &'static str;
 
-    /// Immutable token decimals
-    const DECIMALS: u8;
-}
+//     /// Immutable token decimals
+//     const DECIMALS: u8;
+// }
 
 sol_storage! {
     /// Erc20 implements all ERC-20 methods.
-    pub struct Erc20<T> {
+    pub struct Erc20 {
         /// Maps users to balances
         mapping(address => uint256) balances;
         /// Maps users to a mapping of each spender's allowance
         mapping(address => mapping(address => uint256)) allowances;
         /// The total supply of the token
         uint256 total_supply;
-        /// Used to allow [`Erc20Params`]
-        PhantomData<T> phantom;
     }
 }
 
@@ -58,7 +52,7 @@ pub enum Erc20Error {
 // These methods aren't exposed to other contracts
 // Methods marked as "pub" here are usable outside of the erc20 module (i.e. they're callable from lib.rs)
 // Note: modifying storage will become much prettier soon
-impl<T: Erc20Params> Erc20<T> {
+impl Erc20 {
     /// Movement of funds between 2 accounts
     /// (invoked by the public transfer() and transfer_from() functions )
     pub fn _transfer(&mut self, from: Address, to: Address, value: U256) -> Result<(), Erc20Error> {
@@ -108,20 +102,20 @@ impl<T: Erc20Params> Erc20<T> {
 // These methods are public to other contracts
 // Note: modifying storage will become much prettier soon
 #[public]
-impl<T: Erc20Params> Erc20<T> {
+impl Erc20 {
     /// Immutable token name
     pub fn name() -> String {
-        T::NAME.into()
+        "ATON Stylus".into()
     }
 
     /// Immutable token symbol
     pub fn symbol() -> String {
-        T::SYMBOL.into()
+        "ATON".into()
     }
 
     /// Immutable token decimals
     pub fn decimals() -> u8 {
-        T::DECIMALS
+        18u8
     }
 
     /// Total supply of tokens

@@ -33,7 +33,7 @@ mod ownable;
 mod structs;
 use alloy_sol_types::sol;
 
-use crate::erc20::{Erc20, Erc20Error, Erc20Params};
+use crate::erc20::{Erc20, Erc20Error};
 use alloy_primitives::{Address, U256};
 use control::AccessControl;
 use ownable::Ownable;
@@ -41,13 +41,7 @@ use stylus_sdk::{call::transfer_eth, contract, evm, msg};
 
 use stylus_sdk::prelude::*;
 
-/// Immutable definitions
-struct ATONParams;
-impl Erc20Params for ATONParams {
-    const NAME: &'static str = "ATON STYLUS";
-    const SYMBOL: &'static str = "ATON";
-    const DECIMALS: u8 = 18;
-}
+
 
 // Define the entrypoint as a Solidity storage object. The sol_storage! macro
 // will generate Rust-equivalent structs with all fields mapped to Solidity-equivalent
@@ -57,7 +51,7 @@ sol_storage! {
     struct ATON {
         // Allows erc20 to access ATON's storage and make calls
         #[borrow]
-        Erc20<ATONParams> erc20;
+        Erc20 erc20;
         #[borrow]
         Ownable owner;
 
@@ -97,7 +91,7 @@ pub enum ATONError {
 }
 
 #[public]
-#[inherit(Erc20<ATONParams>,Ownable,AccessControl)]
+#[inherit(Erc20,Ownable,AccessControl)]
 impl ATON {
     //     pub fn debug_mint_aton(&mut self) -> Result<bool, Vec<u8>> {
     //         let _ = self.erc20.mint(msg::sender(), msg::value());
@@ -250,7 +244,7 @@ impl ATON {
         // Ensure no division by zero
         if total_supply_tokens > U256::from(0) {
             // Update accumulated commission per token
-            let decimals = U256::from(10).pow(U256::from(ATONParams::DECIMALS));
+            let decimals = U256::from(10).pow(U256::from(18u8));
             let additional_commission = (new_commission_aton * decimals) / total_supply_tokens;
 
             // Access storage fields using `.get()` and `.set()`
@@ -286,7 +280,7 @@ impl ATON {
         let _owed_per_token = self.accumulated_commission_per_token.get()
             - self.last_commission_per_token.get(player);
         let _unclaimed_commission = (self.erc20.balance_of(player) * _owed_per_token * pct_denom)
-            / U256::from(10).pow(U256::from(ATONParams::DECIMALS));
+            / U256::from(10).pow(U256::from(18u8));
         Ok(_unclaimed_commission)
     }
 
