@@ -1,4 +1,4 @@
-// swap/mod.rs
+// debug_mint_aton/mod.rs
 use ethers::prelude::*;
 use ethers::providers::{Http, Provider};
 use ethers::signers::LocalWallet;
@@ -11,7 +11,7 @@ use ethers::abi::Abi;
 // Add this line to import the necessary eyre types
 use eyre::{Result, WrapErr}; 
 
-pub async fn swap() -> Result<()> { // Use eyre::Result and make it public
+pub async fn debug_mint_aton() -> Result<()> { // Use eyre::Result and make it public
     // Load environment variables
     dotenv().ok();
 
@@ -57,7 +57,7 @@ pub async fn swap() -> Result<()> { // Use eyre::Result and make it public
 #[tokio::main]
 async fn main() {
     // This will only run when the module is called by itself
-    if let Err(err) = swap().await { 
+    if let Err(err) = debug_mint_aton().await { 
         eprintln!("Error: {:?}", err);
     }
 }

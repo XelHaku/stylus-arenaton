@@ -18,12 +18,9 @@ path = "src/main.rs"
 
 [[bin]]
 name = "debug_mint_aton"
-path = "debug_mint_aton/mod.rs"
+path = "src/debug_mint_aton/mod.rs"
+
 
 [[bin]]
 name = "balance_of"
-path = "balance_of/mod.rs"
-
-[[bin]]
-name = "swap"
-path = "swap/mod.rs"
+path = "src/balance_of/mod.rs"
