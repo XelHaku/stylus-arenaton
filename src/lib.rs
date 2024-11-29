@@ -29,6 +29,7 @@ extern crate alloc;
 mod constants;
 // mod control;
 mod erc20permit;
+mod cryptography;
 // mod ownable;
 mod structs;
 use alloy_sol_types::sol;
