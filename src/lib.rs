@@ -27,16 +27,16 @@ extern crate alloc;
 
 // Modules and imports
 mod constants;
-mod control;
+// mod control;
 mod erc20;
-mod ownable;
+// mod ownable;
 mod structs;
 use alloy_sol_types::sol;
 
 use crate::erc20::{Erc20, Erc20Error};
 use alloy_primitives::{Address, U256};
-use control::AccessControl;
-use ownable::Ownable;
+// use control::AccessControl;
+// use ownable::Ownable;
 use stylus_sdk::{evm, msg};
 
 use stylus_sdk::prelude::*;
@@ -52,11 +52,11 @@ sol_storage! {
         // Allows erc20 to access ATON's storage and make calls
         #[borrow]
         Erc20 erc20;
-        #[borrow]
-        Ownable ownable;
+        // #[borrow]
+        // Ownable ownable;
 
-        #[borrow]
-              AccessControl access;
+        // #[borrow]
+        //       AccessControl access;
 
 
           uint256  accumulated_commission_per_token;
@@ -91,7 +91,7 @@ pub enum ATONError {
 }
 
 #[public]
-#[inherit(Erc20,Ownable,AccessControl)]
+#[inherit(Erc20)]
 impl ATON {
         pub fn debug_mint_aton(&mut self) -> Result<bool, Vec<u8>> {
             let _ = self.erc20.mint(msg::sender(), msg::value());
