@@ -9,21 +9,9 @@
 use alloy_primitives::{Address, U256};
 use alloy_sol_types::sol;
 use stylus_sdk::{evm, msg, prelude::*};
-// use crate::utils::cryptography::{ecdsa, eip712::IEip712};
-use crate::constants;
-use crate::cryptography::ecdsa;
+use crate::cryptography::{ecdsa, eip712::IEip712};
 
-
-// pub trait Erc20Params {
-//     /// Immutable token name
-//     const NAME: &'static str;
-
-//     /// Immutable token symbol
-//     const SYMBOL: &'static str;
-
-//     /// Immutable token decimals
-//     const DECIMALS: u8;
-// }
+use crate::nonces::Nonces;
 
 sol_storage! {
     /// Erc20 implements all ERC-20 methods.
@@ -35,6 +23,9 @@ sol_storage! {
         mapping(address => mapping(address => uint256)) allowances;
         /// The total supply of the token
         uint256 total_supply;
+
+        /// Nonces contract.
+        Nonces nonces;
     }
 }
 
@@ -45,13 +36,32 @@ sol! {
 
     error InsufficientBalance(address from, uint256 have, uint256 want);
     error InsufficientAllowance(address owner, address spender, uint256 have, uint256 want);
+
+        /// Indicates an error related to the fact that
+    /// permit deadline has expired.
+    #[derive(Debug)]
+    #[allow(missing_docs)]
+    error ERC2612ExpiredSignature(uint256 deadline);
+
+    /// Indicates an error related to the issue about mismatched signature.
+    #[derive(Debug)]
+    #[allow(missing_docs)]
+    error ERC2612InvalidSigner(address signer, address owner);
 }
 
-/// Represents the ways methods may fail.
+
+
+/// A Permit error.
 #[derive(SolidityError)]
 pub enum Erc20Error {
     InsufficientBalance(InsufficientBalance),
     InsufficientAllowance(InsufficientAllowance),
+    /// Indicates an error related to the fact that
+    /// permit deadline has expired.
+    ExpiredSignature(ERC2612ExpiredSignature),
+    /// Indicates an error related to the issue about mismatched signature.
+    InvalidSigner(ERC2612InvalidSigner),
+
 }
 
 // These methods aren't exposed to other contracts
