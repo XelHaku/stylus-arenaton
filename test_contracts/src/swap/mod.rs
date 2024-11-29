@@ -16,7 +16,7 @@ pub async fn debug_mint_aton() -> Result<()> { // Use eyre::Result and make it p
     dotenv().ok();
 
     // RPC URL (Replace with your Ethereum node URL)
-    let rpc_url = std::env::var("RPC_URL").unwrap_or_else(|_| "http://127.0.0.1:8545".into());
+    let rpc_url = std::env::var("RPC_URL").unwrap_or_else(|_| "http://127.0.0.1:8547".into());
     let provider = Provider::<Http>::try_from(rpc_url)?;
 
     // Private Key (Replace with your private key, securely load it from ENV in production)

@@ -14,7 +14,7 @@ pub async fn balance_of() -> Result<()> {
     dotenv().ok();
 
     // RPC URL (Replace with your Ethereum node URL)
-    let rpc_url = std::env::var("RPC_URL").unwrap_or_else(|_| "http://127.0.0.1:8545".into());
+    let rpc_url = std::env::var("RPC_URL").unwrap_or_else(|_| "http://127.0.0.1:8547".into());
     let provider = Provider::<Http>::try_from(rpc_url)?;
 
     // Contract address (Replace with your contract address)
