@@ -62,7 +62,11 @@ pub async fn balance_of() -> Result<()> {
     println!("Balance of {:?}: {}", owner_address, balance);
 
     Ok(())
-}
+}Error: Invalid name: please ensure the contract and method you're calling exist! failed to decode empty bytes. if you're using jsonrpc this is likely due to jsonrpc returning `0x` in case contract or method don't exist
+
+Location:
+    src/balance_of/mod.rs:57:25
+xel@BlueBlack:~/git/stylus-hello-world/test_contracts$ 
 
 #[tokio::main]
 async fn main() {
