@@ -11,20 +11,20 @@ pub struct PlayerSummary {
     // pub claimed_commission: U256,
 }
 
-impl PlayerSummary {
-    pub fn new(
-        // level: U256,
-        // eth_balance: U256,
-        aton_balance: U256
-        // unclaimed_commission: U256,
-        // claimed_commission: U256,
-    ) -> Self {
-        Self {
-            // level,
-            // eth_balance,
-            aton_balance,
-            // unclaimed_commission,
-            // claimed_commission,
-        }
-    }
-}
+// impl PlayerSummary {
+//     pub fn new(
+//         // level: U256,
+//         // eth_balance: U256,
+//         aton_balance: U256
+//         // unclaimed_commission: U256,
+//         // claimed_commission: U256,
+//     ) -> Self {
+//         Self {
+//             // level,
+//             // eth_balance,
+//             aton_balance,
+//             // unclaimed_commission,
+//             // claimed_commission,
+//         }
+//     }
+// }
