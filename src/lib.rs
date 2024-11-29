@@ -38,7 +38,6 @@ use alloy_primitives::{ Address, U256 };
 use stylus_sdk::{ evm, msg, contract, prelude::*, call::transfer_eth };
 use ownable::Ownable;
 use control::AccessControl;
-use structs::PlayerSummary;
 
 /// Immutable definitions
 struct ATONParams;
