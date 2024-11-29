@@ -1,6 +1,6 @@
 cargo stylus check
 cargo stylus export-abi
 cargo stylus deploy --private-key 9dc8c652a16755e58fe2ffae9991c895174f3746022b2a474f8d89694b4dc312 -e https://sepolia-rollup.arbitrum.io/rpc    
-cargo stylus verify --deployment-tx 0xd73c81a3cb4ccd58df3f1855ed67ed8c4982b153c725796212b8320161e41914 -e https://sepolia-rollup.arbitrum.io/rpc    
+cargo stylus verify --deployment-tx 0xd8cac7f27d989ffd9f42c83fc4495662edc257599ca19b6318a9fbad55526218 -e https://sepolia-rollup.arbitrum.io/rpc    
 
  cargo stylus cache bid 96c9cd6c626547df0048e8a2fb512f4401772f58 0 --private-key 9dc8c652a16755e58fe2ffae9991c895174f3746022b2a474f8d89694b4dc312 -e https://sepolia-rollup.arbitrum.io/rpc

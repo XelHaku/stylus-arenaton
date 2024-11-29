@@ -92,18 +92,18 @@ pub enum ATONError {
 #[public]
 #[inherit(Erc20<ATONParams>,Ownable,AccessControl)]
 impl ATON {
-    pub fn debug_mint_aton(&mut self) -> Result<(), Vec<u8>> {
+    pub fn debug_mint_aton(&mut self) -> Result<bool, Vec<u8>> {
         let _ = self.erc20.mint(msg::sender(), msg::value());
-        Ok(())
-    }
-    pub fn transfer(&mut self, to: Address, value: U256) -> Result<bool, Erc20Error> {
-        self.erc20._transfer(msg::sender(), to, value)?; // _
         Ok(true)
     }
+    // pub fn transfer(&mut self, to: Address, value: U256) -> Result<bool, Erc20Error> {
+    //     self.erc20._transfer(msg::sender(), to, value)?; // _
+    //     Ok(true)
+    // }
     /// Allows a user to donate Ether to mint ATON tokens.
     /// The Ether is converted into ATON and credited to the sender's balance.
     /// Emits a `DonateATON` event.
-    pub fn donate_aton(&mut self) -> Result<(), ATONError> {
+    pub fn donate_aton(&mut self) -> Result<bool,ATONError> {
         let amount = msg::value(); // Ether sent with the transaction
         let sender = msg::sender(); // Address of the sender
 
@@ -121,7 +121,7 @@ impl ATON {
 
         // Emit the `DonateATON` event
         evm::log(DonateATON { sender, amount });
-        Ok(())
+        Ok(true)
     }
 
     pub fn stake_eth(&mut self, _player: Address) -> Result<bool, Vec<u8>> {
