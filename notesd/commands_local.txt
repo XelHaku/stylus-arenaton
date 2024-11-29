@@ -6,7 +6,7 @@ cd nitro-devnode
 cargo stylus check
 cargo stylus export-abi
 cargo stylus deploy --private-key 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659     
-cargo stylus verify --deployment-tx 0x9c95bfdb4e7e4de64ca32a96fd750dd078b2dd326f8cba66b8a5b6a7f443f7b2     
+cargo stylus verify --deployment-tx 0xff9393aa5b2b85fb88dd94136bbecb66226b6c6806707979d01e95aa473cdcfe     
 
  cargo stylus cache bid 96c9cd6c626547df0048e8a2fb512f4401772f58 0 --private-key 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659 
 

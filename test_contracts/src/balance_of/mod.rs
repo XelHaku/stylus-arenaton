@@ -1,73 +1,77 @@
 use ethers::prelude::*;
 use ethers::providers::{Http, Provider};
 use ethers::types::Address;
-use ethers::contract::Contract;
-use dotenv::dotenv;
-use std::sync::Arc;
-use ethers::abi::Abi;
-
-// Add this line to import the necessary eyre types
 use eyre::{Result, WrapErr};
+use std::sync::Arc;
 
+// Mark this function as async without the #[tokio::main] attribute
 pub async fn balance_of() -> Result<()> {
-    // Load environment variables
-    dotenv().ok();
+    // RPC URL for your local Ethereum node
+    let rpc_url = "http://127.0.0.1:8545";
+    let provider = Arc::new(Provider::<Http>::try_from(rpc_url)
+        .wrap_err("Failed to connect to the local Ethereum node")?);
 
-    // RPC URL (Replace with your Ethereum node URL)
-    let rpc_url = std::env::var("RPC_URL").unwrap_or_else(|_| "http://127.0.0.1:8545".into());
-    let provider = Provider::<Http>::try_from(rpc_url)?;
+    // Address to check (replace with the desired address)
+    let target_address: Address = "0x7e32b54800705876d3b5cfbc7d9c226a211f7c1a".parse()
+        .wrap_err("Invalid Ethereum address")?;
 
-    // Contract address (Replace with your contract address)
-    let contract_address: Address = "0x525c2aba45f66987217323e8a05ea400c65d06dc".parse()?;
+    // Fetch the balance
+    let balance = provider
+        .get_balance(target_address, None)
+        .await
+        .wrap_err("Failed to fetch balance from the local node")?;
 
-    // Contract ABI (Replace with the actual ABI)
-    let abi: Abi = serde_json::from_str(
-        r#"[
-   {
-    "constant": true,
-    "inputs": [
-        {
-            "name": "owner",
-            "type": "address"
-        }
-    ],
-    "name": "balanceOf",
-    "outputs": [
-        {
-            "name": "",
-            "type": "uint256"
-        }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-}
+    // Convert balance from Wei to Ether for readability
+    let balance_in_ether = ethers::utils::format_units(balance, 18)
+        .wrap_err("Failed to convert balance to Ether")?;
 
-]"#
-    )
-    .wrap_err("Error parsing ABI")?;
-
-    // Initialize the contract instance
-    let contract = Contract::new(contract_address, abi, Arc::new(provider));
-
-    // Replace with the address you want to query
-    let owner_address: Address = "0x525c2aba45f66987217323e8a05ea400c65d06dc".parse()?;
-
-    // Call the "balanceOf" function on the smart contract
-    let balance: U256 = contract
-        .method::<_, U256>("balanceOf", owner_address)?
-        .call()
-        .await?;
-
-    println!("Balance of {:?}: {}", owner_address, balance);
+    // Print the balance
+    println!("Balance of {:?}: {} ETH", target_address, balance_in_ether);
 
     Ok(())
 }
 
-#[tokio::main]
+#[tokio::main] // Only apply this to the main entry point
 async fn main() {
     // This will only run when the module is called by itself
     if let Err(err) = balance_of().await {
         eprintln!("Error: {:?}", err);
     }
 }
+
+
+
+// // src/main.rs
+
+// use ethers::prelude::*;
+// use ethers::providers::{Http, Provider};
+// use ethers::types::Address;
+// use eyre::{Result, WrapErr};
+// use std::sync::Arc;
+
+// #[tokio::main]
+// async fn main() -> Result<()> {
+//     // RPC URL for your local Ethereum node
+//     let rpc_url = "http://127.0.0.1:8547";
+//     let provider = Arc::new(Provider::<Http>::try_from(rpc_url)
+//         .wrap_err("Failed to connect to the local Ethereum node")?);
+
+//     // Address to check (replace with the desired address)
+//     let target_address: Address = "0x3f1Eae7D46d88F08fc2F8ed27FCb2AB183EB2d0E".parse()
+//         .wrap_err("Invalid Ethereum address")?;
+
+//     // Fetch the balance
+//     let balance = provider
+//         .get_balance(target_address, None)
+//         .await
+//         .wrap_err("Failed to fetch balance from the local node")?;
+
+//     // Convert balance from Wei to Ether for readability
+//     let balance_in_ether = ethers::utils::format_units(balance, 18)
+//         .wrap_err("Failed to convert balance to Ether")?;
+
+//     // Print the balance
+//     println!("Balance of {:?}: {} ETH", target_address, balance_in_ether);
+
+//     Ok(())
+// }
