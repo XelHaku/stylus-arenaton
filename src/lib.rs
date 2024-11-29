@@ -35,9 +35,11 @@ use alloy_sol_types::sol;
 
 use crate::erc20::{ Erc20, Erc20Params, Erc20Error };
 use alloy_primitives::{ Address, U256 };
-use stylus_sdk::{ evm, msg, contract, prelude::*, call::transfer_eth };
+use stylus_sdk::{ evm, msg, contract,  call::transfer_eth };
 use ownable::Ownable;
 use control::AccessControl;
+
+use stylus_sdk::prelude::*;
 
 /// Immutable definitions
 struct ATONParams;
@@ -80,6 +82,11 @@ sol! {
     event Accumulate(uint256 new_commission, uint256 accumulated, uint256 total);
     error ZeroEther(address sender);
     error ZeroAton(address sender);
+
+     #[derive(AbiType)]
+    struct Foo {
+        uint256 bar;
+    }
 }
 
 /// Represents the ways methods may fail.
