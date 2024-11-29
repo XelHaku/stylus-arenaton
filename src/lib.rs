@@ -30,6 +30,7 @@ mod constants;
 mod control;
 mod erc20;
 mod ownable;
+mod structs;
 use alloy_sol_types::sol;
 
 use crate::erc20::{ Erc20, Erc20Params, Erc20Error };
@@ -37,6 +38,7 @@ use alloy_primitives::{ Address, U256 };
 use stylus_sdk::{ evm, msg, contract, prelude::*, call::transfer_eth };
 use ownable::Ownable;
 use control::AccessControl;
+use structs::PlayerSummary;
 
 /// Immutable definitions
 struct ATONParams;
@@ -158,6 +160,12 @@ impl ATON {
         // let _ = self.access.only_role(constants::ARENATON_ENGINE_ROLE.into())?;
         // let _ = self.erc20.transfer_from(_player,contract::address(), _amount);
         Ok(true)
+    }
+
+
+        pub fn player_summary(&mut self, player: Address) -> Result<bool, ATONError> {
+let _player_commission = self._player_commission(player);
+     Ok(true)
     }
 
     //       /**
