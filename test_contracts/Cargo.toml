@@ -24,3 +24,7 @@ path = "src/debug_mint_aton/mod.rs"
 [[bin]]
 name = "balance_of"
 path = "src/balance_of/mod.rs"
+
+[[bin]]
+name = "name"
+path = "src/name/mod.rs"
