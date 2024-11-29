@@ -15,14 +15,12 @@ use stylus_sdk::{
 use crate::cryptography::ecdsa;
 
 /// Address of the `ecrecover` EVM precompile.
-pub const ECRECOVER_ADDR: Address =
-    address!("0000000000000000000000000000000000000001");
+pub const ECRECOVER_ADDR: Address = address!("0000000000000000000000000000000000000001");
 
 /// Upper range for `s` value from the signature.
 /// See [`check_if_malleable`].
-pub const SIGNATURE_S_UPPER_BOUND: U256 = uint!(
-    0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0_U256
-);
+pub const SIGNATURE_S_UPPER_BOUND: U256 =
+    uint!(0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0_U256);
 
 sol! {
     /// The signature derives the `Address::ZERO`.
@@ -140,9 +138,8 @@ fn _recover(
         return Err(ECDSAInvalidSignature {}.into());
     }
 
-    let recovered =
-        call::static_call(Call::new_in(storage), ECRECOVER_ADDR, &calldata)
-            .expect("should call `ecrecover` precompile");
+    let recovered = call::static_call(Call::new_in(storage), ECRECOVER_ADDR, &calldata)
+        .expect("should call `ecrecover` precompile");
 
     let recovered = Address::from_slice(&recovered[12..]);
 
@@ -209,16 +206,11 @@ mod tests {
 
     use super::*;
 
-    const MSG_HASH: B256 = b256!(
-        "a1de988600a42c4b4ab089b619297c17d53cffae5d5120d82d8a92d0bb3b78f2"
-    );
+    const MSG_HASH: B256 =
+        b256!("a1de988600a42c4b4ab089b619297c17d53cffae5d5120d82d8a92d0bb3b78f2");
     const V: u8 = 28;
-    const R: B256 = b256!(
-        "65e72b1cf8e189569963750e10ccb88fe89389daeeb8b735277d59cd6885ee82"
-    );
-    const S: B256 = b256!(
-        "3eb5a6982b540f185703492dab77b863a88ce01f27e21ade8b2879c10fc9e653"
-    );
+    const R: B256 = b256!("65e72b1cf8e189569963750e10ccb88fe89389daeeb8b735277d59cd6885ee82");
+    const S: B256 = b256!("3eb5a6982b540f185703492dab77b863a88ce01f27e21ade8b2879c10fc9e653");
 
     #[test]
     fn prepares_calldata() {
@@ -231,8 +223,7 @@ mod tests {
     fn rejects_invalid_s() {
         let invalid_s = SIGNATURE_S_UPPER_BOUND + uint!(1_U256);
         let invalid_s = B256::from_slice(&invalid_s.to_be_bytes_vec());
-        let err = check_if_malleable(&invalid_s)
-            .expect_err("should return ECDSAInvalidSignatureS");
+        let err = check_if_malleable(&invalid_s).expect_err("should return ECDSAInvalidSignatureS");
 
         assert!(matches!(err,
                 Error::InvalidSignatureS(ECDSAInvalidSignatureS {

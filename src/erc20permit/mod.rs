@@ -6,16 +6,23 @@
 //! Note that this code is unaudited and not fit for production use.
 
 // Imported packages
+use crate::cryptography::{ecdsa, eip712::IEip712};
 use alloy_primitives::{Address, U256};
 use alloy_sol_types::sol;
-use stylus_sdk::{evm, msg, prelude::*};
-use crate::cryptography::{ecdsa, eip712::IEip712};
+use stylus_sdk::{
+    evm,
+    msg,
+    block,
+    prelude::StorageType,
+    storage::TopLevelStorage,
+    stylus_proc::{public, sol_storage, SolidityError},
+};
 
 use crate::nonces::Nonces;
 
 sol_storage! {
     /// Erc20 implements all ERC-20 methods.
-    pub struct Erc20 {
+    pub struct Erc20<T: IEip712 + StorageType>{
 
         /// Maps users to balances
         mapping(address => uint256) balances;
@@ -24,8 +31,11 @@ sol_storage! {
         /// The total supply of the token
         uint256 total_supply;
 
-        /// Nonces contract.
+       /// Nonces contract.
         Nonces nonces;
+
+        /// EIP-712 contract. Must implement [`IEip712`] trait.
+        T eip712;
     }
 }
 
@@ -49,8 +59,6 @@ sol! {
     error ERC2612InvalidSigner(address signer, address owner);
 }
 
-
-
 /// A Permit error.
 #[derive(SolidityError)]
 pub enum Erc20Error {
@@ -61,14 +69,14 @@ pub enum Erc20Error {
     ExpiredSignature(ERC2612ExpiredSignature),
     /// Indicates an error related to the issue about mismatched signature.
     InvalidSigner(ERC2612InvalidSigner),
-
 }
 
 // These methods aren't exposed to other contracts
 // Methods marked as "pub" here are usable outside of the erc20 module (i.e. they're callable from lib.rs)
 // Note: modifying storage will become much prettier soon
-impl Erc20 {
-    /// Movement of funds between 2 accounts
+unsafe impl<T: IEip712 + StorageType> TopLevelStorage for Erc20<T> {}
+
+impl<T: IEip712 + StorageType> Erc20<T> {    /// Movement of funds between 2 accounts
     /// (invoked by the public transfer() and transfer_from() functions )
     pub fn _transfer(&mut self, from: Address, to: Address, value: U256) -> Result<(), Erc20Error> {
         // Decreasing sender balance
@@ -117,7 +125,7 @@ impl Erc20 {
 // These methods are public to other contracts
 // Note: modifying storage will become much prettier soon
 #[public]
-impl Erc20 {
+impl<T: IEip712 + StorageType> Erc20<T> {    /// Movement of funds between 2 accounts
     /// Immutable token name
     pub fn name() -> String {
         "ATON Stylus".into()

@@ -85,11 +85,7 @@ impl Nonces {
     ///
     /// Returns an error if the `nonce` is not the next valid nonce for the
     /// owner.
-    pub fn use_checked_nonce(
-        &mut self,
-        owner: Address,
-        nonce: U256,
-    ) -> Result<(), Error> {
+    pub fn use_checked_nonce(&mut self, owner: Address, nonce: U256) -> Result<(), Error> {
         let current_nonce = self._nonces.get(owner);
 
         if nonce != current_nonce {
@@ -106,4 +102,3 @@ impl Nonces {
         Ok(())
     }
 }
-

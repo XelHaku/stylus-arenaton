@@ -19,9 +19,8 @@ use stylus_sdk::{block, contract};
 /// keccak256("EIP712Domain(string name,string version,uint256 chainId,address
 /// verifyingContract)")
 pub const TYPE_HASH: [u8; 32] = [
-    0x8b, 0x73, 0xc3, 0xc6, 0x9b, 0xb8, 0xfe, 0x3d, 0x51, 0x2e, 0xcc, 0x4c,
-    0xf7, 0x59, 0xcc, 0x79, 0x23, 0x9f, 0x7b, 0x17, 0x9b, 0x0f, 0xfa, 0xca,
-    0xa9, 0xa7, 0x5d, 0x52, 0x2b, 0x39, 0x40, 0x0f,
+    0x8b, 0x73, 0xc3, 0xc6, 0x9b, 0xb8, 0xfe, 0x3d, 0x51, 0x2e, 0xcc, 0x4c, 0xf7, 0x59, 0xcc, 0x79,
+    0x23, 0x9f, 0x7b, 0x17, 0x9b, 0x0f, 0xfa, 0xca, 0xa9, 0xa7, 0x5d, 0x52, 0x2b, 0x39, 0x40, 0x0f,
 ];
 
 /// Field for the domain separator.
@@ -48,10 +47,7 @@ pub type DomainSeparatorTuple = sol! {
 ///
 /// [eth_signTypedData]: https://eips.ethereum.org/EIPS/eip-712
 #[must_use]
-pub fn to_typed_data_hash(
-    domain_separator: &[u8; 32],
-    struct_hash: &[u8; 32],
-) -> B256 {
+pub fn to_typed_data_hash(domain_separator: &[u8; 32], struct_hash: &[u8; 32]) -> B256 {
     let mut preimage = [0u8; 66];
     preimage[..2].copy_from_slice(&TYPED_DATA_PREFIX);
     preimage[2..34].copy_from_slice(domain_separator);
@@ -64,8 +60,9 @@ pub trait IEip712 {
     /// Immutable name of EIP-712 instance.
     const NAME: &'static str;
     /// Hashed name of EIP-712 instance.
-    const HASHED_NAME: [u8; 32] =
-        keccak_const::Keccak256::new().update(Self::NAME.as_bytes()).finalize();
+    const HASHED_NAME: [u8; 32] = keccak_const::Keccak256::new()
+        .update(Self::NAME.as_bytes())
+        .finalize();
 
     /// Immutable version of EIP-712 instance.
     const VERSION: &'static str;
@@ -90,9 +87,7 @@ pub trait IEip712 {
     /// # Arguments
     ///
     /// * `&self` - Read access to the contract's state.
-    fn eip712_domain(
-        &self,
-    ) -> ([u8; 1], String, String, U256, Address, [u8; 32], Vec<U256>) {
+    fn eip712_domain(&self) -> ([u8; 1], String, String, U256, Address, [u8; 32], Vec<U256>) {
         (
             FIELDS,
             Self::NAME.to_owned(),
@@ -143,8 +138,7 @@ mod tests {
 
     const CHAIN_ID: U256 = uint!(42161_U256);
 
-    const CONTRACT_ADDRESS: Address =
-        address!("000000000000000000000000000000000000dEaD");
+    const CONTRACT_ADDRESS: Address = address!("000000000000000000000000000000000000dEaD");
 
     #[derive(Default)]
     struct TestEIP712 {}
@@ -178,16 +172,11 @@ mod tests {
     #[test]
     fn test_to_typed_data_hash() {
         // TYPE_HASH
-        let domain_separator = b256!(
-            "8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f"
-        );
+        let domain_separator =
+            b256!("8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f");
         // bytes32("stylus");
-        let struct_hash = b256!(
-            "7379746c75730000000000000000000000000000000000000000000000000000"
-        );
-        let expected = b256!(
-            "cefc47137f8165d8270433dd62e395f5672966b83a113a7bb7b2805730a2197e"
-        );
+        let struct_hash = b256!("7379746c75730000000000000000000000000000000000000000000000000000");
+        let expected = b256!("cefc47137f8165d8270433dd62e395f5672966b83a113a7bb7b2805730a2197e");
 
         assert_eq!(
             expected,
