@@ -1,10 +1,17 @@
+
+
 git clone https://github.com/OffchainLabs/nitro-devnode.git
 cd nitro-devnode
 
 cargo stylus check
 cargo stylus export-abi
 cargo stylus deploy --private-key 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659     
-cargo stylus verify --deployment-tx 0xd73c81a3cb4ccd58df3f1855ed67ed8c4982b153c725796212b8320161e41914     
+cargo stylus verify --deployment-tx 0x9c95bfdb4e7e4de64ca32a96fd750dd078b2dd326f8cba66b8a5b6a7f443f7b2     
 
  cargo stylus cache bid 96c9cd6c626547df0048e8a2fb512f4401772f58 0 --private-key 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659 
 
+
+
+deployed code at address: 0xa6e41ffd769491a42a6e5ce453259b93983a22ef
+deployment tx hash: 0x9c95bfdb4e7e4de64ca32a96fd750dd078b2dd326f8cba66b8a5b6a7f443f7b2
+contract activated and ready onchain with tx hash: 0x3f5032940a9086bced2356ba106a59da0f7434d7e992268700387e2c86b3eb5c
