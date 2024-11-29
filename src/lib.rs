@@ -53,7 +53,7 @@ sol_storage! {
         #[borrow]
         Erc20 erc20;
         #[borrow]
-        Ownable owner;
+        Ownable ownable;
 
         #[borrow]
               AccessControl access;
