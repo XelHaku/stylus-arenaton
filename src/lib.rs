@@ -95,19 +95,16 @@ pub enum ATONError {
 // #[inherit(-)]
 impl ATON {
 
-     pub   fn symbol(&self) -> String {
-        "META".into()
-    }
 
      /// Immutable token name
     pub fn name() -> String {
         "ATON Stylus".into()
     }
 
-    // /// Immutable token symbol
-    // pub fn symbol() -> String {
-    //     "ATON".into()
-    // }
+    /// Immutable token symbol
+    pub fn symbol() -> String {
+        "ATON".into()
+    }
 
     /// Immutable token decimals
     pub fn decimals() -> u8 {
@@ -176,14 +173,14 @@ impl ATON {
         self.allowances.getter(owner).get(spender)
     }
     #[payable]
-    pub fn mint_aton(&mut self) -> Result<bool, ATONError> {
+    pub fn debug_mint_aton(&mut self) -> Result<bool, ATONError> {
         let _ = self.mint(msg::sender(), msg::value());
         Ok(true)
     }
 
 
     #[payable]
-    pub fn donate_aton(&mut self) -> Result<bool, ATONError> {
+    pub fn donate_eth(&mut self) -> Result<bool, ATONError> {
         let amount = msg::value(); // Ether sent with the transaction
         let sender = msg::sender(); // Address of the sender
 
@@ -204,7 +201,7 @@ impl ATON {
         Ok(true)
     }
 
-
+    #[payable]
     pub fn stake_eth(&mut self, _player: Address) -> Result<bool, Vec<u8>> {
         // self.access.only_role(constants::ARENATON_ENGINE_ROLE.into())?;
         let _ = self.mint(contract::address(), msg::value());
@@ -243,71 +240,8 @@ impl ATON {
         Ok(true)
     }
 
-    //         pub fn player_summary(&mut self, player: Address) -> Result<bool, ATONError> {
-    // let _player_commission = self._player_commission(player);
-    //      Ok(true)
-    //     }
-
-    //       /**
-    //    * @dev Retrieves a summary of a single player's data and includes global commission data,
-    //    * as well as a batch of event IDs (either active or closed).
-    //    * @param playerAddress The address of the player.
-    //    * @return summary A PlayerSummary struct containing the player's summary data.
-    //    * @return totalCommission The total commission in ATON.
-    //    * @return accumulatedCommission The accumulated commission per token.
-    //    */
-    //   function playerSummary(
-    //     address playerAddress
-    //   )
-    //     external
-    //     view
-    //     returns (AStructs.PlayerSummary memory summary, uint256 totalCommission, uint256 accumulatedCommission)
-    //   {
-    //     AStructs.Player storage player = players[playerAddress];
-
-    //     // Populate the player's summary
-    //     summary = AStructs.PlayerSummary({
-    //       level: player.level, // Player's current level
-    //       ethBalance: playerAddress.balance, // Player's ETH balance
-    //       atonBalance: balanceOf(playerAddress), // Player's ATON token balance
-    //       unclaimedCommission: _playerCommission(playerAddress), // Player's unclaimed commission
-    //       claimedCommission: player.claimedCommissionsByPlayer // Player's total claimed commission
-    //     });
-
-    //     // Assign the global data to the return values
-    //     totalCommission = totalCommissionInATON;
-    //     accumulatedCommission = accumulatedCommissionPerToken;
-
-    //     // Return the player's summary along with the global commission data
-    //     return (summary, totalCommission, accumulatedCommission);
-    //   }
 }
 
-//      /**
-//    * @dev Swaps ATON tokens for ETH at a 1:1 ratio.
-//    * @param _amountAton The amount of ATON tokens to swap.
-//    * @return success True if the swap was successful.
-//    */
-//   function swap(uint256 _amountAton) external nonReentrant returns (bool success) {
-//     require(_amountAton > 0, "Swap amount must be greater than zero");
-//     require(balanceOf(msg.sender) >= _amountAton, "Insufficient ATON balance");
-//     require(address(this).balance >= _amountAton, "Contract has insufficient ETH balance");
-
-//     // Step 1: Transfer ATON tokens to the contract
-//     _distributeTransfer(msg.sender, address(this), _amountAton);
-
-//     // Step 2: Burn the ATON tokens from the contract to maintain the 1:1 swap mechanism
-//     _burn(address(this), _amountAton);
-
-//     // Step 3: Transfer Ether to the sender (after state changes)
-//     (bool sent, ) = msg.sender.call{ value: _amountAton }("");
-//     require(sent, "Failed to send ETH");
-
-//     // Emit the swap event after successful transfer
-//     emit EventsLib.Swap(msg.sender, _amountAton);
-
-//     return true;
-//   }
 
 // Private Functions
 impl ATON {
