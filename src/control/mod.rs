@@ -114,10 +114,10 @@ sol_storage! {
     }
 }
 
+pub const DEFAULT_ADMIN_ROLE: [u8; 32] = [0; 32];
 #[public]
 impl AccessControl {
     /// The default admin role. `[0; 32]` by default.
-    pub const DEFAULT_ADMIN_ROLE: [u8; 32] = [0; 32];
 
     /// Returns `true` if `account` has been granted `role`.
     ///

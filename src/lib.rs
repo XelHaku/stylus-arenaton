@@ -27,6 +27,7 @@ extern crate alloc;
 
 // Modules and imports
 mod constants;
+mod control;
 // mod ownable;
 mod structs;
 use alloy_sol_types::sol;
@@ -36,6 +37,8 @@ use stylus_sdk::{ contract, evm, msg };
 use stylus_sdk::call::transfer_eth;
 use stylus_sdk::prelude::*;
 
+use control::AccessControl;
+
 
 // Define the entrypoint as a Solidity storage object. The sol_storage! macro
 // will generate Rust-equivalent structs with all fields mapped to Solidity-equivalent
@@ -43,6 +46,8 @@ use stylus_sdk::prelude::*;
 sol_storage! {
     #[entrypoint]
     struct ATON {
+        #[borrow]
+        AccessControl access;
 
 
           uint256  accumulated_commission_per_token;
@@ -92,7 +97,7 @@ pub enum ATONError {
 }
 
 #[public]
-// #[inherit(-)]
+#[inherit(AccessControl)]
 impl ATON {
 
 
