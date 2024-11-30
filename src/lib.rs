@@ -202,6 +202,7 @@ impl ATON {
         Ok(true)
     }
 
+
     pub fn stake_eth(&mut self, _player: Address) -> Result<bool, Vec<u8>> {
         // self.access.only_role(constants::ARENATON_ENGINE_ROLE.into())?;
         let _ = self.mint(contract::address(), msg::value());
