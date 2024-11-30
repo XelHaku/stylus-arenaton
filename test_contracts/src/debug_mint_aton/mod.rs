@@ -20,8 +20,8 @@ pub async fn debug_mint_aton() -> Result<()> { // Use eyre::Result and make it p
     let provider = Provider::<Http>::try_from(rpc_url)?;
 
     // Private Key (Replace with your private key, securely load it from ENV in production)
-    let private_key = std::env::var("PRIVATE_KEY_NODE")
-        .expect("Please set the PRIVATE_KEY_NODE environment variable");
+    let private_key = std::env::var("PRIVATE_KEY")
+        .expect("Please set the PRIVATE_KEY environment variable");
     let wallet: LocalWallet = private_key
         .parse::<LocalWallet>()?
         .with_chain_id(1337u64); // Use the correct chain ID 

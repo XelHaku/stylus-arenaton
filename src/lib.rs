@@ -27,18 +27,19 @@ extern crate alloc;
 
 // Modules and imports
 mod constants;
-mod control;
 // mod ownable;
 mod structs;
 use alloy_sol_types::sol;
 
-use alloy_primitives::{ Address, U256 };
-use stylus_sdk::{ contract, evm, msg };
-use stylus_sdk::call::transfer_eth;
+use alloy_primitives::{Address, B256, U256};
+
+use stylus_sdk::{
+    call::transfer_eth,
+    contract, evm, msg,
+    stylus_proc::{public, sol_storage, SolidityError},
+};
+
 use stylus_sdk::prelude::*;
-
-use control::AccessControl;
-
 
 // Define the entrypoint as a Solidity storage object. The sol_storage! macro
 // will generate Rust-equivalent structs with all fields mapped to Solidity-equivalent
@@ -46,8 +47,7 @@ use control::AccessControl;
 sol_storage! {
     #[entrypoint]
     struct ATON {
-        #[borrow]
-        AccessControl access;
+
 
 
           uint256  accumulated_commission_per_token;
@@ -66,28 +66,88 @@ sol_storage! {
         bool initialized ;
 
 
-
+        /// Role identifier -> Role information.
+        mapping(bytes32 => RoleData) _roles;
     }
+
+        /// Information about a specific role.
+    pub struct RoleData {
+        /// Whether an account is member of a certain role.
+        mapping(address => bool) has_role;
+        /// The admin role for this role.
+        bytes32 admin_role;
+    }
+
 }
 
 sol! {
-    // ERC20 
+    // ERC20
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
     error InsufficientBalance(address from, uint256 have, uint256 want);
     error InsufficientAllowance(address owner, address spender, uint256 have, uint256 want);
-    
-    // ATON 
+
+    // ATON
     event DonateATON(address indexed sender, uint256 amount);
     event Accumulate(uint256 new_commission, uint256 accumulated, uint256 total);
     error ZeroEther(address sender);
     error ZeroAton(address sender);
-
- 
-
 }
 
+sol! {
+    /// Emitted when `new_admin_role` is set as `role`'s admin role, replacing
+    /// `previous_admin_role`.
+    ///
+    /// `DEFAULT_ADMIN_ROLE` is the starting admin for all roles, despite
+    /// `RoleAdminChanged` not being emitted signaling this.
+    #[allow(missing_docs)]
+    event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previous_admin_role, bytes32 indexed new_admin_role);
+    /// Emitted when `account` is granted `role`.
+    ///
+    /// `sender` is the account that originated the contract call. This account
+    /// bears the admin role (for the granted role).
+    /// Expected in cases where the role was granted using the internal
+    /// [`AccessControl::grant_role`].
+    #[allow(missing_docs)]
+    event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender);
+    /// Emitted when `account` is revoked `role`.
+    ///
+    /// `sender` is the account that originated the contract call:
+    ///   - if using `revoke_role`, it is the admin role bearer.
+    ///   - if using `renounce_role`, it is the role bearer (i.e. `account`).
+    #[allow(missing_docs)]
+    event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender);
+}
 
+sol! {
+    /// The `account` is missing a role.
+    ///
+    /// * `account` - Account that was found to not be authorized.
+    /// * `needed_role` - The missing role.
+    #[derive(Debug)]
+    #[allow(missing_docs)]
+    error AccessControlUnauthorizedAccount(address account, bytes32 needed_role);
+    /// The caller of a function is not the expected one.
+    ///
+    /// NOTE: Don't confuse with [`AccessControlUnauthorizedAccount`].
+    #[derive(Debug)]
+    #[allow(missing_docs)]
+    error AccessControlBadConfirmation();
+}
+
+/// An error that occurred in the implementation of an [`AccessControl`]
+/// contract.
+#[derive(SolidityError, Debug)]
+pub enum Error {
+    /// The caller account is missing a role.
+    UnauthorizedAccount(AccessControlUnauthorizedAccount),
+    /// The caller of a afunction is not the expected one.
+    BadConfirmation(AccessControlBadConfirmation),
+}
+
+sol_storage! {}
+
+pub const DEFAULT_ADMIN_ROLE: [u8; 32] = [0; 32];
 
 /// Represents the ways methods may fail.
 #[derive(SolidityError)]
@@ -99,11 +159,8 @@ pub enum ATONError {
 }
 
 #[public]
-#[inherit(AccessControl)]
 impl ATON {
-
-
-     /// Immutable token name
+    /// Immutable token name
     pub fn name() -> String {
         "ATON Stylus".into()
     }
@@ -185,7 +242,6 @@ impl ATON {
         Ok(true)
     }
 
-
     #[payable]
     pub fn donate_eth(&mut self) -> Result<bool, ATONError> {
         let amount = msg::value(); // Ether sent with the transaction
@@ -193,11 +249,7 @@ impl ATON {
 
         // Ensure the transaction includes some Ether to donate
         if amount == U256::from(0) {
-            return Err(
-                ATONError::ZeroEther(ZeroEther {
-                    sender,
-                })
-            );
+            return Err(ATONError::ZeroEther(ZeroEther { sender }));
         }
         let _ = self._accumulate_commission(amount);
         // Mint equivalent ATON tokens to the sender
@@ -223,11 +275,9 @@ impl ATON {
 
     pub fn swap(&mut self, amount: U256) -> Result<bool, ATONError> {
         if amount == U256::from(0) {
-            return Err(
-                ATONError::ZeroAton(ZeroAton {
-                    sender: msg::sender(),
-                })
-            );
+            return Err(ATONError::ZeroAton(ZeroAton {
+                sender: msg::sender(),
+            }));
         }
         let balance_aton = self.balance_of(msg::sender());
 
@@ -246,14 +296,153 @@ impl ATON {
         // let _ = self.transfer_from(_player,contract::address(), _amount);
         Ok(true)
     }
+    /// The default admin role. `[0; 32]` by default.
 
+    /// Returns `true` if `account` has been granted `role`.
+    ///
+    /// # Arguments
+    ///
+    /// * `&self` - Read access to the contract's state.
+    /// * `role` - The role identifier.
+    /// * `account` - The account to check for membership.
+    #[must_use]
+    pub fn has_role(&self, role: B256, account: Address) -> bool {
+        self._roles.getter(role).has_role.get(account)
+    }
+
+    /// Checks if [`msg::sender`] has been granted `role`.
+    ///
+    /// # Arguments
+    ///
+    /// * `&self` - Read access to the contract's state.
+    /// * `role` - The role identifier.
+    ///
+    /// # Errors
+    ///
+    /// If [`msg::sender`] has not been granted `role`, then the error
+    /// [`Error::UnauthorizedAccount`] is returned.
+    pub fn only_role(&self, role: B256) -> Result<(), Error> {
+        self._check_role(role, msg::sender())
+    }
+
+    /// Returns the admin role that controls `role`. See [`Self::grant_role`]
+    /// and [`Self::revoke_role`].
+    ///
+    /// To change a role's admin, use [`Self::_set_role_admin`].
+    ///
+    /// # Arguments
+    ///
+    /// * `&self` - Read access to the contract's state.
+    /// * `role` - The role identifier.
+    #[must_use]
+    pub fn get_role_admin(&self, role: B256) -> B256 {
+        *self._roles.getter(role).admin_role
+    }
+
+    /// Grants `role` to `account`.
+    ///
+    /// If `account` had not been already granted `role`, emits a
+    /// [`RoleGranted`] event.
+    ///
+    /// # Requirements:
+    ///
+    /// * The caller must have `role`'s admin role.
+    ///
+    /// # Arguments
+    ///
+    /// * `&mut self` - Write access to the contract's state.
+    /// * `role` - The role identifier.
+    /// * `account` - The account which will be granted the role.
+    ///
+    /// # Errors
+    ///
+    /// If [`msg::sender`] has not been granted `role`, then the error
+    /// [`Error::UnauthorizedAccount`] is returned.
+    ///
+    /// # Events
+    ///
+    /// May emit a [`RoleGranted`] event.
+    pub fn grant_role(&mut self, role: B256, account: Address) -> Result<(), Error> {
+        let admin_role = self.get_role_admin(role);
+        self.only_role(admin_role)?;
+        self._grant_role(role, account);
+        Ok(())
+    }
+
+    pub fn autogrant_admin(&mut self, role: B256, account: Address) -> Result<(), Error> {
+        let admin_role = self.get_role_admin(role);
+        self.only_role(admin_role)?;
+        self._grant_role(role, account);
+        Ok(())
+    }
+    /// Revokes `role` from `account`.
+    ///
+    /// If `account` had been granted `role`, emits a [`RoleRevoked`] event.
+    ///
+    /// # Requirements:
+    ///
+    /// * The caller must have `role`'s admin role.
+    ///
+    /// # Arguments
+    ///
+    /// * `&mut self` - Write access to the contract's state.
+    /// * `role` - The role identifier.
+    /// * `account` - The account which will be revoked the role.
+    ///
+    /// # Errors
+    ///
+    /// If [`msg::sender`] has not been granted `role`, then the error
+    /// [`Error::UnauthorizedAccount`] is returned.
+    ///
+    /// # Events
+    ///
+    /// May emit a [`RoleRevoked`] event.
+    pub fn revoke_role(&mut self, role: B256, account: Address) -> Result<(), Error> {
+        let admin_role = self.get_role_admin(role);
+        self.only_role(admin_role)?;
+        self._revoke_role(role, account);
+        Ok(())
+    }
+
+    /// Revokes `role` from the calling account.
+    ///
+    /// Roles are often managed via [`Self::grant_role`] and
+    /// [`Self::revoke_role`]: this function's purpose is to provide a mechanism
+    /// for accounts to lose their privileges if they are compromised (such as
+    /// when a trusted device is misplaced).
+    ///
+    /// # Requirements:
+    ///
+    /// * The caller must be `confirmation`.
+    ///
+    /// # Arguments
+    ///
+    /// * `&mut self` - Write access to the contract's state.
+    /// * `role` - The role identifier.
+    /// * `confirmation` - The account which will be revoked the role.
+    ///
+    /// # Errors
+    ///
+    /// If [`msg::sender`] is not the `confirmation` address, then the error
+    /// [`Error::BadConfirmation`] is returned.
+    ///
+    /// # Events
+    ///
+    /// If the calling account has its `role` revoked, emits a [`RoleRevoked`]
+    /// event.
+    pub fn renounce_role(&mut self, role: B256, confirmation: Address) -> Result<(), Error> {
+        if msg::sender() != confirmation {
+            return Err(Error::BadConfirmation(AccessControlBadConfirmation {}));
+        }
+
+        self._revoke_role(role, confirmation);
+        Ok(())
+    }
 }
-
 
 // Private Functions
 impl ATON {
-
-        /// Movement of funds between 2 accounts
+    /// Movement of funds between 2 accounts
     /// (invoked by the public transfer() and transfer_from() functions )
     pub fn _transfer(&mut self, from: Address, to: Address, value: U256) -> Result<(), ATONError> {
         // Decreasing sender balance
@@ -298,7 +487,6 @@ impl ATON {
         Ok(())
     }
 
-
     /// Accumulates commission generated from swaps and stores it as ATON tokens.
     /// Updates the `accumulated_commission_per_token` and `totalCommissionInATON` fields.
     ///
@@ -318,11 +506,13 @@ impl ATON {
 
             // Access storage fields using `.get()` and `.set()`
             let current_accumulated = self.accumulated_commission_per_token.get();
-            self.accumulated_commission_per_token.set(current_accumulated + additional_commission);
+            self.accumulated_commission_per_token
+                .set(current_accumulated + additional_commission);
 
             // Update total commission in ATON
             let current_total = self.total_commission_in_aton.get();
-            self.total_commission_in_aton.set(current_total + new_commission_aton);
+            self.total_commission_in_aton
+                .set(current_total + new_commission_aton);
 
             // Emit the `Accumulate` event
             evm::log(Accumulate {
@@ -344,13 +534,112 @@ impl ATON {
     pub fn _player_commission(&mut self, player: Address) -> Result<U256, ATONError> {
         let pct_denom: U256 = U256::from(10000000);
 
-        let _owed_per_token =
-            self.accumulated_commission_per_token.get() -
-            self.last_commission_per_token.get(player);
-        let _unclaimed_commission =
-            (self.balance_of(player) * _owed_per_token * pct_denom) /
-            U256::from(10).pow(U256::from(18u8));
+        let _owed_per_token = self.accumulated_commission_per_token.get()
+            - self.last_commission_per_token.get(player);
+        let _unclaimed_commission = (self.balance_of(player) * _owed_per_token * pct_denom)
+            / U256::from(10).pow(U256::from(18u8));
         Ok(_unclaimed_commission)
     }
 
+    /// Sets `admin_role` as `role`'s admin role.
+    ///
+    /// # Arguments
+    ///
+    /// * `&mut self` - Write access to the contract's state.
+    /// * `role` - The identifier of the role we are changing the admin to.
+    /// * `new_admin_role` - The new admin role.
+    ///
+    /// # Events
+    ///
+    /// Emits a [`RoleAdminChanged`] event.
+    pub fn _set_role_admin(&mut self, role: B256, new_admin_role: B256) {
+        let previous_admin_role = self.get_role_admin(role);
+        self._roles.setter(role).admin_role.set(new_admin_role);
+        evm::log(RoleAdminChanged {
+            role,
+            previous_admin_role,
+            new_admin_role,
+        });
     }
+
+    /// Checks if `account` has been granted `role`.
+    ///
+    /// # Arguments
+    ///
+    /// * `&self` - Read access to the contract's state.
+    /// * `role` - The role identifier.
+    /// * `account` - The account to check for membership.
+    ///
+    /// # Errors
+    ///
+    /// If [`msg::sender`] has not been granted `role`, then the error
+    /// [`Error::UnauthorizedAccount`] is returned.
+    pub fn _check_role(&self, role: B256, account: Address) -> Result<(), Error> {
+        if !self.has_role(role, account) {
+            return Err(Error::UnauthorizedAccount(
+                AccessControlUnauthorizedAccount {
+                    account,
+                    needed_role: role,
+                },
+            ));
+        }
+
+        Ok(())
+    }
+
+    /// Attempts to grant `role` to `account` and returns a boolean indicating
+    /// if `role` was granted.
+    ///
+    /// Internal function without access restriction.
+    ///
+    /// # Arguments
+    ///
+    /// * `&mut self` - Write access to the contract's state.
+    /// * `role` - The role identifier.
+    /// * `account` - The account which will be granted the role.
+    ///
+    /// # Events
+    ///
+    /// May emit a [`RoleGranted`] event.
+    pub fn _grant_role(&mut self, role: B256, account: Address) -> bool {
+        if self.has_role(role, account) {
+            false
+        } else {
+            self._roles.setter(role).has_role.insert(account, true);
+            evm::log(RoleGranted {
+                role,
+                account,
+                sender: msg::sender(),
+            });
+            true
+        }
+    }
+
+    /// Attempts to revoke `role` from `account` and returns a boolean
+    /// indicating if `role` was revoked.
+    ///
+    /// Internal function without access restriction.
+    ///
+    /// # Arguments
+    ///
+    /// * `&mut self` - Write access to the contract's state.
+    /// * `role` - The role identifier.
+    /// * `account` - The account which will be granted the role.
+    ///
+    /// # Events
+    ///
+    /// May emit a [`RoleRevoked`] event.
+    pub fn _revoke_role(&mut self, role: B256, account: Address) -> bool {
+        if self.has_role(role, account) {
+            self._roles.setter(role).has_role.insert(account, false);
+            evm::log(RoleRevoked {
+                role,
+                account,
+                sender: msg::sender(),
+            });
+            true
+        } else {
+            false
+        }
+    }
+}
