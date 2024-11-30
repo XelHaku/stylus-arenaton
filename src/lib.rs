@@ -37,8 +37,8 @@ use crate::erc20::{Erc20, Erc20Error};
 use alloy_primitives::{Address, U256};
 // use control::AccessControl;
 // use ownable::Ownable;
-use stylus_sdk::{evm, msg};
-
+use stylus_sdk::{contract,evm, msg};
+use stylus_sdk::call::transfer_eth;
 use stylus_sdk::prelude::*;
 
 // Define the entrypoint as a Solidity storage object. The sol_storage! macro
@@ -88,74 +88,68 @@ pub enum ATONError {
 #[public]
 #[inherit(Erc20)]
 impl ATON {
-    pub fn mint_aton(&mut self) -> Result<bool, Vec<u8>> {
+    pub fn mint_aton(&mut self) -> Result<bool, ATONError> {
         let _ = self.erc20.mint(msg::sender(), msg::value());
         Ok(true)
     }
-    //     // pub fn transfer(&mut self, to: Address, value: U256) -> Result<bool, Erc20Error> {
-    //     //     self.erc20._transfer(msg::sender(), to, value)?; // _
-    //     //     Ok(true)
-    //     // }
-    //     /// Allows a user to donate Ether to mint ATON tokens.
-    //     /// The Ether is converted into ATON and credited to the sender's balance.
-    //     /// Emits a `DonateATON` event.
-    //     pub fn donate_aton(&mut self) -> Result<bool,ATONError> {
-    //         let amount = msg::value(); // Ether sent with the transaction
-    //         let sender = msg::sender(); // Address of the sender
 
-    //         // Ensure the transaction includes some Ether to donate
-    //         if amount == U256::from(0) {
-    //             return Err(
-    //                 ATONError::ZeroEther(ZeroEther {
-    //                     sender,
-    //                 })
-    //             );
-    //         }
-    //         let _ = self._accumulate_commission(amount);
-    //         // Mint equivalent ATON tokens to the sender
-    //         let _ = self.erc20.mint(contract::address(), amount);
+        pub fn donate_aton(&mut self) -> Result<bool,ATONError> {
+            let amount = msg::value(); // Ether sent with the transaction
+            let sender = msg::sender(); // Address of the sender
 
-    //         // Emit the `DonateATON` event
-    //         evm::log(DonateATON { sender, amount });
-    //         Ok(true)
-    //     }
+            // Ensure the transaction includes some Ether to donate
+            if amount == U256::from(0) {
+                return Err(
+                    ATONError::ZeroEther(ZeroEther {
+                        sender,
+                    })
+                );
+            }
+            let _ = self._accumulate_commission(amount);
+            // Mint equivalent ATON tokens to the sender
+            let _ = self.erc20.mint(contract::address(), amount);
 
-    //     pub fn stake_eth(&mut self, _player: Address) -> Result<bool, Vec<u8>> {
-    //         self.access.only_role(constants::ARENATON_ENGINE_ROLE.into())?;
-    //         let _ = self.erc20.mint(contract::address(), msg::value());
-    //         Ok(true)
-    //     }
+            // Emit the `DonateATON` event
+            evm::log(DonateATON { sender, amount });
+            Ok(true)
+        }
 
-    //     pub fn stake_aton(&mut self, _player: Address, _amount: U256) -> Result<bool, Vec<u8>> {
-    //         let _ = self.access.only_role(constants::ARENATON_ENGINE_ROLE.into())?;
-    //         let _ = self.erc20.transfer_from(_player, contract::address(), _amount);
-    //         Ok(true)
-    //     }
+        pub fn stake_eth(&mut self, _player: Address) -> Result<bool, Vec<u8>> {
+            // self.access.only_role(constants::ARENATON_ENGINE_ROLE.into())?;
+            let _ = self.erc20.mint(contract::address(), msg::value());
+            Ok(true)
+        }
 
-    //     pub fn swap(&mut self, amount: U256) -> Result<bool, ATONError> {
-    //         if amount == U256::from(0) {
-    //  return Err(
-    //                 ATONError::ZeroAton(ZeroAton {
-    //                     sender: msg::sender(),
-    //                 })
-    //             );        }
-    //         let balance_aton = self.erc20.balance_of(msg::sender());
+        pub fn stake_aton(&mut self, _player: Address, _amount: U256) -> Result<bool, Vec<u8>> {
+            // let _ = self.access.only_role(constants::ARENATON_ENGINE_ROLE.into())?;
+            let _ = self.erc20.transfer_from(_player, contract::address(), _amount);
+            Ok(true)
+        }
 
-    //         if balance_aton < amount {
-    //             return Ok(true); // error
-    //         }
-    //         let balance_eth = contract::balance();
+        pub fn swap(&mut self, amount: U256) -> Result<bool, ATONError> {
+            if amount == U256::from(0) {
+     return Err(
+                    ATONError::ZeroAton(ZeroAton {
+                        sender: msg::sender(),
+                    })
+                );        }
+            let balance_aton = self.erc20.balance_of(msg::sender());
 
-    //         if balance_eth < amount {
-    //             return Ok(true); // error
-    //         }
+            if balance_aton < amount {
+                return Ok(true); // error
+            }
+            let balance_eth = contract::balance();
 
-    //         let _ = transfer_eth(msg::sender(), amount); // these two are equivalent
+            if balance_eth < amount {
+                return Ok(true); // error
+            }
 
-    //         // let _ = self.access.only_role(constants::ARENATON_ENGINE_ROLE.into())?;
-    //         // let _ = self.erc20.transfer_from(_player,contract::address(), _amount);
-    //         Ok(true)
-    //     }
+            let _ = transfer_eth(msg::sender(), amount); // these two are equivalent
+
+            // let _ = self.access.only_role(constants::ARENATON_ENGINE_ROLE.into())?;
+            // let _ = self.erc20.transfer_from(_player,contract::address(), _amount);
+            Ok(true)
+        }
 
     //         pub fn player_summary(&mut self, player: Address) -> Result<bool, ATONError> {
     // let _player_commission = self._player_commission(player);
