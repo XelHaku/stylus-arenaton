@@ -28,21 +28,18 @@ extern crate alloc;
 // Modules and imports
 mod constants;
 // mod control;
-mod cryptography;
-mod erc20permit;
-mod nonces;
+mod erc20;
 // mod ownable;
 mod structs;
 use alloy_sol_types::sol;
 
-use crate::erc20permit::{Erc20, Erc20Error};
+use crate::erc20::{Erc20, Erc20Error};
 use alloy_primitives::{Address, U256};
 // use control::AccessControl;
 // use ownable::Ownable;
 use stylus_sdk::{evm, msg};
 
 use stylus_sdk::prelude::*;
-use crate::cryptography::eip712::IEip712;
 
 // Define the entrypoint as a Solidity storage object. The sol_storage! macro
 // will generate Rust-equivalent structs with all fields mapped to Solidity-equivalent
@@ -52,7 +49,7 @@ sol_storage! {
     struct ATON {
         // Allows erc20 to access ATON's storage and make calls
         #[borrow]
-        Erc20<Eip712> erc20;
+        Erc20 erc20;
         // #[borrow]
         // Ownable ownable;
 
@@ -70,14 +67,6 @@ sol_storage! {
 
 
     }
-
-
-    struct Eip712 {}
-}
-
-impl IEip712 for Eip712 {
-    const NAME: &'static str = "ERC-20 Permit Example";
-    const VERSION: &'static str = "1";
 }
 
 sol! {
@@ -100,7 +89,7 @@ pub enum ATONError {
 }
 
 #[public]
-#[inherit(Erc20<Eip712>)]
+#[inherit(Erc20)]
 impl ATON {
     pub fn debug_mint_aton(&mut self) -> Result<bool, Vec<u8>> {
         let _ = self.erc20.mint(msg::sender(), msg::value());
