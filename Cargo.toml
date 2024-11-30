@@ -14,15 +14,13 @@ description = "Stylus hello world example"
 stylus-sdk = { version = "=0.7.0-beta.0" }
 hex = "0.4.3"
 dotenv = "0.15.0"
-
-
-alloy-primitives =  "=0.8.13"
-alloy-sol-types =  "=0.8.13"
-alloy-sol-macro =  "=0.8.13"
+alloy-primitives = "0.8.13"
+alloy-sol-types = "0.8.13"
+alloy-sol-macro = "0.8.13"
 cfg-if = "0.1"
-derivative = "=2.2.0"
-keccak-const = "=0.2.0"
-stylus-proc = "=0.7.0-beta.0"
+derivative = "2.2.0"
+keccak-const = "0.2.0"
+stylus-proc = "0.6.0"
 
 
 
@@ -49,3 +47,5 @@ strip = true
 lto = true
 panic = "abort"
 opt-level = "s"
+
+

@@ -36,6 +36,7 @@ use stylus_sdk::{ contract, evm, msg };
 use stylus_sdk::call::transfer_eth;
 use stylus_sdk::prelude::*;
 
+
 // Define the entrypoint as a Solidity storage object. The sol_storage! macro
 // will generate Rust-equivalent structs with all fields mapped to Solidity-equivalent
 // storage slots and types.
