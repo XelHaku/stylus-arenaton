@@ -108,10 +108,10 @@ impl Erc20 {
         "ATON Stylus".into()
     }
 
-    /// Immutable token symbol
-    pub fn symbol() -> String {
-        "ATON".into()
-    }
+    // /// Immutable token symbol
+    // pub fn symbol() -> String {
+    //     "ATON".into()
+    // }
 
     /// Immutable token decimals
     pub fn decimals() -> u8 {

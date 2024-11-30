@@ -88,6 +88,11 @@ pub enum ATONError {
 #[public]
 #[inherit(Erc20)]
 impl ATON {
+
+     pub   fn symbol(&self) -> String {
+        "META".into()
+    }
+
     pub fn mint_aton(&mut self) -> Result<bool, ATONError> {
         let _ = self.erc20.mint(msg::sender(), msg::value());
         Ok(true)
