@@ -91,7 +91,7 @@ pub enum ATONError {
 #[public]
 #[inherit(Erc20)]
 impl ATON {
-    pub fn debug_mint_aton(&mut self) -> Result<bool, Vec<u8>> {
+    pub fn mint_aton(&mut self) -> Result<bool, Vec<u8>> {
         let _ = self.erc20.mint(msg::sender(), msg::value());
         Ok(true)
     }
