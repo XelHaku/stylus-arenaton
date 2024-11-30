@@ -33,11 +33,11 @@ mod erc20;
 mod structs;
 use alloy_sol_types::sol;
 
-use crate::erc20::{Erc20, Erc20Error};
-use alloy_primitives::{Address, U256};
+use crate::erc20::{ Erc20, Erc20Error };
+use alloy_primitives::{ Address, U256 };
 // use control::AccessControl;
 // use ownable::Ownable;
-use stylus_sdk::{contract,evm, msg};
+use stylus_sdk::{ contract, evm, msg };
 use stylus_sdk::call::transfer_eth;
 use stylus_sdk::prelude::*;
 
@@ -93,63 +93,64 @@ impl ATON {
         Ok(true)
     }
 
-        pub fn donate_aton(&mut self) -> Result<bool,ATONError> {
-            let amount = msg::value(); // Ether sent with the transaction
-            let sender = msg::sender(); // Address of the sender
+    pub fn donate_aton(&mut self) -> Result<bool, ATONError> {
+        let amount = msg::value(); // Ether sent with the transaction
+        let sender = msg::sender(); // Address of the sender
 
-            // Ensure the transaction includes some Ether to donate
-            if amount == U256::from(0) {
-                return Err(
-                    ATONError::ZeroEther(ZeroEther {
-                        sender,
-                    })
-                );
-            }
-            let _ = self._accumulate_commission(amount);
-            // Mint equivalent ATON tokens to the sender
-            let _ = self.erc20.mint(contract::address(), amount);
+        // Ensure the transaction includes some Ether to donate
+        if amount == U256::from(0) {
+            return Err(
+                ATONError::ZeroEther(ZeroEther {
+                    sender,
+                })
+            );
+        }
+        let _ = self._accumulate_commission(amount);
+        // Mint equivalent ATON tokens to the sender
+        let _ = self.erc20.mint(contract::address(), amount);
 
-            // Emit the `DonateATON` event
-            evm::log(DonateATON { sender, amount });
-            Ok(true)
+        // Emit the `DonateATON` event
+        evm::log(DonateATON { sender, amount });
+        Ok(true)
+    }
+
+    pub fn stake_eth(&mut self, _player: Address) -> Result<bool, Vec<u8>> {
+        // self.access.only_role(constants::ARENATON_ENGINE_ROLE.into())?;
+        let _ = self.erc20.mint(contract::address(), msg::value());
+        Ok(true)
+    }
+
+    pub fn stake_aton(&mut self, _player: Address, _amount: U256) -> Result<bool, Vec<u8>> {
+        // let _ = self.access.only_role(constants::ARENATON_ENGINE_ROLE.into())?;
+        let _ = self.erc20.transfer_from(_player, contract::address(), _amount);
+        Ok(true)
+    }
+
+    pub fn swap(&mut self, amount: U256) -> Result<bool, ATONError> {
+        if amount == U256::from(0) {
+            return Err(
+                ATONError::ZeroAton(ZeroAton {
+                    sender: msg::sender(),
+                })
+            );
+        }
+        let balance_aton = self.erc20.balance_of(msg::sender());
+
+        if balance_aton < amount {
+            return Ok(true); // error
+        }
+        let balance_eth = contract::balance();
+
+        if balance_eth < amount {
+            return Ok(true); // error
         }
 
-        pub fn stake_eth(&mut self, _player: Address) -> Result<bool, Vec<u8>> {
-            // self.access.only_role(constants::ARENATON_ENGINE_ROLE.into())?;
-            let _ = self.erc20.mint(contract::address(), msg::value());
-            Ok(true)
-        }
+        let _ = transfer_eth(msg::sender(), amount); // these two are equivalent
 
-        pub fn stake_aton(&mut self, _player: Address, _amount: U256) -> Result<bool, Vec<u8>> {
-            // let _ = self.access.only_role(constants::ARENATON_ENGINE_ROLE.into())?;
-            let _ = self.erc20.transfer_from(_player, contract::address(), _amount);
-            Ok(true)
-        }
-
-        pub fn swap(&mut self, amount: U256) -> Result<bool, ATONError> {
-            if amount == U256::from(0) {
-     return Err(
-                    ATONError::ZeroAton(ZeroAton {
-                        sender: msg::sender(),
-                    })
-                );        }
-            let balance_aton = self.erc20.balance_of(msg::sender());
-
-            if balance_aton < amount {
-                return Ok(true); // error
-            }
-            let balance_eth = contract::balance();
-
-            if balance_eth < amount {
-                return Ok(true); // error
-            }
-
-            let _ = transfer_eth(msg::sender(), amount); // these two are equivalent
-
-            // let _ = self.access.only_role(constants::ARENATON_ENGINE_ROLE.into())?;
-            // let _ = self.erc20.transfer_from(_player,contract::address(), _amount);
-            Ok(true)
-        }
+        // let _ = self.access.only_role(constants::ARENATON_ENGINE_ROLE.into())?;
+        // let _ = self.erc20.transfer_from(_player,contract::address(), _amount);
+        Ok(true)
+    }
 
     //         pub fn player_summary(&mut self, player: Address) -> Result<bool, ATONError> {
     // let _player_commission = self._player_commission(player);
@@ -238,13 +239,11 @@ impl ATON {
 
             // Access storage fields using `.get()` and `.set()`
             let current_accumulated = self.accumulated_commission_per_token.get();
-            self.accumulated_commission_per_token
-                .set(current_accumulated + additional_commission);
+            self.accumulated_commission_per_token.set(current_accumulated + additional_commission);
 
             // Update total commission in ATON
             let current_total = self.total_commission_in_aton.get();
-            self.total_commission_in_aton
-                .set(current_total + new_commission_aton);
+            self.total_commission_in_aton.set(current_total + new_commission_aton);
 
             // Emit the `Accumulate` event
             evm::log(Accumulate {
@@ -266,10 +265,12 @@ impl ATON {
     pub fn _player_commission(&mut self, player: Address) -> Result<U256, Erc20Error> {
         let pct_denom: U256 = U256::from(10000000);
 
-        let _owed_per_token = self.accumulated_commission_per_token.get()
-            - self.last_commission_per_token.get(player);
-        let _unclaimed_commission = (self.erc20.balance_of(player) * _owed_per_token * pct_denom)
-            / U256::from(10).pow(U256::from(18u8));
+        let _owed_per_token =
+            self.accumulated_commission_per_token.get() -
+            self.last_commission_per_token.get(player);
+        let _unclaimed_commission =
+            (self.erc20.balance_of(player) * _owed_per_token * pct_denom) /
+            U256::from(10).pow(U256::from(18u8));
         Ok(_unclaimed_commission)
     }
 
