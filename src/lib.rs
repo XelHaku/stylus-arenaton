@@ -160,6 +160,12 @@ pub enum ATONError {
 
 #[public]
 impl ATON {
+
+    pub fn initialize_contract(&mut self, to: Address, value: U256) -> Result<bool, ATONError> {
+        // self._transfer(msg::sender(), to, value)?;
+        Ok(true)
+    }
+
     /// Immutable token name
     pub fn name() -> String {
         "ATON Stylus".into()
