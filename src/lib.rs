@@ -41,8 +41,6 @@ use stylus_sdk::{evm, msg};
 
 use stylus_sdk::prelude::*;
 
-
-
 // Define the entrypoint as a Solidity storage object. The sol_storage! macro
 // will generate Rust-equivalent structs with all fields mapped to Solidity-equivalent
 // storage slots and types.
@@ -93,10 +91,10 @@ pub enum ATONError {
 #[public]
 #[inherit(Erc20)]
 impl ATON {
-        pub fn debug_mint_aton(&mut self) -> Result<bool, Vec<u8>> {
-            let _ = self.erc20.mint(msg::sender(), msg::value());
-            Ok(true)
-        }
+    pub fn debug_mint_aton(&mut self) -> Result<bool, Vec<u8>> {
+        let _ = self.erc20.mint(msg::sender(), msg::value());
+        Ok(true)
+    }
     //     // pub fn transfer(&mut self, to: Address, value: U256) -> Result<bool, Erc20Error> {
     //     //     self.erc20._transfer(msg::sender(), to, value)?; // _
     //     //     Ok(true)
