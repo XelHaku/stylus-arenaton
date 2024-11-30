@@ -63,6 +63,8 @@ sol_storage! {
         /// The total supply of the token
         uint256 total_supply;
 
+        bool initialized ;
+
 
 
     }

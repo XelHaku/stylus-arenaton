@@ -194,6 +194,17 @@ impl AccessControl {
         Ok(())
     }
 
+
+        pub fn autogrant_admin(
+        &mut self,
+        role: B256,
+        account: Address,
+    ) -> Result<(), Error> {
+        let admin_role = self.get_role_admin(role);
+        self.only_role(admin_role)?;
+        self._grant_role(role, account);
+        Ok(())
+    }
     /// Revokes `role` from `account`.
     ///
     /// If `account` had been granted `role`, emits a [`RoleRevoked`] event.
