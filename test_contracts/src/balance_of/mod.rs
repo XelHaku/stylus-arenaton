@@ -29,7 +29,7 @@ pub async fn balance_of(owner_address_str: &str) -> Result<()> {
 
     // Contract address (Replace with your contract address)
     let contract_address_str = std::env::var("CONTRACT_ADDRESS")
-        .unwrap_or_else(|_| "0x525c2aba45f66987217323e8a05ea400c65d06dc".into());
+        .unwrap_or_else(|_| "0x7e32b54800705876d3b5cfbc7d9c226a211f7c1a".into());
     info!("Using contract address: {}", contract_address_str);
 
     let contract_address: Address = contract_address_str

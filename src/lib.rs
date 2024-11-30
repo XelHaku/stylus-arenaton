@@ -175,7 +175,7 @@ impl ATON {
     pub fn allowance(&self, owner: Address, spender: Address) -> U256 {
         self.allowances.getter(owner).get(spender)
     }
-
+    #[payable]
     pub fn mint_aton(&mut self) -> Result<bool, ATONError> {
         let _ = self.mint(msg::sender(), msg::value());
         Ok(true)

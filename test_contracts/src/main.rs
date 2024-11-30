@@ -21,6 +21,10 @@ async fn main() -> Result<()> {
 
     let player1 = "0x7e32b54800705876d3b5cfbc7d9c226a211f7c1a";
     balance_of(player1).await?;
+
+
+    addEvent(abc,1750000000).await?
+stake(ATON,player2,team1).await?
    
     // swap
   
