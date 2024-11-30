@@ -75,10 +75,7 @@ sol! {
     error ZeroEther(address sender);
     error ZeroAton(address sender);
 
-     #[derive(AbiType)]
-    struct Foo {
-        uint256 bar;
-    }
+ 
 }
 
 /// Represents the ways methods may fail.
