@@ -181,6 +181,8 @@ impl ATON {
         Ok(true)
     }
 
+
+    #[payable]
     pub fn donate_aton(&mut self) -> Result<bool, ATONError> {
         let amount = msg::value(); // Ether sent with the transaction
         let sender = msg::sender(); // Address of the sender
