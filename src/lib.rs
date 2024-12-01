@@ -161,7 +161,7 @@ pub enum ATONError {
 #[public]
 impl ATON {
 
-    pub fn initialize_contract(&mut self, to: Address, value: U256) -> Result<bool, ATONError> {
+    pub fn initialize_contract(&mut self) -> Result<bool, ATONError> {
         // self._transfer(msg::sender(), to, value)?;
         Ok(true)
     }
