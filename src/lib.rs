@@ -68,6 +68,8 @@ sol_storage! {
 
         /// Role identifier -> Role information.
         mapping(bytes32 => RoleData) _roles;
+
+        address owner;
     }
 
         /// Information about a specific role.
@@ -134,15 +136,26 @@ sol! {
     #[allow(missing_docs)]
     error AccessControlBadConfirmation();
 }
+sol! {
+    /// Emitted when ownership gets transferred between accounts.
+    ///
+    /// * `previous_owner` - Address of the previous owner.
+    /// * `new_owner` - Address of the new owner.
+    #[allow(missing_docs)]
+    event OwnershipTransferred(address indexed previous_owner, address indexed new_owner);
+}
+
+
 
 /// An error that occurred in the implementation of an [`AccessControl`]
 /// contract.
 #[derive(SolidityError, Debug)]
 pub enum Error {
     /// The caller account is missing a role.
-    UnauthorizedAccount(AccessControlUnauthorizedAccount),
+    AccessUnauthorizedAccount(AccessControlUnauthorizedAccount),
     /// The caller of a afunction is not the expected one.
     BadConfirmation(AccessControlBadConfirmation),
+
 }
 
 sol_storage! {}
@@ -326,7 +339,7 @@ impl ATON {
     /// # Errors
     ///
     /// If [`msg::sender`] has not been granted `role`, then the error
-    /// [`Error::UnauthorizedAccount`] is returned.
+    /// [`Error::AccessUnauthorizedAccount`] is returned.
     pub fn only_role(&self, role: B256) -> Result<(), Error> {
         self._check_role(role, msg::sender())
     }
@@ -363,7 +376,7 @@ impl ATON {
     /// # Errors
     ///
     /// If [`msg::sender`] has not been granted `role`, then the error
-    /// [`Error::UnauthorizedAccount`] is returned.
+    /// [`Error::AccessUnauthorizedAccount`] is returned.
     ///
     /// # Events
     ///
@@ -398,7 +411,7 @@ impl ATON {
     /// # Errors
     ///
     /// If [`msg::sender`] has not been granted `role`, then the error
-    /// [`Error::UnauthorizedAccount`] is returned.
+    /// [`Error::AccessUnauthorizedAccount`] is returned.
     ///
     /// # Events
     ///
@@ -579,10 +592,10 @@ impl ATON {
     /// # Errors
     ///
     /// If [`msg::sender`] has not been granted `role`, then the error
-    /// [`Error::UnauthorizedAccount`] is returned.
+    /// [`Error::AccessUnauthorizedAccount`] is returned.
     pub fn _check_role(&self, role: B256, account: Address) -> Result<(), Error> {
         if !self.has_role(role, account) {
-            return Err(Error::UnauthorizedAccount(
+            return Err(Error::AccessUnauthorizedAccount(
                 AccessControlUnauthorizedAccount {
                     account,
                     needed_role: role,
