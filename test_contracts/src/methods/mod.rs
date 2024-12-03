@@ -26,7 +26,7 @@ pub async fn name(rpc_url: &str, contract_address: &str) -> Result<()> {
     )
     .await?;
 
-    println!("Contract Name: {}", contract_name);
+    println!("\nContract Name: {}", contract_name);
     Ok(())
 }
 
@@ -51,7 +51,7 @@ pub async fn total_supply(rpc_url: &str, contract_address: &str) -> Result<()> {
     )
     .await?;
 
-    println!("Total Supply: {}", total_supply);
+    println!("\nTotal Supply: {}", total_supply);
     Ok(())
 }
 
@@ -84,7 +84,7 @@ pub async fn balance_of(
     )
     .await?;
 
-    println!("Balance of {}: {}", owner, balance);
+    println!("\nBalance of {}: {}", owner, balance);
     Ok(())
 }
 
@@ -115,8 +115,8 @@ pub async fn debug_mint_aton(
     .await?;
 
     match receipt {
-        Some(receipt) => println!("Transaction successful: {:?}", receipt),
-        None => println!("Transaction executed successfully, but no receipt was returned."),
+        Some(receipt) => println!("\nTransaction successful: {:?}", receipt),
+        None => println!("\nTransaction executed successfully, but no receipt was returned."),
     }
 
     Ok(())
@@ -161,8 +161,8 @@ let receipt = call_contract_method_signed( // Remove <bool>
 .await?;
 
     match receipt {
-        Some(receipt) => println!("Transaction successful: {:?}", receipt),
-        None => println!("Transaction executed successfully, but no receipt was returned."),
+        Some(receipt) => println!("\nTransaction successful: {:?}", receipt),
+        None => println!("\nTransaction executed successfully, but no receipt was returned."),
     }
 
     Ok(())
@@ -208,8 +208,8 @@ pub async fn stake_eth(
     .await?;
 
     match receipt {
-        Some(receipt) => println!("Transaction successful: {:?}", receipt),
-        None => println!("Transaction executed successfully, but no receipt was returned."),
+        Some(receipt) => println!("\nTransaction successful: {:?}", receipt),
+        None => println!("\nTransaction executed successfully, but no receipt was returned."),
     }
 
     Ok(())
@@ -250,8 +250,8 @@ pub async fn initialize_contract(
     .await?;
 
     match receipt {
-        Some(receipt) => println!("Transaction successful: {:?}", receipt),
-        None => println!("Transaction executed successfully, but no receipt was returned."),
+        Some(receipt) => println!("\nTransaction successful: {:?}", receipt),
+        None => println!("\nTransaction executed successfully, but no receipt was returned."),
     }
 
     Ok(())
