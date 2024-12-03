@@ -1,0 +1,12 @@
+/home/xel/git/stylus-arenaton/arenaton_engine/target/debug/deps/libderive_more-2501ad87bf28b788.rmeta: /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/derive_more-1.0.0/src/lib.rs /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/derive_more-1.0.0/src/add.rs /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/derive_more-1.0.0/src/ops.rs /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/derive_more-1.0.0/src/as.rs /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/derive_more-1.0.0/src/str.rs /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/derive_more-1.0.0/src/../README.md
+
+/home/xel/git/stylus-arenaton/arenaton_engine/target/debug/deps/libderive_more-2501ad87bf28b788.rlib: /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/derive_more-1.0.0/src/lib.rs /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/derive_more-1.0.0/src/add.rs /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/derive_more-1.0.0/src/ops.rs /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/derive_more-1.0.0/src/as.rs /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/derive_more-1.0.0/src/str.rs /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/derive_more-1.0.0/src/../README.md
+
+/home/xel/git/stylus-arenaton/arenaton_engine/target/debug/deps/derive_more-2501ad87bf28b788.d: /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/derive_more-1.0.0/src/lib.rs /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/derive_more-1.0.0/src/add.rs /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/derive_more-1.0.0/src/ops.rs /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/derive_more-1.0.0/src/as.rs /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/derive_more-1.0.0/src/str.rs /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/derive_more-1.0.0/src/../README.md
+
+/home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/derive_more-1.0.0/src/lib.rs:
+/home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/derive_more-1.0.0/src/add.rs:
+/home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/derive_more-1.0.0/src/ops.rs:
+/home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/derive_more-1.0.0/src/as.rs:
+/home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/derive_more-1.0.0/src/str.rs:
+/home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/derive_more-1.0.0/src/../README.md:

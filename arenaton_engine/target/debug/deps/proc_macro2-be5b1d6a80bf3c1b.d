@@ -1,0 +1,12 @@
+/home/xel/git/stylus-arenaton/arenaton_engine/target/debug/deps/libproc_macro2-be5b1d6a80bf3c1b.rmeta: /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/proc-macro2-1.0.92/src/lib.rs /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/proc-macro2-1.0.92/src/marker.rs /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/proc-macro2-1.0.92/src/parse.rs /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/proc-macro2-1.0.92/src/rcvec.rs /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/proc-macro2-1.0.92/src/detection.rs /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/proc-macro2-1.0.92/src/fallback.rs /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/proc-macro2-1.0.92/src/extra.rs /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/proc-macro2-1.0.92/src/wrapper.rs
+
+/home/xel/git/stylus-arenaton/arenaton_engine/target/debug/deps/proc_macro2-be5b1d6a80bf3c1b.d: /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/proc-macro2-1.0.92/src/lib.rs /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/proc-macro2-1.0.92/src/marker.rs /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/proc-macro2-1.0.92/src/parse.rs /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/proc-macro2-1.0.92/src/rcvec.rs /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/proc-macro2-1.0.92/src/detection.rs /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/proc-macro2-1.0.92/src/fallback.rs /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/proc-macro2-1.0.92/src/extra.rs /home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/proc-macro2-1.0.92/src/wrapper.rs
+
+/home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/proc-macro2-1.0.92/src/lib.rs:
+/home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/proc-macro2-1.0.92/src/marker.rs:
+/home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/proc-macro2-1.0.92/src/parse.rs:
+/home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/proc-macro2-1.0.92/src/rcvec.rs:
+/home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/proc-macro2-1.0.92/src/detection.rs:
+/home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/proc-macro2-1.0.92/src/fallback.rs:
+/home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/proc-macro2-1.0.92/src/extra.rs:
+/home/xel/.cargo/registry/src/index.crates.io-6f17d22bba15001f/proc-macro2-1.0.92/src/wrapper.rs:

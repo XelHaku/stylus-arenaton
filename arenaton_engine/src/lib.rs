@@ -96,30 +96,6 @@ sol! {
     error ZeroAton(address sender);
 }
 
-sol! {
-    /// Emitted when `new_admin_role` is set as `role`'s admin role, replacing
-    /// `previous_admin_role`.
-    ///
-    /// `DEFAULT_ADMIN_ROLE` is the starting admin for all roles, despite
-    /// `RoleAdminChanged` not being emitted signaling this.
-    #[allow(missing_docs)]
-    event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previous_admin_role, bytes32 indexed new_admin_role);
-    /// Emitted when `account` is granted `role`.
-    ///
-    /// `sender` is the account that originated the contract call. This account
-    /// bears the admin role (for the granted role).
-    /// Expected in cases where the role was granted using the internal
-    /// [`AccessControl::grant_role`].
-    #[allow(missing_docs)]
-    event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender);
-    /// Emitted when `account` is revoked `role`.
-    ///
-    /// `sender` is the account that originated the contract call:
-    ///   - if using `revoke_role`, it is the admin role bearer.
-    ///   - if using `renounce_role`, it is the role bearer (i.e. `account`).
-    #[allow(missing_docs)]
-    event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender);
-}
 
 sol! {
     /// The `account` is missing a role.
