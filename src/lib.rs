@@ -39,6 +39,9 @@ use stylus_sdk::{
     stylus_proc::{public, sol_storage, SolidityError},
 };
 
+use alloy_primitives::FixedBytes;
+
+
 use stylus_sdk::prelude::*;
 
 // Define the entrypoint as a Solidity storage object. The sol_storage! macro
@@ -160,7 +163,6 @@ pub enum Error {
 
 sol_storage! {}
 
-pub const DEFAULT_ADMIN_ROLE: [u8; 32] = [0; 32];
 
 /// Represents the ways methods may fail.
 #[derive(SolidityError)]
@@ -174,8 +176,8 @@ pub enum ATONError {
 #[public]
 impl ATON {
 
-    pub fn initialize_contract(&mut self) -> Result<bool, ATONError> {
-        // self._transfer(msg::sender(), to, value)?;
+ pub fn initialize_contract(&mut self, account: Address) -> Result<bool, ATONError> {
+        self._grant_role(FixedBytes::from(constants::ARENATON_ENGINE_ROLE), account);
         Ok(true)
     }
 
@@ -388,12 +390,7 @@ impl ATON {
         Ok(())
     }
 
-    pub fn autogrant_admin(&mut self, role: B256, account: Address) -> Result<(), Error> {
-        let admin_role = self.get_role_admin(role);
-        self.only_role(admin_role)?;
-        self._grant_role(role, account);
-        Ok(())
-    }
+
     /// Revokes `role` from `account`.
     ///
     /// If `account` had been granted `role`, emits a [`RoleRevoked`] event.
