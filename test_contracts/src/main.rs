@@ -5,7 +5,8 @@ mod constants;
 mod players; // Add this line
 
 use crate::players::fund_players_eth::fund_players_eth;
-use methods::{debug_mint_aton,approve, balance_of,total_supply,name};
+use crate::players::eth_balance::eth_balance;
+use methods::{debug_mint_aton,approve, balance_of,total_supply,name,stake_eth};
 use ethers::prelude::*;
 use eyre::Result;
 use std::sync::Arc;
@@ -28,6 +29,8 @@ async fn main() -> Result<()> {
         .parse::<u64>()?;
     name(&rpc_url, engine_address.as_str()).await?;
     name(&rpc_url, erc20aton_address.as_str()).await?;
+
+    eth_balance(erc20aton_address.parse::<Address>()?, &rpc_url).await?;
     total_supply(&rpc_url, erc20aton_address.as_str()).await?;
 
     // Call the fund_players_eth function
@@ -38,16 +41,25 @@ balance_of(&WALLETS[0].address, &rpc_url, erc20aton_address.as_str()).await?;
 
 
 
-debug_mint_aton(
-    &erc20aton_address, 
-    &WALLETS[0].private_key, 
-    &rpc_url, 
-    chain_id
-).await?;
+stake_eth(&engine_address, &WALLETS[0].private_key, &rpc_url, chain_id, WALLETS[0].address.parse::<Address>()?, U256::from(1000000)).await?;
+    eth_balance(erc20aton_address.parse::<Address>()?, &rpc_url).await?;
 
 balance_of(&WALLETS[0].address, &rpc_url, erc20aton_address.as_str()).await?;
 
-approve(&erc20aton_address, &WALLETS[0].private_key, &rpc_url, chain_id, WALLETS[2].address.parse::<Address>()?, U256::from(1000000)).await?;
+
+
+
+
+// debug_mint_aton(
+//     &erc20aton_address, 
+//     &WALLETS[0].private_key, 
+//     &rpc_url, 
+//     chain_id
+// ).await?;
+
+// balance_of(&WALLETS[0].address, &rpc_url, erc20aton_address.as_str()).await?;
+
+// approve(&erc20aton_address, &WALLETS[0].private_key, &rpc_url, chain_id, WALLETS[2].address.parse::<Address>()?, U256::from(1000000)).await?;
 
     // Call the debugMintAton method
     // debug_mint_aton(erc20aton_address, signer).await?;

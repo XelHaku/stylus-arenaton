@@ -166,13 +166,17 @@ let receipt = call_contract_method_signed( // Remove <bool>
     }
 
     Ok(())
-}   pub async fn stake_eth(
+}   
+
+
+
+pub async fn stake_eth(
     contract_address: &str,
     private_key: &str,
     rpc_url: &str,
     chain_id: u64,
     player: Address,
-    value: U256, // Amount of ETH to stake in Wei
+    value: U256,
 ) -> Result<()> {
     let abi_json = r#"[
   {
@@ -181,7 +185,7 @@ let receipt = call_contract_method_signed( // Remove <bool>
     ],
     "name": "stakeEth",
     "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
-    "stateMutability": "payable", // Make sure it's payable
+    "stateMutability": "payable",
     "type": "function"
   }
 ]"#;
@@ -195,11 +199,11 @@ let receipt = call_contract_method_signed( // Remove <bool>
 
     let receipt = call_contract_method_signed(
         "stakeEth",
-        player, // Pass the player address as argument
+        player,
         abi_json,
         contract_address,
         signer,
-        value, // Pass the value to send with the transaction
+        value,
     )
     .await?;
 
