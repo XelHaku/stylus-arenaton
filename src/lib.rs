@@ -108,16 +108,6 @@ sol! {
 }
 
 
-/// An error that occurred in the implementation of an [`AccessControl`]
-/// contract.
-#[derive(SolidityError, Debug)]
-pub enum Error {
-    /// The caller account is missing a role.
-    AccessUnauthorizedAccount(AccessControlUnauthorizedAccount),
-    /// The caller of a afunction is not the expected one.
-    BadConfirmation(AccessControlBadConfirmation),
-
-}
 
 
 
@@ -128,20 +118,23 @@ pub enum ATONError {
     ZeroAton(ZeroAton),
     InsufficientBalance(InsufficientBalance),
     InsufficientAllowance(InsufficientAllowance),
+    AccessUnauthorizedAccount(AccessControlUnauthorizedAccount),
+    BadConfirmation(AccessControlBadConfirmation),
+    AlreadyInitialized(AlreadyInitialized),
 }
 
 #[public]
 impl ATON {
 
- pub fn initialize_contract(&mut self, account: Address) -> Result<bool, ATONError> {
-    if self.initialized{
-        return Err(ATONError::AlreadyInitialized());
-    
+pub fn initialize_contract(&mut self, account: Address) -> Result<bool, ATONError> {
+    if self.initialized.get() { // Access the value using .get()
+        return Err(ATONError::AlreadyInitialized(AlreadyInitialized {})); // Add the error struct
     }
+    self.initialized.set(true); // Set initialized to true
     self.owner.set(msg::sender());
-        self._grant_role(FixedBytes::from(constants::ARENATON_ENGINE_ROLE), account);
-        Ok(true)
-    }
+    self._grant_role(FixedBytes::from(constants::ARENATON_ENGINE_ROLE), account);
+    Ok(true)
+}
 
     /// Immutable token name
     pub fn name() -> String {
@@ -304,7 +297,7 @@ impl ATON {
     ///
     /// If [`msg::sender`] has not been granted `role`, then the error
     /// [`Error::AccessUnauthorizedAccount`] is returned.
-    pub fn only_role(&self, role: B256) -> Result<(), Error> {
+    pub fn only_role(&self, role: B256) -> Result<(), ATONError> {
         self._check_role(role, msg::sender())
     }
 
@@ -345,7 +338,7 @@ impl ATON {
     /// # Events
     ///
     /// May emit a [`RoleGranted`] event.
-    pub fn grant_role(&mut self, role: B256, account: Address) -> Result<(), Error> {
+    pub fn grant_role(&mut self, role: B256, account: Address) -> Result<(), ATONError> {
         let admin_role = self.get_role_admin(role);
         self.only_role(admin_role)?;
         self._grant_role(role, account);
@@ -375,7 +368,7 @@ impl ATON {
     /// # Events
     ///
     /// May emit a [`RoleRevoked`] event.
-    pub fn revoke_role(&mut self, role: B256, account: Address) -> Result<(), Error> {
+    pub fn revoke_role(&mut self, role: B256, account: Address) -> Result<(), ATONError> {
         let admin_role = self.get_role_admin(role);
         self.only_role(admin_role)?;
         self._revoke_role(role, account);
@@ -408,9 +401,9 @@ impl ATON {
     ///
     /// If the calling account has its `role` revoked, emits a [`RoleRevoked`]
     /// event.
-    pub fn renounce_role(&mut self, role: B256, confirmation: Address) -> Result<(), Error> {
+    pub fn renounce_role(&mut self, role: B256, confirmation: Address) -> Result<(), ATONError> {
         if msg::sender() != confirmation {
-            return Err(Error::BadConfirmation(AccessControlBadConfirmation {}));
+            return Err(ATONError::BadConfirmation(AccessControlBadConfirmation {}));
         }
 
         self._revoke_role(role, confirmation);
@@ -552,9 +545,9 @@ impl ATON {
     ///
     /// If [`msg::sender`] has not been granted `role`, then the error
     /// [`Error::AccessUnauthorizedAccount`] is returned.
-    pub fn _check_role(&self, role: B256, account: Address) -> Result<(), Error> {
+    pub fn _check_role(&self, role: B256, account: Address) -> Result<(), ATONError> {
         if !self.has_role(role, account) {
-            return Err(Error::AccessUnauthorizedAccount(
+            return Err(ATONError::AccessUnauthorizedAccount(
                 AccessControlUnauthorizedAccount {
                     account,
                     needed_role: role,
