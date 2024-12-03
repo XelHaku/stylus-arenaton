@@ -5,6 +5,8 @@ use ethers::contract::Contract;
 use ethers::abi::Abi;
 use dotenv::dotenv;
 use std::sync::Arc;
+use std::fs;
+use std::path::Path;
 
 // Import necessary eyre types
 use eyre::{Result, WrapErr};
@@ -37,19 +39,13 @@ pub async fn name() -> Result<()> {
         .wrap_err("Invalid contract address")?;
     info!("Contract address parsed: {:?}", contract_address);
 
-    // Contract ABI (Replace with the actual ABI)
-    let abi_str = r#"[
-            {
-                "inputs": [],
-                "name": "name",
-                "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
-                "stateMutability": "pure",
-                "type": "function"
-            }
-        ]"#;
+    // Load ABI from file
+    let abi_path = Path::new("src/abi/IATON.json");
+    let abi_json = fs::read_to_string(abi_path).wrap_err("Failed to read ABI file")?;
+    info!("ABI file loaded from: {:?}", abi_path);
 
-    let abi: Abi = serde_json::from_str(abi_str)
-        .wrap_err("Error parsing ABI")?;
+    let abi: Abi = serde_json::from_str(&abi_json)
+        .wrap_err("Error parsing ABI from file")?;
     info!("Contract ABI parsed");
 
     // Initialize the contract instance
@@ -80,37 +76,3 @@ async fn main() {
         error!("Error: {:?}", err);
     }
 }
-
-
-load abi from tree l@BlueBlack:~/git/stylus-arenaton/test_contracts$ tree -L 3
-.
-├── Cargo.lock
-├── Cargo.toml
-├── src
-│   ├── abi
-│   │   └── IATON.json
-│   ├── balance_of
-│   │   └── mod.rs
-│   ├── debug_mint_aton
-│   │   └── mod.rs
-│   ├── main.rs
-│   ├── name
-│   │   └── mod.rs
-│   └── swap
-│       └── mod.rs
-└── target
-    ├── CACHEDIR.TAG
-    └── debug
-        ├── balance_of
-        ├── balance_of.d
-        ├── build
-        ├── deps
-        ├── examples
-        ├── incremental
-        ├── main
-        ├── main.d
-        ├── name
-        └── name.d
-
-12 directories, 15 files
-xel@BlueBlack:~/git/stylus-arenaton/test_contracts$ 
