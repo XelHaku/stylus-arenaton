@@ -5,7 +5,7 @@ mod constants;
 mod players; // Add this line
 
 use crate::players::fund_players_eth::fund_players_eth;
-use methods::{debug_mint_aton, balance_of};
+use methods::{debug_mint_aton, balance_of,total_supply};
 use ethers::prelude::*;
 use eyre::Result;
 use std::sync::Arc;
@@ -28,6 +28,8 @@ async fn main() -> Result<()> {
     // Call the fund_players_eth function
     // print_wallets(Some(2));
     // fund_players_eth(&rpc_url, chain_id,Some(2)).await?;
+
+    total_supply(&rpc_url, erc20aton_address).await?;
 
 
     balance_of("0x7e32b54800705876d3b5cfbc7d9c226a211f7c1a", &rpc_url, &erc20aton_address).await?;
