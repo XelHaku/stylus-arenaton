@@ -30,13 +30,11 @@ async fn main() -> Result<()> {
 
     // Call the fund_players_eth function
     print_wallets(Some(1));
+
+    fund_players_eth("1000000000000000000",&rpc_url, chain_id,Some(1)).await?;
 balance_of(&WALLETS[0].address, &rpc_url, erc20aton_address.as_str()).await?;
 
-    fund_players_eth(&rpc_url, chain_id,Some(1)).await?;
-balance_of(&WALLETS[0].address, &rpc_url, erc20aton_address.as_str()).await?;
 
-
-balance_of(&WALLETS[0].address, &rpc_url, erc20aton_address.as_str()).await?;
 
 debug_mint_aton(
     &erc20aton_address, 
@@ -44,6 +42,8 @@ debug_mint_aton(
     &rpc_url, 
     chain_id
 ).await?;
+
+balance_of(&WALLETS[0].address, &rpc_url, erc20aton_address.as_str()).await?;
 
 approve(&erc20aton_address, &WALLETS[0].private_key, &rpc_url, chain_id, WALLETS[2].address.parse::<Address>()?, U256::from(1000000)).await?;
 

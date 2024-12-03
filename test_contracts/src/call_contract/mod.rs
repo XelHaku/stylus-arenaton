@@ -1,6 +1,7 @@
 use ethers::abi::{Abi, Detokenize, Tokenize};
 use ethers::prelude::*;
 use eyre::{Result, WrapErr};
+use serde::de::value;
 use std::sync::Arc;
 use serde_json::from_str;
 
@@ -28,13 +29,13 @@ pub async fn call_contract_method<T: Detokenize>(
     Ok(result)
 }
 
-/// Generalized function to call a contract method with signing
 pub async fn call_contract_method_signed(
     method_name: &str,
     args: impl Tokenize,
     abi_json: &str,
     contract_address_str: &str,
     signer: Arc<SignerMiddleware<Provider<Http>, LocalWallet>>,
+    value: U256, 
 ) -> Result<Option<TransactionReceipt>> {
     let contract_address: Address = contract_address_str
         .parse()
@@ -42,9 +43,10 @@ pub async fn call_contract_method_signed(
     let abi: Abi = serde_json::from_str(abi_json).wrap_err("Error parsing ABI")?;
     let contract = Contract::new(contract_address, abi, signer);
 
-    // Send the transaction and await its receipt
+    // Send the transaction with the specified value and await its receipt
     let tx = contract
         .method::<_, ()>(method_name, args)?
+        .value(value) // Set the transaction value
         .send()
         .await?
         .await

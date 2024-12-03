@@ -2,6 +2,7 @@
 use crate::call_contract::{call_contract_method, call_contract_method_signed};
 use ethers::prelude::*;
 use eyre::Result;
+use serde::de::value;
 use std::sync::Arc;
 
 /// Function to get the name of the contract
@@ -109,6 +110,7 @@ pub async fn debug_mint_aton(
         abi_json,
         contract_address,
         signer,
+        U256::from(100000),
     )
     .await?;
 
@@ -148,14 +150,15 @@ pub async fn approve(
         wallet,
     ));
 
-    let receipt = call_contract_method_signed::<bool>(
-        "approve",
-        (spender, value),
-        abi_json,
-        contract_address,
-        signer,
-    )
-    .await?;
+let receipt = call_contract_method_signed( // Remove <bool>
+    "approve",
+    (spender, value),
+    abi_json,
+    contract_address,
+    signer,
+    U256::from(0),
+)
+.await?;
 
     match receipt {
         Some(receipt) => println!("Transaction successful: {:?}", receipt),
