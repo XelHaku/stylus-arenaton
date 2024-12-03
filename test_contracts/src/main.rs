@@ -1,32 +1,35 @@
-// src/main.rs
+mod call_contract;
+mod methods;
 
-// Import the eyre crate for error handling
+use methods::{balance_of, debug_mint_aton, name};
+use ethers::prelude::*;
 use eyre::Result;
+use std::sync::Arc;
 
-// Declare the modules
-mod debug_mint_aton;
-mod name;
-mod balance_of;
-
-// Import the functions from the modules
-use debug_mint_aton::debug_mint_aton;
-use name::name;
-use balance_of::balance_of;
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Call the functions and propagate errors using `?`
-    // debug_mint_aton().await?;
-    name().await?;
+    dotenv::dotenv().ok();
+    tracing_subscriber::fmt::init();
 
-
+    // Define RPC URL and contract address
+    let rpc_url = std::env::var("RPC_URL").unwrap_or_else(|_| "http://127.0.0.1:8545".into());
+    let contract_address = "0x7e32b54800705876d3b5cfbc7d9c226a211f7c1a";
     let player1 = "0x7e32b54800705876d3b5cfbc7d9c226a211f7c1a";
-    balance_of(player1).await?;
 
+    // Call the name function
+    name(&rpc_url, contract_address).await?;
 
-    // addEvent(abc,1750000000).await?
-// stake(ATON,player2,team1).await?
-   
-    // swap
-  
+    // Get balance for player address
+    balance_of(player1, &rpc_url, contract_address).await?;
+
+    // Mint debug ATON tokens (requires signing)
+    let private_key = std::env::var("PRIVATE_KEY").expect("Please set the PRIVATE_KEY environment variable");
+    let wallet = private_key.parse::<LocalWallet>()?.with_chain_id(1337u64);
+    let signer = Arc::new(SignerMiddleware::new(
+        Provider::<Http>::try_from(&rpc_url)?,
+        wallet,
+    ));
+    debug_mint_aton(contract_address, signer).await?;
+
     Ok(())
 }

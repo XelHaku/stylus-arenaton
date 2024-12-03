@@ -10,6 +10,7 @@ tokio = { version = "1.28.2", features = ["full"] }
 tracing = "0.1"
 tracing-subscriber = "0.3"
 eyre = "0.6"
+serde = { version = "1.0", features = ["derive"] } 
 serde_json = "1.0"
 
 [[bin]]
@@ -33,3 +34,4 @@ path = "src/name/mod.rs"
 [[bin]]
 name = "call_contract"
 path = "src/balance_of/mod.rs"
+
