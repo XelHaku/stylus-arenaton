@@ -1,25 +1,3 @@
-//!
-//! Stylus Hello World
-//!
-//! The following contract implements the ArenatonEngine example from Foundry.
-//!
-//! ```
-//! contract ArenatonEngine {
-//!     uint256 public number;
-//!     function setNumber(uint256 newNumber) public {
-//!         number = newNumber;
-//!     }
-//!     function increment() public {
-//!         number++;
-//!     }
-//! }
-//! ```
-//!
-//! The program is ABI-equivalent with Solidity, which means you can call it from both Solidity and Rust.
-//! To do this, run `cargo stylus export-abi`.
-//!
-//! Note: this code is a template-only and has not been audited.
-//!
 
 // Allow `cargo stylus export-abi` to generate a main function.
 #![cfg_attr(not(feature = "export-abi"), no_main)]
@@ -34,6 +12,13 @@ sol_storage! {
     #[entrypoint]
     pub struct ArenatonEngine {
         uint256 number;
+    }
+}
+
+sol_interface! {
+    interface IMethods {
+        function viewFoo() external view;
+        function writeFoo() external;
     }
 }
 
