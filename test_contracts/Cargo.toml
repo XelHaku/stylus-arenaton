@@ -13,25 +13,25 @@ eyre = "0.6"
 serde = { version = "1.0", features = ["derive"] } 
 serde_json = "1.0"
 
-[[bin]]
-name = "main"
-path = "src/main.rs"
+# [[bin]]
+# name = "main"
+# path = "src/main.rs"
 
 
-[[bin]]
-name = "debug_mint_aton"
-path = "src/debug_mint_aton/mod.rs"
+# [[bin]]
+# name = "debug_mint_aton"
+# path = "src/debug_mint_aton/mod.rs"
 
 
-[[bin]]
-name = "balance_of"
-path = "src/balance_of/mod.rs"
+# [[bin]]
+# name = "balance_of"
+# path = "src/balance_of/mod.rs"
 
-[[bin]]
-name = "name"
-path = "src/name/mod.rs"
+# [[bin]]
+# name = "name"
+# path = "src/name/mod.rs"
 
-[[bin]]
-name = "call_contract"
-path = "src/balance_of/mod.rs"
+# [[bin]]
+# name = "call_contract"
+# path = "src/balance_of/mod.rs"
 
