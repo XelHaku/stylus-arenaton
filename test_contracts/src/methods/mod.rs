@@ -1,13 +1,11 @@
+
 use crate::call_contract::{call_contract_method, call_contract_method_signed};
 use ethers::prelude::*;
 use eyre::Result;
 use std::sync::Arc;
 
 /// Function to get the name of the contract
-pub async fn name(
-    rpc_url: &str,
-    contract_address: &str,
-) -> Result<()> {
+pub async fn name(rpc_url: &str, contract_address: &str) -> Result<()> {
     let abi_json = r#"[
         {
             "inputs": [],
@@ -18,7 +16,6 @@ pub async fn name(
         }
     ]"#;
 
-    // Use call_contract_method to call the `name` function
     let contract_name: String = call_contract_method(
         "name",
         (), // No arguments
@@ -29,6 +26,31 @@ pub async fn name(
     .await?;
 
     println!("Contract Name: {}", contract_name);
+    Ok(())
+}
+
+/// Function to get the total supply of the contract
+pub async fn total_supply(rpc_url: &str, contract_address: &str) -> Result<()> {
+    let abi_json = r#"[
+        {
+            "inputs": [],
+            "name": "totalSupply",
+            "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+            "stateMutability": "view",
+            "type": "function"
+        }
+    ]"#;
+
+    let total_supply: u128 = call_contract_method(
+        "totalSupply",
+        (), // No arguments
+        abi_json,
+        contract_address,
+        rpc_url,
+    )
+    .await?;
+
+    println!("Total Supply: {}", total_supply);
     Ok(())
 }
 
@@ -50,13 +72,11 @@ pub async fn balance_of(
         }
     ]"#;
 
-    // Parse the owner address
     let owner: Address = owner_address.parse()?;
 
-    // Use call_contract_method to call the `balanceOf` function
     let balance: U256 = call_contract_method(
         "balanceOf",
-        owner,
+        owner, // Pass owner as argument
         abi_json,
         contract_address,
         rpc_url,
@@ -74,8 +94,7 @@ pub async fn debug_mint_aton(
 ) -> Result<()> {
     let abi_json = r#"[{"inputs":[],"name":"debugMintAton","outputs":[],"stateMutability":"nonpayable","type":"function"}]"#;
 
-    // Use call_contract_method_signed to call the `debugMintAton` function
-    call_contract_method_signed::<()>(
+    let receipt = call_contract_method_signed(
         "debugMintAton",
         (), // No arguments
         abi_json,
@@ -84,6 +103,10 @@ pub async fn debug_mint_aton(
     )
     .await?;
 
-    println!("debugMintAton executed successfully");
+    match receipt {
+        Some(receipt) => println!("Transaction successful: {:?}", receipt),
+        None => println!("Transaction executed successfully, but no receipt was returned."),
+    }
+
     Ok(())
 }
