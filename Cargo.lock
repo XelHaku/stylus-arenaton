@@ -3551,9 +3551,9 @@ dependencies = [
 
 [[package]]
 name = "stylus-proc"
-version = "0.7.0-beta.0"
+version = "0.7.0-beta.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e1e91d532773d8525fb2d91e0b58834fc475c6caeec96019fc9bc3726fe5bbae"
+checksum = "8abd5d2cb3a10a36101b3d9243eda29daa58aad89b93979afe77c4be89068413"
 dependencies = [
  "alloy-primitives 0.8.13",
  "alloy-sol-types 0.8.13",
@@ -3585,7 +3585,7 @@ dependencies = [
  "lazy_static",
  "mini-alloc",
  "regex",
- "stylus-proc 0.7.0-beta.0",
+ "stylus-proc 0.7.0-beta.1",
 ]
 
 [[package]]
