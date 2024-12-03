@@ -36,20 +36,18 @@ use alloy_primitives::{Address, B256, U256};
 use stylus_sdk::{
     call::transfer_eth,
     contract, evm, msg,
-    stylus_proc::{public, , SolidityError},
+    stylus_proc::{public, sol_storage, SolidityError},
 };
-
 use alloy_primitives::FixedBytes;
 
 
 use stylus_sdk::prelude::*;
 
-// Define the entrypoint as a Solidity storage object. The ! macro
+// Define the entrypoint as a Solidity storage object. The sol_storage! macro
 // will generate Rust-equivalent structs with all fields mapped to Solidity-equivalent
 // storage slots and types.
-! {
-    #[entrypoint]
-    struct ATON {
+sol_storage! {
+    #[entrypoint]    struct ATON {
 
 
 
@@ -136,7 +134,7 @@ pub enum ATONError {
 impl ATON {
 
  pub fn initialize_contract(&mut self, account: Address) -> Result<bool, ATONError> {
-    if(self.initialized){
+    if self.initialized{
         return Err(ATONError::AlreadyInitialized());
     
     }
