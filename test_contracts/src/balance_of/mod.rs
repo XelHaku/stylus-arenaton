@@ -5,6 +5,8 @@ use ethers::contract::Contract;
 use ethers::abi::Abi;
 use dotenv::dotenv;
 use std::sync::Arc;
+use std::fs;
+use std::path::Path;
 
 // Import necessary eyre types
 use eyre::{Result, WrapErr};
@@ -18,7 +20,7 @@ pub async fn balance_of(owner_address_str: &str) -> Result<()> {
     dotenv().ok();
     info!("Environment variables loaded");
 
-    // RPC URL (Replace with your Ethereum node URL)
+    // Get RPC URL from environment or fallback to default
     let rpc_url = std::env::var("RPC_URL")
         .unwrap_or_else(|_| "http://127.0.0.1:8547".into());
     info!("Using RPC URL: {}", rpc_url);
@@ -27,7 +29,7 @@ pub async fn balance_of(owner_address_str: &str) -> Result<()> {
         .wrap_err("Failed to create provider")?;
     info!("Provider initialized");
 
-    // Contract address (Replace with your contract address)
+    // Get contract address from environment or fallback to default
     let contract_address_str = std::env::var("CONTRACT_ADDRESS")
         .unwrap_or_else(|_| "0x7e32b54800705876d3b5cfbc7d9c226a211f7c1a".into());
     info!("Using contract address: {}", contract_address_str);
@@ -37,21 +39,13 @@ pub async fn balance_of(owner_address_str: &str) -> Result<()> {
         .wrap_err("Invalid contract address")?;
     info!("Contract address parsed: {:?}", contract_address);
 
-    // Contract ABI (Replace with the actual ABI)
-    let abi_str = r#"[
-        {
-            "inputs": [
-                { "internalType": "address", "name": "owner", "type": "address" }
-            ],
-            "name": "balanceOf",
-            "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-            "stateMutability": "view",
-            "type": "function"
-        }
-    ]"#;
+    // Load ABI dynamically from file
+    let abi_path = Path::new("src/abi/IATON.json"); // Adjust path to match your project structure
+    let abi_json = fs::read_to_string(abi_path).wrap_err("Failed to read ABI file")?;
+    info!("ABI file loaded from: {:?}", abi_path);
 
-    let abi: Abi = serde_json::from_str(abi_str)
-        .wrap_err("Error parsing ABI")?;
+    let abi: Abi = serde_json::from_str(&abi_json)
+        .wrap_err("Error parsing ABI from file")?;
     info!("Contract ABI parsed");
 
     // Initialize the contract instance
@@ -83,7 +77,7 @@ async fn main() {
     // Initialize tracing subscriber for logging
     tracing_subscriber::fmt::init();
 
-    // The address whose balance you want to check
+    // Example owner address (replace with an actual address to query)
     let address = "0x7e32b54800705876d3b5cfbc7d9c226a211f7c1a";
 
     // Run the `balance_of` function and handle any errors
