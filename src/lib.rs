@@ -36,7 +36,7 @@ use alloy_primitives::{Address, B256, U256};
 use stylus_sdk::{
     call::transfer_eth,
     contract, evm, msg,
-    stylus_proc::{public, sol_storage, SolidityError},
+    stylus_proc::{public, , SolidityError},
 };
 
 use alloy_primitives::FixedBytes;
@@ -44,10 +44,10 @@ use alloy_primitives::FixedBytes;
 
 use stylus_sdk::prelude::*;
 
-// Define the entrypoint as a Solidity storage object. The sol_storage! macro
+// Define the entrypoint as a Solidity storage object. The ! macro
 // will generate Rust-equivalent structs with all fields mapped to Solidity-equivalent
 // storage slots and types.
-sol_storage! {
+! {
     #[entrypoint]
     struct ATON {
 
@@ -84,7 +84,6 @@ sol_storage! {
     }
 
 }
-
 sol! {
     // ERC20
     event Transfer(address indexed from, address indexed to, uint256 value);
@@ -97,57 +96,18 @@ sol! {
     event Accumulate(uint256 new_commission, uint256 accumulated, uint256 total);
     error ZeroEther(address sender);
     error ZeroAton(address sender);
-}
+    error AlreadyInitialized();
 
-sol! {
-    /// Emitted when `new_admin_role` is set as `role`'s admin role, replacing
-    /// `previous_admin_role`.
-    ///
-    /// `DEFAULT_ADMIN_ROLE` is the starting admin for all roles, despite
-    /// `RoleAdminChanged` not being emitted signaling this.
-    #[allow(missing_docs)]
+    // Access Control
     event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previous_admin_role, bytes32 indexed new_admin_role);
-    /// Emitted when `account` is granted `role`.
-    ///
-    /// `sender` is the account that originated the contract call. This account
-    /// bears the admin role (for the granted role).
-    /// Expected in cases where the role was granted using the internal
-    /// [`AccessControl::grant_role`].
-    #[allow(missing_docs)]
     event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender);
-    /// Emitted when `account` is revoked `role`.
-    ///
-    /// `sender` is the account that originated the contract call:
-    ///   - if using `revoke_role`, it is the admin role bearer.
-    ///   - if using `renounce_role`, it is the role bearer (i.e. `account`).
-    #[allow(missing_docs)]
     event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender);
-}
-
-sol! {
-    /// The `account` is missing a role.
-    ///
-    /// * `account` - Account that was found to not be authorized.
-    /// * `needed_role` - The missing role.
-    #[derive(Debug)]
-    #[allow(missing_docs)]
     error AccessControlUnauthorizedAccount(address account, bytes32 needed_role);
-    /// The caller of a function is not the expected one.
-    ///
-    /// NOTE: Don't confuse with [`AccessControlUnauthorizedAccount`].
-    #[derive(Debug)]
-    #[allow(missing_docs)]
     error AccessControlBadConfirmation();
-}
-sol! {
-    /// Emitted when ownership gets transferred between accounts.
-    ///
-    /// * `previous_owner` - Address of the previous owner.
-    /// * `new_owner` - Address of the new owner.
-    #[allow(missing_docs)]
+
+    // Ownership
     event OwnershipTransferred(address indexed previous_owner, address indexed new_owner);
 }
-
 
 
 /// An error that occurred in the implementation of an [`AccessControl`]
@@ -161,7 +121,6 @@ pub enum Error {
 
 }
 
-sol_storage! {}
 
 
 /// Represents the ways methods may fail.
@@ -177,6 +136,10 @@ pub enum ATONError {
 impl ATON {
 
  pub fn initialize_contract(&mut self, account: Address) -> Result<bool, ATONError> {
+    if(self.initialized){
+        return Err(ATONError::AlreadyInitialized());
+    
+    }
     self.owner.set(msg::sender());
         self._grant_role(FixedBytes::from(constants::ARENATON_ENGINE_ROLE), account);
         Ok(true)
