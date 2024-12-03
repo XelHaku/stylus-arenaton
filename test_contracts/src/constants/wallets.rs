@@ -54,12 +54,16 @@ pub const WALLETS: [Wallet; 11] = [
     },
 ];
 
-pub fn print_wallets() {
-    for wallet in &WALLETS {
+
+pub fn print_wallets(limit: Option<usize>) {
+    let wallets_to_print = match limit {
+        Some(l) => WALLETS.iter().take(l),
+        None => WALLETS.iter().take(WALLETS.len()), // Take all elements
+    };
+
+    for wallet in wallets_to_print {
         println!("Wallet address: {}", wallet.address);
         println!("Wallet private key: {}", wallet.private_key);
         println!();
     }
 }
-
-
