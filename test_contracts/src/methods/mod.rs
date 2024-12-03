@@ -87,16 +87,70 @@ pub async fn balance_of(
     Ok(())
 }
 
-/// Function to execute `debugMintAton`
+
 pub async fn debug_mint_aton(
     contract_address: &str,
-    signer: Arc<SignerMiddleware<Provider<Http>, LocalWallet>>,
+    private_key: &str,
+    rpc_url: &str,
+    chain_id: u64,
 ) -> Result<()> {
     let abi_json = r#"[{"inputs":[],"name":"debugMintAton","outputs":[],"stateMutability":"nonpayable","type":"function"}]"#;
 
+    // Create signer from private key
+    let wallet = private_key.parse::<LocalWallet>()?.with_chain_id(chain_id);
+    let signer = Arc::new(SignerMiddleware::new(
+        Provider::<Http>::try_from(rpc_url)?,
+        wallet,
+    ));
+
     let receipt = call_contract_method_signed(
         "debugMintAton",
-        (), // No arguments
+        (),
+        abi_json,
+        contract_address,
+        signer,
+    )
+    .await?;
+
+    match receipt {
+        Some(receipt) => println!("Transaction successful: {:?}", receipt),
+        None => println!("Transaction executed successfully, but no receipt was returned."),
+    }
+
+    Ok(())
+}
+
+pub async fn approve(
+    contract_address: &str,
+    private_key: &str,
+    rpc_url: &str,
+    chain_id: u64,
+    spender: Address,
+    value: U256,
+) -> Result<()> {
+    let abi_json = r#"[
+  {
+    "inputs": [
+      { "internalType": "address", "name": "spender", "type": "address" },
+      { "internalType": "uint256", "name": "value", "type": "uint256" }
+    ],
+    "name": "approve",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]"#;
+
+    // Create signer from private key
+    let wallet = private_key.parse::<LocalWallet>()?.with_chain_id(chain_id);
+    let signer = Arc::new(SignerMiddleware::new(
+        Provider::<Http>::try_from(rpc_url)?,
+        wallet,
+    ));
+
+    let receipt = call_contract_method_signed::<bool>(
+        "approve",
+        (spender, value),
         abi_json,
         contract_address,
         signer,

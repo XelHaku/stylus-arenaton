@@ -5,12 +5,12 @@ mod constants;
 mod players; // Add this line
 
 use crate::players::fund_players_eth::fund_players_eth;
-use methods::{debug_mint_aton, balance_of,total_supply};
+use methods::{debug_mint_aton,approve, balance_of,total_supply,name};
 use ethers::prelude::*;
 use eyre::Result;
 use std::sync::Arc;
 
-use constants::wallets::{print_wallets};
+use constants::wallets::{WALLETS,print_wallets};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -18,23 +18,34 @@ async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
 
     let rpc_url = std::env::var("RPC_URL").unwrap_or_else(|_| "http://127.0.0.1:8545".into());
-    let erc20aton_address = "0x7e32b54800705876d3b5cfbc7d9c226a211f7c1a";
+    let erc20aton_address = std::env::var("ERC20ATON_ADDRESS").unwrap_or_else(|_| "http://127.0.0.1:8545".into());
+
     // let whale_private_key = std::env::var("PRIVATE_KEY").expect("Please set the PRIVATE_KEY environment variable");
 
     let chain_id = std::env::var("CHAIN_ID")
         .unwrap_or_else(|_| "412346".to_string())
         .parse::<u64>()?;
+    name(&rpc_url, erc20aton_address.as_str()).await?;
+    total_supply(&rpc_url, erc20aton_address.as_str()).await?;
 
     // Call the fund_players_eth function
-    // print_wallets(Some(2));
-    // fund_players_eth(&rpc_url, chain_id,Some(2)).await?;
+    print_wallets(Some(1));
+balance_of(&WALLETS[0].address, &rpc_url, erc20aton_address.as_str()).await?;
 
-    total_supply(&rpc_url, erc20aton_address).await?;
-
-
-    balance_of("0x7e32b54800705876d3b5cfbc7d9c226a211f7c1a", &rpc_url, &erc20aton_address).await?;
+    fund_players_eth(&rpc_url, chain_id,Some(1)).await?;
+balance_of(&WALLETS[0].address, &rpc_url, erc20aton_address.as_str()).await?;
 
 
+balance_of(&WALLETS[0].address, &rpc_url, erc20aton_address.as_str()).await?;
+
+debug_mint_aton(
+    &erc20aton_address, 
+    &WALLETS[0].private_key, 
+    &rpc_url, 
+    chain_id
+).await?;
+
+approve(&erc20aton_address, &WALLETS[0].private_key, &rpc_url, chain_id, WALLETS[2].address.parse::<Address>()?, U256::from(1000000)).await?;
 
     // Call the debugMintAton method
     // debug_mint_aton(erc20aton_address, signer).await?;
