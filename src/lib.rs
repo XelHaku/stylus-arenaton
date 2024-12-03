@@ -105,6 +105,8 @@ sol! {
 
     // Ownership
     event OwnershipTransferred(address indexed previous_owner, address indexed new_owner);
+    error OwnableUnauthorizedAccount(address account);
+    error OwnableInvalidOwner(address owner);
 }
 
 
@@ -121,18 +123,20 @@ pub enum ATONError {
     AccessUnauthorizedAccount(AccessControlUnauthorizedAccount),
     BadConfirmation(AccessControlBadConfirmation),
     AlreadyInitialized(AlreadyInitialized),
+    UnauthorizedAccount(OwnableUnauthorizedAccount),
+    InvalidOwner(OwnableInvalidOwner),
 }
 
 #[public]
 impl ATON {
 
-pub fn initialize_contract(&mut self, account: Address) -> Result<bool, ATONError> {
+pub fn initialize_contract(&mut self) -> Result<bool, ATONError> {
     if self.initialized.get() { // Access the value using .get()
         return Err(ATONError::AlreadyInitialized(AlreadyInitialized {})); // Add the error struct
     }
     self.initialized.set(true); // Set initialized to true
     self.owner.set(msg::sender());
-    self._grant_role(FixedBytes::from(constants::ARENATON_ENGINE_ROLE), account);
+    self._grant_role(FixedBytes::from(constants::DEFAULT_ADMIN_ROLE), msg::sender());
     Ok(true)
 }
 

@@ -214,3 +214,45 @@ pub async fn stake_eth(
 
     Ok(())
 }
+
+
+pub async fn initialize_contract(
+    contract_address: &str,
+    private_key: &str,
+    rpc_url: &str,
+    chain_id: u64,
+) -> Result<()> {
+    let abi_json = r#"[
+  {
+    "inputs": [],
+    "name": "initializeContract",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "nonpayable", 
+    "type": "function"
+  }
+]"#;
+
+    // Create signer from private key
+    let wallet = private_key.parse::<LocalWallet>()?.with_chain_id(chain_id);
+    let signer = Arc::new(SignerMiddleware::new(
+        Provider::<Http>::try_from(rpc_url)?,
+        wallet,
+    ));
+
+    let receipt = call_contract_method_signed(
+        "initializeContract",
+        (), // No arguments
+        abi_json,
+        contract_address,
+        signer,
+        U256::zero(), // No value sent
+    )
+    .await?;
+
+    match receipt {
+        Some(receipt) => println!("Transaction successful: {:?}", receipt),
+        None => println!("Transaction executed successfully, but no receipt was returned."),
+    }
+
+    Ok(())
+}

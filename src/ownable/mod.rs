@@ -22,32 +22,13 @@ sol! {
     ///
     /// * `previous_owner` - Address of the previous owner.
     /// * `new_owner` - Address of the new owner.
-    #[allow(missing_docs)]
-    event OwnershipTransferred(address indexed previous_owner, address indexed new_owner);
-}
 
-sol! {
-    /// The caller account is not authorized to perform an operation.
-    ///
-    /// * `account` - Account that was found to not be authorized.
-    #[derive(Debug)]
-    #[allow(missing_docs)]
-    error OwnableUnauthorizedAccount(address account);
-    /// The owner is not a valid owner account. (eg. `Address::ZERO`)
-    ///
-    /// * `owner` - Account that's not allowed to become the owner.
-    #[derive(Debug)]
-    #[allow(missing_docs)]
-    error OwnableInvalidOwner(address owner);
 }
 
 /// An error that occurred in the implementation of an [`Ownable`] contract.
 #[derive(SolidityError, Debug)]
 pub enum Error {
-    /// The caller account is not authorized to perform an operation.
-    UnauthorizedAccount(OwnableUnauthorizedAccount),
-    /// The owner is not a valid owner account. (eg. `Address::ZERO`)
-    InvalidOwner(OwnableInvalidOwner),
+
 }
 
 impl MethodError for Error {

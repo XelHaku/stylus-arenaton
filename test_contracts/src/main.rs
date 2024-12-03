@@ -6,7 +6,7 @@ mod players; // Add this line
 
 use crate::players::fund_players_eth::fund_players_eth;
 use crate::players::eth_balance::eth_balance;
-use methods::{debug_mint_aton,approve, balance_of,total_supply,name,stake_eth};
+use methods::{debug_mint_aton,approve, balance_of,total_supply,name,stake_eth,initialize_contract};
 use ethers::prelude::*;
 use eyre::Result;
 use std::sync::Arc;
@@ -22,11 +22,14 @@ async fn main() -> Result<()> {
     let erc20aton_address = std::env::var("ERC20ATON_ADDRESS").unwrap_or_else(|_| "http://127.0.0.1:8545".into());
     let engine_address = std::env::var("ENGINE_ADDRESS").unwrap_or_else(|_| "http://127.0.0.1:8545".into());
 
-    // let whale_private_key = std::env::var("PRIVATE_KEY").expect("Please set the PRIVATE_KEY environment variable");
+    let whale_private_key = std::env::var("PRIVATE_KEY").expect("Please set the PRIVATE_KEY environment variable");
 
     let chain_id = std::env::var("CHAIN_ID")
         .unwrap_or_else(|_| "412346".to_string())
         .parse::<u64>()?;
+   
+   
+    initialize_contract(&erc20aton_address, whale_private_key, &rpc_url, chain_id).await?;
     name(&rpc_url, engine_address.as_str()).await?;
     name(&rpc_url, erc20aton_address.as_str()).await?;
 
