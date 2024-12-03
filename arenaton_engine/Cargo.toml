@@ -1,10 +1,10 @@
 [package]
-name = "stylus-hello-world"
+name = "arenaton-engine-stylus"
 version = "0.1.9"
 edition = "2021"
 license = "MIT OR Apache-2.0"
-homepage = "https://github.com/OffchainLabs/stylus-hello-world"
-repository = "https://github.com/OffchainLabs/stylus-hello-world"
+homepage = "https://github.com/OffchainLabs/arenaton-engine-stylus"
+repository = "https://github.com/OffchainLabs/arenaton-engine-stylus"
 keywords = ["arbitrum", "ethereum", "stylus", "alloy"]
 description = "Stylus hello world example"
 

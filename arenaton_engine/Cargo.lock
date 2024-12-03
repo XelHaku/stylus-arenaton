@@ -242,6 +242,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "arenaton-engine-stylus"
+version = "0.1.9"
+dependencies = [
+ "alloy-primitives 0.8.13",
+ "alloy-sol-macro 0.8.14",
+ "alloy-sol-types 0.8.13",
+ "cfg-if 0.1.10",
+ "derivative",
+ "dotenv",
+ "ethers",
+ "eyre",
+ "hex",
+ "keccak-const",
+ "stylus-proc 0.6.0",
+ "stylus-sdk",
+ "tokio",
+]
+
+[[package]]
 name = "ark-ff"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3509,25 +3528,6 @@ dependencies = [
  "quote",
  "rustversion",
  "syn 2.0.90",
-]
-
-[[package]]
-name = "stylus-hello-world"
-version = "0.1.9"
-dependencies = [
- "alloy-primitives 0.8.13",
- "alloy-sol-macro 0.8.14",
- "alloy-sol-types 0.8.13",
- "cfg-if 0.1.10",
- "derivative",
- "dotenv",
- "ethers",
- "eyre",
- "hex",
- "keccak-const",
- "stylus-proc 0.6.0",
- "stylus-sdk",
- "tokio",
 ]
 
 [[package]]
