@@ -70,7 +70,7 @@ sol_storage! {
         /// Role identifier -> Role information.
         mapping(bytes32 => RoleData) _roles;
 
-        address owner;
+        address _owner;
     }
 
         /// Information about a specific role.
@@ -135,7 +135,7 @@ pub fn initialize_contract(&mut self) -> Result<bool, ATONError> {
         return Err(ATONError::AlreadyInitialized(AlreadyInitialized {})); // Add the error struct
     }
     self.initialized.set(true); // Set initialized to true
-    self.owner.set(msg::sender());
+    self._owner.set(msg::sender());
     self._grant_role(FixedBytes::from(constants::DEFAULT_ADMIN_ROLE), msg::sender());
     Ok(true)
 }
@@ -276,72 +276,23 @@ pub fn initialize_contract(&mut self) -> Result<bool, ATONError> {
         // let _ = self.transfer_from(_player,contract::address(), _amount);
         Ok(true)
     }
-    /// The default admin role. `[0; 32]` by default.
 
-    /// Returns `true` if `account` has been granted `role`.
-    ///
-    /// # Arguments
-    ///
-    /// * `&self` - Read access to the contract's state.
-    /// * `role` - The role identifier.
-    /// * `account` - The account to check for membership.
     #[must_use]
     pub fn has_role(&self, role: B256, account: Address) -> bool {
         self._roles.getter(role).has_role.get(account)
     }
 
-    /// Checks if [`msg::sender`] has been granted `role`.
-    ///
-    /// # Arguments
-    ///
-    /// * `&self` - Read access to the contract's state.
-    /// * `role` - The role identifier.
-    ///
-    /// # Errors
-    ///
-    /// If [`msg::sender`] has not been granted `role`, then the error
-    /// [`Error::AccessUnauthorizedAccount`] is returned.
+
     pub fn only_role(&self, role: B256) -> Result<(), ATONError> {
         self._check_role(role, msg::sender())
     }
 
-    /// Returns the admin role that controls `role`. See [`Self::grant_role`]
-    /// and [`Self::revoke_role`].
-    ///
-    /// To change a role's admin, use [`Self::_set_role_admin`].
-    ///
-    /// # Arguments
-    ///
-    /// * `&self` - Read access to the contract's state.
-    /// * `role` - The role identifier.
     #[must_use]
     pub fn get_role_admin(&self, role: B256) -> B256 {
         *self._roles.getter(role).admin_role
     }
 
-    /// Grants `role` to `account`.
-    ///
-    /// If `account` had not been already granted `role`, emits a
-    /// [`RoleGranted`] event.
-    ///
-    /// # Requirements:
-    ///
-    /// * The caller must have `role`'s admin role.
-    ///
-    /// # Arguments
-    ///
-    /// * `&mut self` - Write access to the contract's state.
-    /// * `role` - The role identifier.
-    /// * `account` - The account which will be granted the role.
-    ///
-    /// # Errors
-    ///
-    /// If [`msg::sender`] has not been granted `role`, then the error
-    /// [`Error::AccessUnauthorizedAccount`] is returned.
-    ///
-    /// # Events
-    ///
-    /// May emit a [`RoleGranted`] event.
+
     pub fn grant_role(&mut self, role: B256, account: Address) -> Result<(), ATONError> {
         let admin_role = self.get_role_admin(role);
         self.only_role(admin_role)?;
@@ -356,28 +307,7 @@ pub fn grant_arenaton_role(&mut self, account: Address) -> Result<(), ATONError>
     Ok(())
 }
 
-    /// Revokes `role` from `account`.
-    ///
-    /// If `account` had been granted `role`, emits a [`RoleRevoked`] event.
-    ///
-    /// # Requirements:
-    ///
-    /// * The caller must have `role`'s admin role.
-    ///
-    /// # Arguments
-    ///
-    /// * `&mut self` - Write access to the contract's state.
-    /// * `role` - The role identifier.
-    /// * `account` - The account which will be revoked the role.
-    ///
-    /// # Errors
-    ///
-    /// If [`msg::sender`] has not been granted `role`, then the error
-    /// [`Error::AccessUnauthorizedAccount`] is returned.
-    ///
-    /// # Events
-    ///
-    /// May emit a [`RoleRevoked`] event.
+
     pub fn revoke_role(&mut self, role: B256, account: Address) -> Result<(), ATONError> {
         let admin_role = self.get_role_admin(role);
         self.only_role(admin_role)?;
@@ -385,38 +315,38 @@ pub fn grant_arenaton_role(&mut self, account: Address) -> Result<(), ATONError>
         Ok(())
     }
 
-    /// Revokes `role` from the calling account.
-    ///
-    /// Roles are often managed via [`Self::grant_role`] and
-    /// [`Self::revoke_role`]: this function's purpose is to provide a mechanism
-    /// for accounts to lose their privileges if they are compromised (such as
-    /// when a trusted device is misplaced).
-    ///
-    /// # Requirements:
-    ///
-    /// * The caller must be `confirmation`.
-    ///
-    /// # Arguments
-    ///
-    /// * `&mut self` - Write access to the contract's state.
-    /// * `role` - The role identifier.
-    /// * `confirmation` - The account which will be revoked the role.
-    ///
-    /// # Errors
-    ///
-    /// If [`msg::sender`] is not the `confirmation` address, then the error
-    /// [`Error::BadConfirmation`] is returned.
-    ///
-    /// # Events
-    ///
-    /// If the calling account has its `role` revoked, emits a [`RoleRevoked`]
-    /// event.
     pub fn renounce_role(&mut self, role: B256, confirmation: Address) -> Result<(), ATONError> {
         if msg::sender() != confirmation {
             return Err(ATONError::BadConfirmation(AccessControlBadConfirmation {}));
         }
 
         self._revoke_role(role, confirmation);
+        Ok(())
+    }
+        fn owner(&self) -> Address {
+        self._owner.get()
+    }
+
+    fn transfer_ownership(
+        &mut self,
+        new_owner: Address,
+    ) -> Result<(), ATONError> {
+        self.only_owner()?;
+
+        if new_owner.is_zero() {
+            return Err(ATONError::InvalidOwner(OwnableInvalidOwner {
+                owner: Address::ZERO,
+            }));
+        }
+
+        self._transfer_ownership(new_owner);
+
+        Ok(())
+    }
+
+    fn renounce_ownership(&mut self) -> Result<(), ATONError> {
+        self.only_owner()?;
+        self._transfer_ownership(Address::ZERO);
         Ok(())
     }
 }
@@ -622,5 +552,24 @@ impl ATON {
         } else {
             false
         }
+    }
+
+
+    pub fn only_owner(&self) -> Result<(), ATONError> {
+        let account = msg::sender();
+        if self.owner() != account {
+            return Err(ATONError::UnauthorizedAccount(
+                OwnableUnauthorizedAccount { account },
+            ));
+        }
+
+        Ok(())
+    }
+
+   
+    pub fn _transfer_ownership(&mut self, new_owner: Address) {
+        let previous_owner = self._owner.get();
+        self._owner.set(new_owner);
+        evm::log(OwnershipTransferred { previous_owner, new_owner });
     }
 }
