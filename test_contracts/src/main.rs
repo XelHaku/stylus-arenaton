@@ -19,12 +19,14 @@ async fn main() -> Result<()> {
 
     let rpc_url = std::env::var("RPC_URL").unwrap_or_else(|_| "http://127.0.0.1:8545".into());
     let erc20aton_address = std::env::var("ERC20ATON_ADDRESS").unwrap_or_else(|_| "http://127.0.0.1:8545".into());
+    let engine_address = std::env::var("ENGINE_ADDRESS").unwrap_or_else(|_| "http://127.0.0.1:8545".into());
 
     // let whale_private_key = std::env::var("PRIVATE_KEY").expect("Please set the PRIVATE_KEY environment variable");
 
     let chain_id = std::env::var("CHAIN_ID")
         .unwrap_or_else(|_| "412346".to_string())
         .parse::<u64>()?;
+    name(&rpc_url, engine_address.as_str()).await?;
     name(&rpc_url, erc20aton_address.as_str()).await?;
     total_supply(&rpc_url, erc20aton_address.as_str()).await?;
 

@@ -40,6 +40,9 @@ sol_interface! {
 /// Declare that `ArenatonEngine` is a contract with the following external methods.
 #[public]
 impl ArenatonEngine {
+        pub fn name() -> String {
+        "Name=Arenaton Engine".into()
+    }
     /// Gets the number from storage.
     pub fn number(&self) -> U256 {
         self.number.get()
@@ -66,3 +69,5 @@ impl ArenatonEngine {
         self.set_number(number + U256::from(1));
     }
 }
+// cargo stylus deploy --private-key 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659     
+// 
