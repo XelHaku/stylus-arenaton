@@ -77,3 +77,17 @@ pub async fn balance_of(owner_address_str: &str) -> Result<()> {
 
     Ok(())
 }
+
+#[tokio::main]
+async fn main() {
+    // Initialize tracing subscriber for logging
+    tracing_subscriber::fmt::init();
+
+    // The address whose balance you want to check
+    let address = "0x7e32b54800705876d3b5cfbc7d9c226a211f7c1a";
+
+    // Run the `balance_of` function and handle any errors
+    if let Err(err) = balance_of(address).await {
+        error!("Error: {:?}", err);
+    }
+}

@@ -80,3 +80,37 @@ async fn main() {
         error!("Error: {:?}", err);
     }
 }
+
+
+load abi from tree l@BlueBlack:~/git/stylus-arenaton/test_contracts$ tree -L 3
+.
+├── Cargo.lock
+├── Cargo.toml
+├── src
+│   ├── abi
+│   │   └── IATON.json
+│   ├── balance_of
+│   │   └── mod.rs
+│   ├── debug_mint_aton
+│   │   └── mod.rs
+│   ├── main.rs
+│   ├── name
+│   │   └── mod.rs
+│   └── swap
+│       └── mod.rs
+└── target
+    ├── CACHEDIR.TAG
+    └── debug
+        ├── balance_of
+        ├── balance_of.d
+        ├── build
+        ├── deps
+        ├── examples
+        ├── incremental
+        ├── main
+        ├── main.d
+        ├── name
+        └── name.d
+
+12 directories, 15 files
+xel@BlueBlack:~/git/stylus-arenaton/test_contracts$ 

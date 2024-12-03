@@ -23,8 +23,8 @@ async fn main() -> Result<()> {
     balance_of(player1).await?;
 
 
-    addEvent(abc,1750000000).await?
-stake(ATON,player2,team1).await?
+    // addEvent(abc,1750000000).await?
+// stake(ATON,player2,team1).await?
    
     // swap
   
