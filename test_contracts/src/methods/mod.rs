@@ -166,4 +166,47 @@ let receipt = call_contract_method_signed( // Remove <bool>
     }
 
     Ok(())
+}   pub async fn stake_eth(
+    contract_address: &str,
+    private_key: &str,
+    rpc_url: &str,
+    chain_id: u64,
+    player: Address,
+    value: U256, // Amount of ETH to stake in Wei
+) -> Result<()> {
+    let abi_json = r#"[
+  {
+    "inputs": [
+      { "internalType": "address", "name": "_player", "type": "address" }
+    ],
+    "name": "stakeEth",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "payable", // Make sure it's payable
+    "type": "function"
+  }
+]"#;
+
+    // Create signer from private key
+    let wallet = private_key.parse::<LocalWallet>()?.with_chain_id(chain_id);
+    let signer = Arc::new(SignerMiddleware::new(
+        Provider::<Http>::try_from(rpc_url)?,
+        wallet,
+    ));
+
+    let receipt = call_contract_method_signed(
+        "stakeEth",
+        player, // Pass the player address as argument
+        abi_json,
+        contract_address,
+        signer,
+        value, // Pass the value to send with the transaction
+    )
+    .await?;
+
+    match receipt {
+        Some(receipt) => println!("Transaction successful: {:?}", receipt),
+        None => println!("Transaction executed successfully, but no receipt was returned."),
+    }
+
+    Ok(())
 }

@@ -280,13 +280,13 @@ impl ATON {
     }
 
     #[payable]
-    pub fn stake_eth(&mut self, _player: Address) -> Result<bool, Vec<u8>> {
+    pub fn deposit_eth(&mut self, _player: Address) -> Result<bool, Vec<u8>> {
         // self.access.only_role(constants::ARENATON_ENGINE_ROLE.into())?;
         let _ = self.mint(contract::address(), msg::value());
         Ok(true)
     }
 
-    pub fn stake_aton(&mut self, _player: Address, _amount: U256) -> Result<bool, Vec<u8>> {
+    pub fn deposit_aton(&mut self, _player: Address, _amount: U256) -> Result<bool, Vec<u8>> {
         // let _ = self.access.only_role(constants::ARENATON_ENGINE_ROLE.into())?;
         let _ = self.transfer_from(_player, contract::address(), _amount);
         Ok(true)
