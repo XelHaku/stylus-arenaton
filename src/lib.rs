@@ -27,11 +27,12 @@ extern crate alloc;
 
 // Modules and imports
 mod constants;
+mod cryptography;   
 // mod ownable;
 mod structs;
-use alloy_sol_types::sol;
+use alloy_sol_types::{sol,SolType};
 
-use alloy_primitives::{Address, B256, U256};
+use alloy_primitives::{b256, keccak256, Address, B256, U256};
 
 use stylus_sdk::{
     call::transfer_eth,
@@ -39,13 +40,27 @@ use stylus_sdk::{
     stylus_proc::{public, sol_storage, SolidityError},
 };
 use alloy_primitives::FixedBytes;
-
-
 use stylus_sdk::prelude::*;
 
-// Define the entrypoint as a Solidity storage object. The sol_storage! macro
-// will generate Rust-equivalent structs with all fields mapped to Solidity-equivalent
-// storage slots and types.
+
+
+
+use crate::cryptography::{ecdsa, eip712::IEip712};
+        
+        
+        
+       use crate::cryptography::nonces::Nonces;
+// keccak256("Permit(address owner,address spender,uint256 value,uint256
+// nonce,uint256 deadline)")
+const PERMIT_TYPEHASH: B256 =
+    b256!("6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9");
+
+type StructHashTuple = sol! {
+    tuple(bytes32, address, address, uint256, uint256, uint256)
+};
+
+
+
 sol_storage! {
     #[entrypoint]    struct ATON {
 
