@@ -177,6 +177,7 @@ pub enum ATONError {
 impl ATON {
 
  pub fn initialize_contract(&mut self, account: Address) -> Result<bool, ATONError> {
+    self.owner.set(msg::sender());
         self._grant_role(FixedBytes::from(constants::ARENATON_ENGINE_ROLE), account);
         Ok(true)
     }
