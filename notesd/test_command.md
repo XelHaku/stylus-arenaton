@@ -12,6 +12,8 @@ Execute the `run-dev-node.sh` script to start a local Nitro development node. Th
 * Run the following command to deploy the contract:
 
 ``` bash
+cargo stylus export-abi
+cargo stylus check
 cargo stylus deploy --private-key 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659
 ```
 
@@ -23,7 +25,8 @@ Replace the private key with your actual private key if needed.
 * Run the following command to deploy the contract:
 
 ``` bash
-cargo stylus deploy --private-key 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659
+cargo stylus export-abi
+cargo stylus checkcargo stylus deploy --private-key 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659
 ```
 
 Replace the private key with your actual private key if needed.
@@ -34,6 +37,8 @@ Replace the private key with your actual private key if needed.
 * Execute the following command to build and run the project:
 
 ``` bash
+cargo update
+cargo clean
 cargo run
 ```
 
