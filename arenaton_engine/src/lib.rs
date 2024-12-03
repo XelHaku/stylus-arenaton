@@ -14,11 +14,26 @@ sol_storage! {
         uint256 number;
     }
 }
-
 sol_interface! {
-    interface IMethods {
-        function viewFoo() external view;
-        function writeFoo() external;
+    interface IATON {
+        function initializeContract() external returns (bool);
+        function name() external pure returns (string);
+        function symbol() external pure returns (string);
+        function decimals() external pure returns (uint8);
+        function totalSupply() external view returns (uint256);
+        function balanceOf(address owner) external view returns (uint256);
+        function transfer(address to, uint256 value) external returns (bool);
+        function transferFrom(address from, address to, uint256 value) external returns (bool);
+        function approve(address spender, uint256 value) external returns (bool);
+        function allowance(address owner, address spender) external view returns (uint256);
+        function debugMintAton() external payable returns (bool);
+        function donateEth() external payable returns (bool);
+        function stakeEth(address _player) external payable returns (bool);
+        function stakeAton(address _player, uint256 _amount) external returns (bool);
+        function swap(uint256 amount) external returns (bool);
+        function hasRole(bytes32 role, address account) external view returns (bool);
+        function grantRole(bytes32 role, address account) external;
+        function revokeRole(bytes32 role, address account) external;
     }
 }
 
