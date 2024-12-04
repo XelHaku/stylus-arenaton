@@ -58,45 +58,50 @@ const PERMIT_TYPEHASH: B256 =
 type StructHashTuple = sol! {
     tuple(bytes32, address, address, uint256, uint256, uint256)
 };
+struct MyEip712 {}
 
+impl IEip712 for MyEip712 {
+    const NAME: &'static str = "My Token";
+    const VERSION: &'static str = "1";
+}
 
 
 sol_storage! {
-    #[entrypoint]    struct ATON {
+    #[entrypoint]   
+    
+     struct ATON {
+        // ATON-specific storage variables
+        uint256 accumulated_commission_per_token;
+        uint256 total_commission_in_aton;
+        mapping(address => uint256) last_commission_per_token;
+        mapping(address => uint256) claimed_commissions;
 
-
-
-          uint256  accumulated_commission_per_token;
-
-  // Stores the total commission in ATON
-  uint256  total_commission_in_aton;
-    mapping(address => uint256) last_commission_per_token;
-    mapping(address => uint256) claimed_commissions;
-            /// Maps users to balances
+        // ERC20-related storage variables
         mapping(address => uint256) balances;
-        /// Maps users to a mapping of each spender's allowance
         mapping(address => mapping(address => uint256)) allowances;
-        /// The total supply of the token
         uint256 total_supply;
 
-        bool initialized ;
+        // Initialization flag
+        bool initialized;
 
-
-        /// Role identifier -> Role information.
+        // Access Control
         mapping(bytes32 => RoleData) _roles;
 
+        // Ownership
         address _owner;
+
+
     }
 
-        /// Information about a specific role.
     pub struct RoleData {
-        /// Whether an account is member of a certain role.
         mapping(address => bool) has_role;
-        /// The admin role for this role.
         bytes32 admin_role;
     }
-
 }
+
+
+
+// Implement unsafe TopLevelStorage
 sol! {
     // ERC20
     event Transfer(address indexed from, address indexed to, uint256 value);
@@ -122,6 +127,10 @@ sol! {
     event OwnershipTransferred(address indexed previous_owner, address indexed new_owner);
     error OwnableUnauthorizedAccount(address account);
     error OwnableInvalidOwner(address owner);
+
+    //permit
+    error ERC2612ExpiredSignature(uint256 deadline);
+    error ERC2612InvalidSigner(address signer, address owner);
 }
 
 
@@ -140,11 +149,13 @@ pub enum ATONError {
     AlreadyInitialized(AlreadyInitialized),
     UnauthorizedAccount(OwnableUnauthorizedAccount),
     InvalidOwner(OwnableInvalidOwner),
+    ExpiredSignature(ERC2612ExpiredSignature),
+    InvalidSigner(ERC2612InvalidSigner),
+    // ECDSA(ecdsa::Error),
 }
 
 #[public]
 impl ATON {
-
 pub fn initialize_contract(&mut self) -> Result<bool, ATONError> {
     if self.initialized.get() { // Access the value using .get()
         return Err(ATONError::AlreadyInitialized(AlreadyInitialized {})); // Add the error struct
@@ -365,6 +376,9 @@ pub fn grant_arenaton_role(&mut self, account: Address) -> Result<(), ATONError>
         Ok(())
     }
 }
+
+
+
 
 // Private Functions
 impl ATON {

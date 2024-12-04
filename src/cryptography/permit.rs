@@ -1,3 +1,4 @@
+
 //! Permit Contract.
 //!
 //! Extension of the ERC-20 standard allowing approvals to be made
@@ -18,14 +19,7 @@ use stylus_sdk::{
     stylus_proc::{public, sol_storage, SolidityError},
 };
 
-use crate::{
-    token::erc20::{self, Erc20, IErc20},
-    utils::{
-        cryptography::{ecdsa, eip712::IEip712},
-        nonces::Nonces,
-    },
-};
-
+use crate::cryptography::{ecdsa, eip712::IEip712,nonces::Nonces};
 // keccak256("Permit(address owner,address spender,uint256 value,uint256
 // nonce,uint256 deadline)")
 const PERMIT_TYPEHASH: B256 =
@@ -56,17 +50,12 @@ pub enum Error {
     ExpiredSignature(ERC2612ExpiredSignature),
     /// Indicates an error related to the issue about mismatched signature.
     InvalidSigner(ERC2612InvalidSigner),
-    /// Error type from [`Erc20`] contract [`erc20::Error`].
-    Erc20(erc20::Error),
-    /// Error type from [`ecdsa`] contract [`ecdsa::Error`].
-    ECDSA(ecdsa::Error),
+
 }
 
 sol_storage! {
     /// State of a Permit Contract.
     pub struct Erc20Permit<T: IEip712 + StorageType>{
-        /// ERC-20 contract.
-        Erc20 erc20;
 
         /// Nonces contract.
         Nonces nonces;
@@ -76,7 +65,9 @@ sol_storage! {
     }
 }
 
-
+/// NOTE: Implementation of [`TopLevelStorage`] to be able use `&mut self` when
+/// calling other contracts and not `&mut (impl TopLevelStorage +
+/// BorrowMut<Self>)`. Should be fixed in the future by the Stylus team.
 unsafe impl<T: IEip712 + StorageType> TopLevelStorage for Erc20Permit<T> {}
 
 #[public]
@@ -93,42 +84,42 @@ impl<T: IEip712 + StorageType> Erc20Permit<T> {
         self.eip712.domain_separator_v4()
     }
 
-    #[allow(clippy::too_many_arguments)]
-    pub fn permit(
-        &mut self,
-        owner: Address,
-        spender: Address,
-        value: U256,
-        deadline: U256,
-        v: u8,
-        r: B256,
-        s: B256,
-    ) -> Result<(), Error> {
-        if U256::from(block::timestamp()) > deadline {
-            return Err(ERC2612ExpiredSignature { deadline }.into());
-        }
+    // #[allow(clippy::too_many_arguments)]
+    // pub fn permit(
+    //     &mut self,
+    //     owner: Address,
+    //     spender: Address,
+    //     value: U256,
+    //     deadline: U256,
+    //     v: u8,
+    //     r: B256,
+    //     s: B256,
+    // ) -> Result<(), Error> {
+    //     if U256::from(block::timestamp()) > deadline {
+    //         return Err(ERC2612ExpiredSignature { deadline }.into());
+    //     }
 
-        let struct_hash = keccak256(StructHashTuple::abi_encode(&(
-            *PERMIT_TYPEHASH,
-            owner,
-            spender,
-            value,
-            self.nonces.use_nonce(owner),
-            deadline,
-        )));
+    //     let struct_hash = keccak256(StructHashTuple::abi_encode(&(
+    //         *PERMIT_TYPEHASH,
+    //         owner,
+    //         spender,
+    //         value,
+    //         self.nonces.use_nonce(owner),
+    //         deadline,
+    //     )));
 
-        let hash: B256 = self.eip712.hash_typed_data_v4(struct_hash);
+    //     let hash: B256 = self.eip712.hash_typed_data_v4(struct_hash);
 
-        let signer: Address = ecdsa::recover(self, hash, v, r, s)?;
+    //     let signer: Address = ecdsa::recover(self, hash, v, r, s)?;
 
-        if signer != owner {
-            return Err(ERC2612InvalidSigner { signer, owner }.into());
-        }
+    //     if signer != owner {
+    //         return Err(ERC2612InvalidSigner { signer, owner }.into());
+    //     }
 
-        self.erc20._approve(owner, spender, value, true)?;
+    //     self.erc20._approve(owner, spender, value, true)?;
 
-        Ok(())
-    }
+    //     Ok(())
+    // }
 
 
 }
