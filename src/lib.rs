@@ -65,7 +65,6 @@ sol_storage! {
         /// Role identifier -> Role information.
         mapping(bytes32 => RoleData) _roles;
 
-        address _owner;
     }
 
         /// Information about a specific role.
@@ -322,28 +321,6 @@ pub fn grant_arenaton_role(&mut self, account: Address) -> Result<(), ATONError>
         self._owner.get()
     }
 
-    fn transfer_ownership(
-        &mut self,
-        new_owner: Address,
-    ) -> Result<(), ATONError> {
-        self.only_owner()?;
-
-        if new_owner.is_zero() {
-            return Err(ATONError::InvalidOwner(OwnableInvalidOwner {
-                owner: Address::ZERO,
-            }));
-        }
-
-        self._transfer_ownership(new_owner);
-
-        Ok(())
-    }
-
-    fn renounce_ownership(&mut self) -> Result<(), ATONError> {
-        self.only_owner()?;
-        self._transfer_ownership(Address::ZERO);
-        Ok(())
-    }
 }
 
 // Private Functions
@@ -506,21 +483,5 @@ impl ATON {
     }
 
 
-    pub fn only_owner(&self) -> Result<(), ATONError> {
-        let account = msg::sender();
-        if self.owner() != account {
-            return Err(ATONError::UnauthorizedAccount(
-                OwnableUnauthorizedAccount { account },
-            ));
-        }
-
-        Ok(())
-    }
-
-   
-    pub fn _transfer_ownership(&mut self, new_owner: Address) {
-        let previous_owner = self._owner.get();
-        self._owner.set(new_owner);
-        evm::log(OwnershipTransferred { previous_owner, new_owner });
-    }
+ 
 }
