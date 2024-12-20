@@ -1,1 +1,0 @@
-/home/xel/git/stylus-arenaton/arenaton_engine/target/x86_64-unknown-linux-gnu/debug/stylus-arenaton: /home/xel/git/stylus-arenaton/arenaton_engine/src/lib.rs /home/xel/git/stylus-arenaton/arenaton_engine/src/main.rs
