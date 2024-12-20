@@ -24,7 +24,7 @@
 // Allow `cargo stylus export-abi` to generate a main function.
 #![cfg_attr(not(feature = "export-abi"), no_main)]
 extern crate alloc;
-mod erc20;
+
 // Modules and imports
 mod constants;
 // mod ownable;
@@ -57,7 +57,12 @@ sol_storage! {
   uint256  total_commission_in_aton;
     mapping(address => uint256) last_commission_per_token;
     mapping(address => uint256) claimed_commissions;
-
+            /// Maps users to balances
+        mapping(address => uint256) balances;
+        /// Maps users to a mapping of each spender's allowance
+        mapping(address => mapping(address => uint256)) allowances;
+        /// The total supply of the token
+        uint256 total_supply;
 
         bool initialized ;
 
@@ -348,7 +353,51 @@ pub fn grant_arenaton_role(&mut self, account: Address) -> Result<(), ATONError>
 
 // Private Functions
 impl ATON {
-   
+    /// Movement of funds between 2 accounts
+    /// (invoked by the public transfer() and transfer_from() functions )
+    pub fn _transfer(&mut self, from: Address, to: Address, value: U256) -> Result<(), ATONError> {
+        // Decreasing sender balance
+        let mut sender_balance = self.balances.setter(from);
+        let old_sender_balance = sender_balance.get();
+        if old_sender_balance < value {
+            return Err(ATONError::InsufficientBalance(InsufficientBalance {
+                from,
+                have: old_sender_balance,
+                want: value,
+            }));
+        }
+        sender_balance.set(old_sender_balance - value);
+
+        // Increasing receiver balance
+        let mut to_balance = self.balances.setter(to);
+        let new_to_balance = to_balance.get() + value;
+        to_balance.set(new_to_balance);
+
+        // Emitting the transfer event
+        evm::log(Transfer { from, to, value });
+        Ok(())
+    }
+
+    /// Mints `value` tokens to `address`
+    pub fn mint(&mut self, address: Address, value: U256) -> Result<(), ATONError> {
+        // Increasing balance
+        let mut balance = self.balances.setter(address);
+        let new_balance = balance.get() + value;
+        balance.set(new_balance);
+
+        // Increasing total supply
+        self.total_supply.set(self.total_supply.get() + value);
+
+        // Emitting the transfer event
+        evm::log(Transfer {
+            from: Address::ZERO,
+            to: address,
+            value,
+        });
+
+        Ok(())
+    }
+
     /// Accumulates commission generated from swaps and stores it as ATON tokens.
     /// Updates the `accumulated_commission_per_token` and `totalCommissionInATON` fields.
     ///

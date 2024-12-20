@@ -24,7 +24,8 @@
 // Allow `cargo stylus export-abi` to generate a main function.
 #![cfg_attr(not(feature = "export-abi"), no_main)]
 extern crate alloc;
-
+mod erc20;
+use crate::erc20::{Erc20, Erc20Error};
 // Modules and imports
 mod constants;
 // mod ownable;
@@ -48,7 +49,9 @@ use stylus_sdk::prelude::*;
 // storage slots and types.
 sol_storage! {
     #[entrypoint]    struct ATON {
+        #[borrow]
 
+        Erc20 erc20;
 
 
           uint256  accumulated_commission_per_token;
@@ -128,6 +131,8 @@ pub enum ATONError {
 }
 
 #[public]
+#[inherit(Erc20)]
+
 impl ATON {
 
 pub fn initialize_contract(&mut self) -> Result<bool, ATONError> {
@@ -140,82 +145,6 @@ pub fn initialize_contract(&mut self) -> Result<bool, ATONError> {
     Ok(true)
 }
 
-    /// Immutable token name
-    pub fn name() -> String {
-        "ATON Stylus".into()
-    }
-
-    /// Immutable token symbol
-    pub fn symbol() -> String {
-        "ATON".into()
-    }
-
-    /// Immutable token decimals
-    pub fn decimals() -> u8 {
-        18u8
-    }
-
-    /// Total supply of tokens
-    pub fn total_supply(&self) -> U256 {
-        self.total_supply.get()
-    }
-
-    /// Balance of `address`
-    pub fn balance_of(&self, owner: Address) -> U256 {
-        self.balances.get(owner)
-    }
-
-    /// Transfers `value` tokens from msg::sender() to `to`
-    pub fn transfer(&mut self, to: Address, value: U256) -> Result<bool, ATONError> {
-        self._transfer(msg::sender(), to, value)?;
-        Ok(true)
-    }
-
-    /// Transfers `value` tokens from `from` to `to`
-    /// (msg::sender() must be able to spend at least `value` tokens from `from`)
-    pub fn transfer_from(
-        &mut self,
-        from: Address,
-        to: Address,
-        value: U256,
-    ) -> Result<bool, ATONError> {
-        // Check msg::sender() allowance
-        let mut sender_allowances = self.allowances.setter(from);
-        let mut allowance = sender_allowances.setter(msg::sender());
-        let old_allowance = allowance.get();
-        if old_allowance < value {
-            return Err(ATONError::InsufficientAllowance(InsufficientAllowance {
-                owner: from,
-                spender: msg::sender(),
-                have: old_allowance,
-                want: value,
-            }));
-        }
-
-        // Decreases allowance
-        allowance.set(old_allowance - value);
-
-        // Calls the internal transfer function
-        self._transfer(from, to, value)?;
-
-        Ok(true)
-    }
-
-    /// Approves the spenditure of `value` tokens of msg::sender() to `spender`
-    pub fn approve(&mut self, spender: Address, value: U256) -> bool {
-        self.allowances.setter(msg::sender()).insert(spender, value);
-        evm::log(Approval {
-            owner: msg::sender(),
-            spender,
-            value,
-        });
-        true
-    }
-
-    /// Returns the allowance of `spender` on `owner`'s tokens
-    pub fn allowance(&self, owner: Address, spender: Address) -> U256 {
-        self.allowances.getter(owner).get(spender)
-    }
     #[payable]
     pub fn debug_mint_aton(&mut self) -> Result<bool, ATONError> {
         let _ = self.mint(msg::sender(), msg::value());
@@ -243,13 +172,13 @@ pub fn initialize_contract(&mut self) -> Result<bool, ATONError> {
     #[payable]
     pub fn deposit_eth(&mut self, _player: Address) -> Result<bool, Vec<u8>> {
         // self.access.only_role(constants::ARENATON_ENGINE_ROLE.into())?;
-        let _ = self.mint(contract::address(), msg::value());
+        let _ = self.erc20.mint(contract::address(), msg::value());
         Ok(true)
     }
 
     pub fn deposit_aton(&mut self, _player: Address, _amount: U256) -> Result<bool, Vec<u8>> {
         // let _ = self.access.only_role(constants::ARENATON_ENGINE_ROLE.into())?;
-        let _ = self.transfer_from(_player, contract::address(), _amount);
+        let _ = self.erc20.transfer_from(_player, contract::address(), _amount);
         Ok(true)
     }
 
@@ -259,11 +188,11 @@ pub fn initialize_contract(&mut self) -> Result<bool, ATONError> {
                 sender: msg::sender(),
             }));
         }
-        let balance_aton = self.balance_of(msg::sender());
+        let balance_aton = self.erc20.balance_of(msg::sender());
 
         if balance_aton < amount {
             return Ok(true); // error
-        }
+        }   
         let balance_eth = contract::balance();
 
         if balance_eth < amount {
@@ -407,7 +336,7 @@ impl ATON {
     /// # Note
     /// Assumes `total_supply()` is non-zero. If it is zero, this function will have no effect.
     pub fn _accumulate_commission(&mut self, new_commission_aton: U256) -> Result<(), ATONError> {
-        let total_supply_tokens = self.total_supply();
+        let total_supply_tokens = self.erc20.total_supply();
 
         // Ensure no division by zero
         if total_supply_tokens > U256::from(0) {
@@ -447,7 +376,7 @@ impl ATON {
 
         let _owed_per_token = self.accumulated_commission_per_token.get()
             - self.last_commission_per_token.get(player);
-        let _unclaimed_commission = (self.balance_of(player) * _owed_per_token * pct_denom)
+        let _unclaimed_commission = (self.erc20.balance_of(player) * _owed_per_token * pct_denom)
             / U256::from(10).pow(U256::from(18u8));
         Ok(_unclaimed_commission)
     }
