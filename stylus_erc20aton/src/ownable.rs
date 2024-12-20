@@ -60,13 +60,17 @@ impl Ownable {
         evm::log(OwnershipTransferred { previous_owner, new_owner });
     }
 
+    
+
 }
 
 // These methods are public to other contracts
 // Note: modifying storage will become much prettier soon
 #[public]
 impl Ownable {
-   
+           fn owner(&self) -> Address {
+        self._owner.get()
+    }
 
     fn transfer_ownership(
         &mut self,

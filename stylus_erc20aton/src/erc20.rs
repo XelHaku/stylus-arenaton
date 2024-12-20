@@ -15,10 +15,6 @@ use stylus_sdk::{evm, msg, prelude::*};
 pub enum ERC20Error {
     InsufficientBalance(InsufficientBalance),
     InsufficientAllowance(InsufficientAllowance),
-    AccessUnauthorizedAccount(AccessControlUnauthorizedAccount),
-    BadConfirmation(AccessControlBadConfirmation),
-    UnauthorizedAccount(OwnableUnauthorizedAccount),
-    InvalidOwner(OwnableInvalidOwner),
 }
 sol_storage! {
     /// Erc20 implements all ERC-20 methods.
@@ -41,18 +37,6 @@ sol! {
     error InsufficientBalance(address from, uint256 have, uint256 want);
     error InsufficientAllowance(address owner, address spender, uint256 have, uint256 want);
 
-
-    // Access Control
-    event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previous_admin_role, bytes32 indexed new_admin_role);
-    event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender);
-    event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender);
-    error AccessControlUnauthorizedAccount(address account, bytes32 needed_role);
-    error AccessControlBadConfirmation();
-
-    // Ownership
-    event OwnershipTransferred(address indexed previous_owner, address indexed new_owner);
-    error OwnableUnauthorizedAccount(address account);
-    error OwnableInvalidOwner(address owner);
 }
 
 
