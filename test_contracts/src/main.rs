@@ -8,7 +8,7 @@ mod players;
 use crate::players::fund_players_eth::fund_players_eth;
 use crate::players::eth_balance::eth_balance;
 use methods::{
-    debug_mint_aton, approve, balance_of, total_supply, name, stake_eth, initialize_contract,owner
+    debug_mint_aton, approve, balance_of, total_supply, name, stake_eth, initialize_contract,owner,grant_arenaton_role
 };
 use ethers::prelude::*;
 use eyre::Result;
@@ -33,15 +33,20 @@ async fn main() -> Result<()> {
         .unwrap_or_else(|_| "412346".to_string())
         .parse::<u64>()?;
 
-        let wallet_0 = &WALLETS[0].private_key;
-
+        let _owner = &WALLETS[0];
+let arenaton_engine_mock = &WALLETS[1];
 
     println!("erc20aton_address: {}", &erc20aton_address);
     println!("engine_address: {}", &engine_address);
     fund_players_eth("1000000000000000000", &rpc_url, chain_id, Some(1)).await?;
 owner(&rpc_url, &erc20aton_address).await?;
     // Inicializa el contrato (opcional)
-    initialize_contract(&erc20aton_address, &wallet_0, &rpc_url, chain_id).await?;
+    // initialize_contract(&erc20aton_address, &_owner.private_key, &rpc_url, chain_id).await?;
+
+
+
+
+    grant_arenaton_role(&erc20aton_address, &arenaton_engine_mock.address, &_owner.private_key, &rpc_url, chain_id).await?;
 
     // Obtiene el nombre del contrato del motor y del token ATON
     name(&rpc_url, erc20aton_address.as_str()).await?;

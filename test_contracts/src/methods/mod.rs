@@ -285,3 +285,48 @@ pub async fn initialize_contract(
 
     Ok(())
 }
+
+
+pub async fn grant_arenaton_role(
+    contract_address: &str,
+    arenaton_engine_address: &str,
+    private_key: &str,
+    rpc_url: &str,
+    chain_id: u64,
+) -> Result<()> {
+    let abi_json = r#"[
+      {
+        "inputs": [{ "internalType": "address", "name": "account", "type": "address" }],
+        "name": "grantArenatonRole",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      }
+    ]"#;
+
+    // Parse contract addresses
+    let arenaton_engine_addr = arenaton_engine_address.parse::<Address>()?;
+
+    // Create signer from private key
+    let wallet = private_key.parse::<LocalWallet>()?.with_chain_id(chain_id);
+    let provider = Provider::<Http>::try_from(rpc_url)?;
+    let signer = Arc::new(SignerMiddleware::new(provider, wallet));
+
+    // Call the contract method, passing arenaton_engine_addr as the function argument
+    let receipt = call_contract_method_signed(
+        "grantArenatonRole",
+        arenaton_engine_addr,  // the argument to 'grantArenatonRole'
+        abi_json,
+        contract_address,
+        signer,
+        U256::zero(),
+    )
+    .await?;
+
+    match receipt {
+        Some(receipt) => println!("\nTransaction successful: {:?}", receipt),
+        None => println!("\nTransaction executed successfully, but no receipt was returned."),
+    }
+
+    Ok(())
+}
