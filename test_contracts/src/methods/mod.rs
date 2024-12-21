@@ -5,6 +5,35 @@ use eyre::Result;
 use serde::de::value;
 use std::sync::Arc;
 
+
+/// Function to get the owner of the contract
+pub async fn owner(rpc_url: &str, contract_address: &str) -> Result<()> {
+    let abi_json = r#"
+    [
+        {
+            "inputs": [],
+            "name": "owner",
+            "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+            "stateMutability": "view",
+            "type": "function"
+        }
+    ]
+    "#;
+
+    // Debug: Print the ABI to ensure it's correct
+    println!("ABI: {}", abi_json);
+
+    let contract_owner: Address = call_contract_method(
+        "owner",
+        (),
+        abi_json,
+        contract_address,
+        rpc_url,
+    ).await?;
+
+    println!("\nContract owner: {}", contract_owner);
+    Ok(())
+}
 /// Function to get the name of the contract
 pub async fn name(rpc_url: &str, contract_address: &str) -> Result<()> {
     let abi_json = r#"[
