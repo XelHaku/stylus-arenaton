@@ -174,7 +174,7 @@ pub fn initialize_contract(&mut self) -> Result<bool, ATONError> {
     }
 
     #[payable]
-    pub fn deposit_eth(&mut self, _player: Address) -> Result<bool, Vec<u8>> {
+    pub fn mint_aton_from_eth(&mut self) -> Result<bool, Vec<u8>> {
         self.control.only_role(constants::ARENATON_ENGINE_ROLE.into())?;
         let _ = self.erc20.mint(contract::address(), msg::value());
         Ok(true)

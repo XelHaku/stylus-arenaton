@@ -34,6 +34,8 @@ pub async fn owner(rpc_url: &str, contract_address: &str) -> Result<()> {
     println!("\nContract owner: {}", contract_owner);
     Ok(())
 }
+
+
 /// Function to get the name of the contract
 pub async fn name(rpc_url: &str, contract_address: &str) -> Result<()> {
     let abi_json = r#"[
@@ -320,6 +322,54 @@ pub async fn grant_arenaton_role(
         contract_address,
         signer,
         U256::zero(),
+    )
+    .await?;
+
+    match receipt {
+        Some(receipt) => println!("\nTransaction successful: {:?}", receipt),
+        None => println!("\nTransaction executed successfully, but no receipt was returned."),
+    }
+
+    Ok(())
+}
+
+
+
+
+pub async fn mint_aton_from_eth( contract_address: &str,value: U256,    private_key: &str,
+    rpc_url: &str,
+    chain_id: u64) -> Result<()> {
+
+/// Function to get the owner of the contract
+    let abi_json = r#"
+    [
+        {
+            "inputs": [],
+            "name": "mintAtonFromEth",
+            "outputs": [{ "internalType": "address", "name": "", "type": "bool" }],
+            "stateMutability": "payable",
+            "type": "function"
+        }
+    ]
+    "#;
+    // function mintAtonFromEth() external payable returns (bool);
+
+    // Parse contract addresses
+    let arenaton_engine_addr = arenaton_engine_address.parse::<Address>()?;
+
+    // Create signer from private key
+    let wallet = private_key.parse::<LocalWallet>()?.with_chain_id(chain_id);
+    let provider = Provider::<Http>::try_from(rpc_url)?;
+    let signer = Arc::new(SignerMiddleware::new(provider, wallet));
+
+    // Call the contract method, passing arenaton_engine_addr as the function argument
+    let receipt = call_contract_method_signed(
+        "mintAtonFromEth",
+        (),  // the argument to 'grantArenatonRole'
+        abi_json,
+        contract_address,
+        signer,
+        value,
     )
     .await?;
 
