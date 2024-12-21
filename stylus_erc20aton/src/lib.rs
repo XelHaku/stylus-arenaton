@@ -195,8 +195,9 @@ pub fn initialize_contract(&mut self) -> Result<bool, ATONError> {
         let balance_aton = self.erc20.balance_of(msg::sender());
 
         if balance_aton < amount {
-            return Ok(true); // error
-        }   
+return Err(ATONError::ZeroAton(ZeroAton {
+                sender: msg::sender(),
+            }));        }   
         let balance_eth = contract::balance();
 
         if balance_eth < amount {
