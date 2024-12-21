@@ -38,7 +38,7 @@ mod constants;
 mod structs;
 use alloy_sol_types::sol;
 
-use alloy_primitives::{Address, B256, U256};
+use alloy_primitives::{Address, U256};
 
 use stylus_sdk::{
     call::transfer_eth,
@@ -53,13 +53,44 @@ use stylus_sdk::prelude::*;
 // Define the entrypoint as a Solidity storage object. The sol_storage! macro
 // will generate Rust-equivalent structs with all fields mapped to Solidity-equivalent
 // storage slots and types.
+// sol_storage! {
+//     #[entrypoint]   
+//     struct ATON {
+//         #[borrow]
+
+//         Erc20 erc20;
+//         #[borrow]
+//         Ownable ownable;
+
+
+//           uint256  accumulated_commission_per_token;
+
+//   // Stores the total commission in ATON
+//   uint256  total_commission_in_aton;
+//     mapping(address => uint256) last_commission_per_token;
+//     mapping(address => uint256) claimed_commissions;
+
+
+//         bool initialized ;
+
+
+
+
+//     }
+
+    // Define some persistent storage using the Solidity ABI.
+// `Counter` will be the entrypoint.
 sol_storage! {
-    #[entrypoint]    struct ATON {
-        #[borrow]
+    #[entrypoint]
+    pub struct ATON {
+                #[borrow]
 
         Erc20 erc20;
-        #[borrow]
+                #[borrow]
         Ownable ownable;
+#[borrow]
+AccessControl control;
+        uint256 number;
 
 
           uint256  accumulated_commission_per_token;
@@ -73,14 +104,9 @@ sol_storage! {
         bool initialized ;
 
 
-
-
     }
-
-        /// Information about a specific role.
-
-
 }
+
 sol! {
     // ERC20
     event Transfer(address indexed from, address indexed to, uint256 value);
@@ -89,8 +115,12 @@ sol! {
     error InsufficientAllowance(address owner, address spender, uint256 have, uint256 want);
 
 
-
-error AlreadyInitialized();
+    // ATON
+    event DonateATON(address indexed sender, uint256 amount);
+    event Accumulate(uint256 new_commission, uint256 accumulated, uint256 total);
+    error ZeroEther(address sender);
+    error ZeroAton(address sender);
+    error AlreadyInitialized();
 }
 
 
@@ -107,7 +137,6 @@ pub enum ATONError {
 
 #[public]
 #[inherit(Erc20,Ownable,AccessControl)]
-
 impl ATON {
 
 pub fn initialize_contract(&mut self) -> Result<bool, ATONError> {
@@ -115,14 +144,14 @@ pub fn initialize_contract(&mut self) -> Result<bool, ATONError> {
         return Err(ATONError::AlreadyInitialized(AlreadyInitialized {})); // Add the error struct
     }
     self.initialized.set(true); // Set initialized to true
-    self._owner.set(msg::sender());
-    self._grant_role(FixedBytes::from(constants::DEFAULT_ADMIN_ROLE), msg::sender());
+    self.ownable._owner.set(msg::sender());
+    self.control._grant_role(FixedBytes::from(constants::DEFAULT_ADMIN_ROLE), msg::sender());
     Ok(true)
 }
 
     #[payable]
     pub fn debug_mint_aton(&mut self) -> Result<bool, ATONError> {
-        let _ = self.mint(msg::sender(), msg::value());
+        let _ = self.erc20.mint(msg::sender(), msg::value());
         Ok(true)
     }
 
@@ -137,7 +166,7 @@ pub fn initialize_contract(&mut self) -> Result<bool, ATONError> {
         }
         let _ = self._accumulate_commission(amount);
         // Mint equivalent ATON tokens to the sender
-        let _ = self.mint(contract::address(), amount);
+        let _ = self.erc20.mint(contract::address(), amount);
 
         // Emit the `DonateATON` event
         evm::log(DonateATON { sender, amount });

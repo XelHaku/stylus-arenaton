@@ -6,10 +6,11 @@
 //! Note that this code is unaudited and not fit for production use.
 
 // Imported packages
-use alloy_primitives::{Address, U256};
+use alloy_primitives::{Address, U256,B256};
 use alloy_sol_types::sol;
 use stylus_sdk::{evm, msg, prelude::*};
-
+use alloy_primitives::FixedBytes;
+use crate::constants;
 
 sol_storage! {
     /// AccessControl implements all ERC-20 methods.
@@ -206,8 +207,6 @@ pub fn grant_arenaton_role(&mut self, account: Address) -> Result<(), ATONError>
         self._revoke_role(role, confirmation);
         Ok(())
     }
-        fn owner(&self) -> Address {
-        self._owner.get()
-    }
+  
 
 }
