@@ -64,12 +64,17 @@ sol_storage! {
 
   
 
-    pub struct Player {
-        address player_address;
-        uint256 level;
-        bytes8[] activeEvents;
-        bytes8[] closedEvents;
-    }
+ /**
+   * @dev Structure representing a player's data within the platform.
+   * This structure includes details about the player's activity, level, and commission earnings.
+   */
+  struct Player {
+    bytes8[] activeEvents; // Array of event IDs in which the player is currently participating.
+    bytes8[] closedEvents; // Array of event IDs for events that the player participated in and that are now closed.
+    uint32 level; // The player's current level, representing their experience or skill within the platform.
+    uint256 claimedCommissionsByPlayer; // Total amount of commissions claimed by the player.
+    uint256 lastCommissionPerTokenForPlayer; // The last recorded commission per token for the player, used to calculate unclaimed commissions.
+  }
 
       /**
    * @dev Structure representing a player's stake in an event.
