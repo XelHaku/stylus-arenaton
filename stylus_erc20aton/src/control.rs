@@ -177,12 +177,12 @@ impl AccessControl {
     }
 
 
-    pub fn grant_role(&mut self, role: B256, account: Address) -> Result<(), ATONError> {
-        let admin_role = self.get_role_admin(role);
-        self.only_role(admin_role)?;
-        self._grant_role(role, account);
-        Ok(())
-    }
+    // pub fn grant_role(&mut self, role: B256, account: Address) -> Result<(), ATONError> {
+    //     let admin_role = self.get_role_admin(role);
+    //     self.only_role(admin_role)?;
+    //     self._grant_role(role, account);
+    //     Ok(())
+    // }
 
 pub fn grant_arenaton_role(&mut self, account: Address) -> Result<(), ATONError> {
     let admin_role = self.get_role_admin(FixedBytes::from(constants::ARENATON_ENGINE_ROLE));
@@ -192,21 +192,14 @@ pub fn grant_arenaton_role(&mut self, account: Address) -> Result<(), ATONError>
 }
 
 
-    pub fn revoke_role(&mut self, role: B256, account: Address) -> Result<(), ATONError> {
-        let admin_role = self.get_role_admin(role);
+    pub fn revoke_arenaton_role(&mut self, account: Address) -> Result<(), ATONError> {
+        let admin_role = self.get_role_admin(FixedBytes::from(constants::ARENATON_ENGINE_ROLE));
         self.only_role(admin_role)?;
-        self._revoke_role(role, account);
+
+        self._revoke_role(FixedBytes::from(constants::ARENATON_ENGINE_ROLE), account);
         Ok(())
     }
 
-    pub fn renounce_role(&mut self, role: B256, confirmation: Address) -> Result<(), ATONError> {
-        if msg::sender() != confirmation {
-            return Err(ATONError::BadConfirmation(AccessControlBadConfirmation {}));
-        }
-
-        self._revoke_role(role, confirmation);
-        Ok(())
-    }
   
 
 }

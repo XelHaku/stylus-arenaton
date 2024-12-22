@@ -89,9 +89,4 @@ impl Ownable {
         Ok(())
     }
 
-    fn renounce_ownership(&mut self) -> Result<(), OwnableError> {
-        self.only_owner()?;
-        self._transfer_ownership(Address::ZERO);
-        Ok(())
-    }
 }
