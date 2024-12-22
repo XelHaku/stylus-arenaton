@@ -55,7 +55,7 @@ sol_storage! {
 
   // Mapping for storing event and player data
 //   mapping(bytes8 => Event) private events;
-//   mapping(address => U256)  players;
+  mapping(address => Player)  players;
 
   // Array for tracking active events
   bytes8[]  activeEvents;
@@ -74,17 +74,13 @@ sol_storage! {
     //     stakes: Vec<Stake>,
     // }   
 
-    // pub struct Player {
-    //     address: Address,
-    //     team: u8,
-    //     stakes: Vec<Stake>,
-    // }
+    pub struct Player {
+        address player_address;
+        uint256 level;
+        bytes8[] activeEvents;
+        bytes8[] closedEvents;
+    }
 
-    // pub struct Stake {
-    //     team: u8,
-    //     amount_aton: U256,
-    //     amount_eth: U256,
-    // }
 }
 
 // Remove or provide Erc20 trait below if needed
