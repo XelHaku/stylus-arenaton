@@ -55,11 +55,11 @@ sol_storage! {
 
   // Mapping for storing event and player data
 //   mapping(bytes8 => Event) private events;
-//   mapping(address => Player) private players;
+//   mapping(address => U256)  players;
 
   // Array for tracking active events
-//   bytes8[] private activeEvents;
-//   bytes8[] private closedEvents;
+  bytes8[]  activeEvents;
+  bytes8[]  closedEvents;
     }
 
     // pub struct Event {
