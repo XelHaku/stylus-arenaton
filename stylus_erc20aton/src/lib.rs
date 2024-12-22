@@ -130,6 +130,22 @@ impl ATON {
         Ok(true)
     }
 
+     pub fn accumulate_aton(&mut self, amount: U256) -> Result<bool, ATONError> {
+        let sender = msg::sender(); // Address of the sender
+
+        // Ensure the transaction includes some Ether to donate
+        if amount == U256::from(0) {
+            return Err(ATONError::ZeroAton  (ZeroAton  { sender }));
+        }
+        let _ = self._accumulate_commission(amount);
+        // Mint equivalent ATON tokens to the sender
+        let _ = self.erc20.transfer(contract::address(), amount);
+
+        // Emit the `DonateATON` event
+        evm::log(DonateATON { sender, amount });
+        Ok(true)
+    }
+
     #[payable]
     pub fn mint_aton_from_eth(&mut self) -> Result<bool, Vec<u8>> {
         self.control.only_role(constants::ARENATON_ENGINE_ROLE.into())?;

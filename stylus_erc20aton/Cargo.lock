@@ -3525,25 +3525,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "stylus-hello-world"
-version = "0.1.9"
-dependencies = [
- "alloy-primitives 0.8.13",
- "alloy-sol-macro 0.8.15",
- "alloy-sol-types 0.8.13",
- "cfg-if 0.1.10",
- "derivative",
- "dotenv",
- "ethers",
- "eyre",
- "hex",
- "keccak-const",
- "stylus-proc 0.6.0",
- "stylus-sdk",
- "tokio",
-]
-
-[[package]]
 name = "stylus-proc"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3599,6 +3580,25 @@ dependencies = [
  "mini-alloc",
  "regex",
  "stylus-proc 0.7.0-beta.1",
+]
+
+[[package]]
+name = "stylus_erc20aton"
+version = "0.1.9"
+dependencies = [
+ "alloy-primitives 0.8.13",
+ "alloy-sol-macro 0.8.15",
+ "alloy-sol-types 0.8.13",
+ "cfg-if 0.1.10",
+ "derivative",
+ "dotenv",
+ "ethers",
+ "eyre",
+ "hex",
+ "keccak-const",
+ "stylus-proc 0.6.0",
+ "stylus-sdk",
+ "tokio",
 ]
 
 [[package]]
