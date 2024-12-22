@@ -33,7 +33,7 @@ sol! {
     error ZeroAton(address sender);
     error AlreadyInitialized();
 
-    event AddEvent(        bytes32 event_id,
+    event AddEvent(        bytes8 event_id,
         uint64 start_date,
         uint8 sport,
     );
@@ -118,28 +118,34 @@ uint64 timestamp;
 #[inherit(Ownable, AccessControl)]
 impl ArenatonEngine {
     /// Add a new event
-    pub fn add_event(
+      pub fn add_event(
         &mut self,
         event_id: String,
         start_date: u64,
         sport: u8
     ) -> Result<bool, ATONError> {
-        // Ensure `event_id` is converted to a fixed-size byte array (e.g., [u8; 32]).
-        let mut event_id_bytes = [0u8; 32]; // Adjust the size to match your specific requirement.
+        // Convert event_id to bytes8
+        let mut event_id_bytes = [0u8; 8];
         let bytes = event_id.as_bytes();
         let copy_len = bytes.len().min(event_id_bytes.len());
         event_id_bytes[..copy_len].copy_from_slice(&bytes[..copy_len]);
 
-        // Log the event with the AddEvent structure
+        // Convert [u8; 8] to FixedBytes<8>
+        let event_id_key = FixedBytes::<8>::from(event_id_bytes);
+
+        // Insert into the events mapping
+        let event = self.events.get(event_id_key);
+
+        // Log the event
         evm::log(AddEvent {
-            event_id: event_id_bytes.into(),
+            event_id: event_id_key, // Use the FixedBytes<8> type here
             start_date,
             sport,
         });
 
-        // Your logic for adding an event goes here
         Ok(true)
     }
+
 
     /// Stake with ATON
     pub fn stake_aton(
