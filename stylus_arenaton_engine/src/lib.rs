@@ -54,7 +54,7 @@ sol_storage! {
 //   uint256 constant pct_denom = 10000000;
 
   // Mapping for storing event and player data
-//   mapping(bytes8 => Event) private events;
+  mapping(bytes8 => Event)  events;
   mapping(address => Player)  players;
 
   // Array for tracking active events
@@ -62,17 +62,9 @@ sol_storage! {
   bytes8[]  closedEvents;
     }
 
-    // pub struct Event {
-    //     active: bool,
-    //     closed: bool,
-    //     paid: bool,
-    //     startDate: u64,
-    //     sport: u8,
-    //     winner: i8,
-    //     total: [u256; 2],
-    //     players: Vec<Address>,
-    //     stakes: Vec<Stake>,
-    // }   
+    pub struct Event {
+        bool active;
+    }   
 
     pub struct Player {
         address player_address;
