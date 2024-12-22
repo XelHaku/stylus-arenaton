@@ -14,7 +14,7 @@ use alloy_sol_types::sol;
 // --- Use standard String ---
 use std::string::String;
 
-use alloy_primitives::{Address, U256, B256};
+use alloy_primitives::{ Address, U256, B256 };
 use stylus_sdk::{
     call::transfer_eth,
     contract,
@@ -32,6 +32,11 @@ sol! {
     error ZeroEther(address sender);
     error ZeroAton(address sender);
     error AlreadyInitialized();
+
+    event AddEvent(        bytes32 event_id,
+        uint64 start_date,
+        uint8 sport,
+    );
 }
 
 /// Represents the ways methods may fail.
@@ -83,7 +88,8 @@ sol_storage! {
   pub struct Stake {
     uint256 amount; // The total amount of tokens staked by the player.
     uint8 team; // The team the player is betting on: 1 for Team A, 2 for Team B.
-  }
+uint64 timestamp;  
+}
 
   /**
    * @dev Structure representing an event for betting.
@@ -112,13 +118,36 @@ sol_storage! {
 #[inherit(Ownable, AccessControl)]
 impl ArenatonEngine {
     /// Add a new event
-    pub fn add_event(&mut self, event_id: String, start_date: U256, sport: u8) -> Result<bool, ATONError> {
-        // Your logic
+    pub fn add_event(
+        &mut self,
+        event_id: String,
+        start_date: u64,
+        sport: u8
+    ) -> Result<bool, ATONError> {
+        // Ensure `event_id` is converted to a fixed-size byte array (e.g., [u8; 32]).
+        let mut event_id_bytes = [0u8; 32]; // Adjust the size to match your specific requirement.
+        let bytes = event_id.as_bytes();
+        let copy_len = bytes.len().min(event_id_bytes.len());
+        event_id_bytes[..copy_len].copy_from_slice(&bytes[..copy_len]);
+
+        // Log the event with the AddEvent structure
+        evm::log(AddEvent {
+            event_id: event_id_bytes.into(),
+            start_date,
+            sport,
+        });
+
+        // Your logic for adding an event goes here
         Ok(true)
     }
 
     /// Stake with ATON
-    pub fn stake_aton(&mut self, _event_id: String, _amount_aton: U256, _team: u8) -> Result<bool, ATONError> {
+    pub fn stake_aton(
+        &mut self,
+        _event_id: String,
+        _amount_aton: U256,
+        _team: u8
+    ) -> Result<bool, ATONError> {
         // Your logic
         Ok(true)
     }
@@ -129,12 +158,12 @@ impl ArenatonEngine {
         Ok(true)
     }
 
-       pub fn close_event(&mut self, _event_id: String, _winner: u8) -> Result<bool, ATONError> {
+    pub fn close_event(&mut self, _event_id: String, _winner: u8) -> Result<bool, ATONError> {
         // Your logic
         Ok(true)
     }
 
-       pub fn pay_event(&mut self, _event_id: String, _batch_size: u128) -> Result<bool, ATONError> {
+    pub fn pay_event(&mut self, _event_id: String, _batch_size: u128) -> Result<bool, ATONError> {
         // Your logic
         Ok(true)
     }
@@ -149,7 +178,6 @@ impl ArenatonEngine {
         Ok(true)
     }
 
-
     pub fn get_player_event_list(&self, _player: Address) -> Result<bool, ATONError> {
         // Your logic
         Ok(true)
@@ -159,4 +187,3 @@ impl ArenatonEngine {
 impl ArenatonEngine {
     // Additional private or internal functions
 }
-
