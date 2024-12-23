@@ -149,7 +149,7 @@ impl ATON {
     #[payable]
     pub fn mint_aton_from_eth(&mut self) -> Result<bool, Vec<u8>> {
         self.control.only_role(constants::ARENATON_ENGINE_ROLE.into())?;
-        let _ = self.erc20.mint(contract::address(), msg::value());
+        let _ = self.erc20.mint(msg::sender(), msg::value());
 
         Ok(true)
     }
