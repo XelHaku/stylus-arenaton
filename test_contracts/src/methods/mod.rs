@@ -115,7 +115,7 @@ pub async fn balance_of(
     )
     .await?;
 
-    println!("\nBalance of {}: {}", owner, balance);
+    println!("\nATON balance of {}: {}", owner, balance);
     Ok(())
 }
 
@@ -330,6 +330,8 @@ pub async fn grant_arenaton_role(
         None => println!("\nTransaction executed successfully, but no receipt was returned."),
     }
 
+    
+
     Ok(())
 }
 
@@ -355,7 +357,7 @@ pub async fn mint_aton_from_eth( contract_address: &str,value: U256,    private_
     // function mintAtonFromEth() external payable returns (bool);
 
     // Parse contract addresses
-    let arenaton_engine_addr = arenaton_engine_address.parse::<Address>()?;
+    // let arenaton_engine_addr = contract_address.parse::<Address>()?;
 
     // Create signer from private key
     let wallet = private_key.parse::<LocalWallet>()?.with_chain_id(chain_id);
