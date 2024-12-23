@@ -136,6 +136,11 @@ impl ArenatonEngine {
         // Insert into the events mapping
         let event = self.events.get(event_id_key);
 
+
+        event.startDate = start_date;
+        event.sport = sport;    
+
+
         // Log the event
         evm::log(AddEvent {
             event_id: event_id_key, // Use the FixedBytes<8> type here
