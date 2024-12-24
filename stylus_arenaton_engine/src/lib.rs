@@ -210,11 +210,14 @@ let _ = self.stake(_event_id,_amount, _team);
        
 //         let config = Call::new_in(self);
 
-//          aton_contract.transfer_from(config, _player, contract::address(),_amount_aton)?;
+//         let _ =match aton_contract.transfer_from(config, _player, contract::address(),_amount_aton) {
+//             Ok(_) => Ok(true),
+//             Err(e) => Err(false),
+//         }
 
     
 
-// self.stake(_event_id,_amount, _team);
+// let _ = self.stake(_event_id,_amount, _team);
 //         // Your logic
 //         Ok(true)
 //     }
