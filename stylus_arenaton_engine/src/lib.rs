@@ -27,7 +27,8 @@ use alloy_primitives::FixedBytes;
 sol_interface! {
     interface IATON {
     function mintAtonFromEth() external payable returns (bool);
-    }
+    function transferFrom(address from, address to, uint256 value) external returns (bool);    
+}
 }
 
 /// Additional events and errors
@@ -160,26 +161,29 @@ impl ArenatonEngine {
     /// Stake with ETH
     #[payable]
     pub fn stake_eth(&mut self, _event_id: String, _team: u8) -> Result<bool, ATONError> {
-        let amount = msg::value(); // Ether sent with the transaction
+        let _amount = msg::value(); // Ether sent with the transaction
         let _player = msg::sender();
 
 
         // Parse the const &str as a local Address variable
         let aton_address = Address::parse_checksummed(ATON, None).expect("Invalid address");
         let aton_contract = IATON::new(aton_address);
-        let config = Call::new_in(self).value(msg::value());
+       
+       
+        let config = Call::new_in(self).value(_amount);
 
-        let amounts = match aton_contract.mint_aton_from_eth(config) {
-            Ok(amounts) => amounts,
-            Err(_) => return Ok(false),
+        let _ = match aton_contract.mint_aton_from_eth(config) {
+            Ok(_) => Ok(true),
+            Err(e) => Err(false),
         };
 
-//
+    
 
+let _ = self.stake(_event_id,_amount, _team);
         Ok(true)
     }
     /// Stake with ATON
-    pub fn stake_aton(
+    pub fn stake(
         &mut self,
         _event_id: String,
         _amount_aton: U256,
@@ -188,6 +192,32 @@ impl ArenatonEngine {
         // Your logic
         Ok(true)
     }
+
+
+//        pub fn stake_aton(
+//         &mut self,
+//         _event_id: String,
+//         _amount_aton: U256,
+//         _team: u8
+//     ) -> Result<bool, ATONError> {
+//         let _player = msg::sender();
+
+
+//         // Parse the const &str as a local Address variable
+//         let aton_address = Address::parse_checksummed(ATON, None).expect("Invalid address");
+//         let aton_contract = IATON::new(aton_address);
+       
+       
+//         let config = Call::new_in(self);
+
+//          aton_contract.transfer_from(config, _player, contract::address(),_amount_aton)?;
+
+    
+
+// self.stake(_event_id,_amount, _team);
+//         // Your logic
+//         Ok(true)
+//     }
 
 
     pub fn close_event(&mut self, _event_id: String, _winner: u8) -> Result<bool, ATONError> {
