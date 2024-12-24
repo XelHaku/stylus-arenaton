@@ -1,14 +1,16 @@
 #![cfg_attr(not(feature = "export-abi"), no_main)]
 extern crate alloc;
-
 mod ownable;
-use crate::ownable::Ownable;
-
 mod control;
-use crate::control::AccessControl;
-
 mod constants;
 mod structs;
+mod tools;
+
+use crate::tools::{string_to_bytes32, bytes32_to_string};
+use crate::ownable::Ownable;
+
+use crate::control::AccessControl;
+
 use alloy_sol_types::sol;
 
 // --- Use standard String ---
@@ -24,6 +26,8 @@ use stylus_sdk::{
 };
 use stylus_sdk::prelude::*;
 use alloy_primitives::FixedBytes;
+
+
 sol_interface! {
     interface IATON {
     function mintAtonFromEth() external payable returns (bool);
@@ -131,13 +135,7 @@ impl ArenatonEngine {
         sport: u8
     ) -> Result<bool, ATONError> {
         // Convert event_id to bytes8
-        let mut event_id_bytes = [0u8; 8];
-        let bytes = event_id.as_bytes();
-        let copy_len = bytes.len().min(event_id_bytes.len());
-        event_id_bytes[..copy_len].copy_from_slice(&bytes[..copy_len]);
-
-        // Convert [u8; 8] to FixedBytes<8>
-        let event_id_key = FixedBytes::<8>::from(event_id_bytes);
+        let event_id_key = string_to_bytes32(&event_id);
 
         // Insert into the events mapping
         let event = self.events.get(event_id_key);
@@ -186,41 +184,56 @@ let _ = self.stake(_event_id,_amount, _team);
     pub fn stake(
         &mut self,
         _event_id: String,
-        _amount_aton: U256,
+        _amount: U256,
         _team: u8
     ) -> Result<bool, ATONError> {
+        // convert _event_id to bytes8
+        let mut event_id_bytes = [0u8; 8];
+        let bytes = _event_id.as_bytes();
+        let copy_len = bytes.len().min(event_id_bytes.len());
+        event_id_bytes[..copy_len].copy_from_slice(&bytes[..copy_len]);
+
+        // Convert [u8; 8] to FixedBytes<8>
+        let event_id_key = FixedBytes::<8>::from(event_id_bytes);
+
+        // Insert into the events mapping
+        let event = self.events.get(event_id_key);
+        // if event.is_none() {
+        //     return Err(false);
+        // }   
+
         // Your logic
         Ok(true)
     }
 
 
-//        pub fn stake_aton(
-//         &mut self,
-//         _event_id: String,
-//         _amount_aton: U256,
-//         _team: u8
-//     ) -> Result<bool, ATONError> {
-//         let _player = msg::sender();
+       pub fn stake_aton(
+        &mut self,
+        _event_id: String,
+        _amount: U256,
+        _team: u8
+    ) -> Result<bool, ATONError> {
+        let _player = msg::sender();
 
 
-//         // Parse the const &str as a local Address variable
-//         let aton_address = Address::parse_checksummed(ATON, None).expect("Invalid address");
-//         let aton_contract = IATON::new(aton_address);
+        // Parse the const &str as a local Address variable
+        let aton_address = Address::parse_checksummed(ATON, None).expect("Invalid address");
+        let aton_contract = IATON::new(aton_address);
        
        
-//         let config = Call::new_in(self);
+        let config = Call::new_in(self);
 
-//         let _ =match aton_contract.transfer_from(config, _player, contract::address(),_amount_aton) {
-//             Ok(_) => Ok(true),
-//             Err(e) => Err(false),
-//         }
+        let _ =match aton_contract.transfer_from(config, _player, contract::address(),_amount) {
+            Ok(_) => Ok(true),
+            Err(e) => Err(false),
+        };
 
     
 
-// let _ = self.stake(_event_id,_amount, _team);
-//         // Your logic
-//         Ok(true)
-//     }
+let _ = self.stake(_event_id,_amount, _team);
+        // Your logic
+        Ok(true)
+    }
 
 
     pub fn close_event(&mut self, _event_id: String, _winner: u8) -> Result<bool, ATONError> {
