@@ -24,6 +24,11 @@ use stylus_sdk::{
 };
 use stylus_sdk::prelude::*;
 use alloy_primitives::FixedBytes;
+sol_interface! {
+    interface IATON {
+    function mintAtonFromEth() external payable returns (bool);
+    }
+}
 
 /// Additional events and errors
 sol! {
@@ -137,8 +142,8 @@ impl ArenatonEngine {
         let event = self.events.get(event_id_key);
 
 
-        event.startDate = start_date;
-        event.sport = sport;    
+        // event.startDate = start_date;
+        // event.sport = sport;    
 
 
         // Log the event
@@ -151,7 +156,16 @@ impl ArenatonEngine {
         Ok(true)
     }
 
+    
+    /// Stake with ETH
+    pub fn stake_eth(&mut self, _event_id: String, _team: u8) -> Result<bool, ATONError> {
+let amount = msg::value(); // Ether sent with the transaction
+let _player = msg::sender();
 
+//
+
+        Ok(true)
+    }
     /// Stake with ATON
     pub fn stake_aton(
         &mut self,
@@ -163,11 +177,6 @@ impl ArenatonEngine {
         Ok(true)
     }
 
-    /// Stake with ETH
-    pub fn stake_eth(&mut self, _event_id: String, _team: u8) -> Result<bool, ATONError> {
-        // Your logic
-        Ok(true)
-    }
 
     pub fn close_event(&mut self, _event_id: String, _winner: u8) -> Result<bool, ATONError> {
         // Your logic
