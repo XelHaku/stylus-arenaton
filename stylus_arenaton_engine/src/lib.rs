@@ -16,8 +16,8 @@ use std::string::String;
 
 use alloy_primitives::{ Address, U256, B256 };
 use stylus_sdk::{
-    call::transfer_eth,
-    contract,
+    abi::Bytes,
+    call::{call, transfer_eth, Call},    contract,
     evm,
     msg,
     stylus_proc::{ public, sol_storage, SolidityError },
@@ -51,7 +51,7 @@ pub enum ATONError {
     ZeroAton(ZeroAton),
     AlreadyInitialized(AlreadyInitialized),
 }
-
+const ATON: &str = "0xa6e41ffd769491a42a6e5ce453259b93983a22ef";
 // `ArenatonEngine` will be the entrypoint.
 sol_storage! {
     #[entrypoint]
@@ -158,9 +158,21 @@ impl ArenatonEngine {
 
     
     /// Stake with ETH
+    #[payable]
     pub fn stake_eth(&mut self, _event_id: String, _team: u8) -> Result<bool, ATONError> {
-let amount = msg::value(); // Ether sent with the transaction
-let _player = msg::sender();
+        let amount = msg::value(); // Ether sent with the transaction
+        let _player = msg::sender();
+
+
+        // Parse the const &str as a local Address variable
+        let aton_address = Address::parse_checksummed(ATON, None).expect("Invalid address");
+        let aton_contract = IATON::new(aton_address);
+        let config = Call::new_in(self).value(msg::value());
+
+        let amounts = match aton_contract.mint_aton_from_eth(config) {
+            Ok(amounts) => amounts,
+            Err(_) => return Ok(false),
+        };
 
 //
 
