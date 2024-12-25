@@ -112,11 +112,11 @@ uint64 timestamp;
    * This structure includes all necessary details for managing the event, including stakes, players, and the event's status.
    */
   pub struct Event {
-    bytes8 eventIdBytes; // Unique identifier for the event in bytes8 format.
+    bytes8 event_id_bytes; // Unique identifier for the event in bytes8 format.
     uint64 start_date; // The start date and time of the event.
     address[] players; // List of players who have placed stakes in the event.
-    mapping(address => Stake) stakes; // Mapping of player addresses to their respective stakes.
-    mapping(address => bool) stakeFinalized; // Mapping to track whether a player's stake has been finalized and paid out.
+    Stake[] stakes; // Mapping of player addresses to their respective stakes.
+    mapping(address => bool) stake_finalized; // Mapping to track whether a player's stake has been finalized and paid out.
     uint256[2] total; // Total stakes for each team: index 0 for Team A, index 1 for Team B.
     uint8 winner; // The winner of the event: 1 for Team A, 2 for Team B, -2 for a tie, -1 for no result yet, -3 for event canceled.
     uint8 sport; // Identifier representing the sport associated with the event.
@@ -152,7 +152,7 @@ impl ArenatonEngine {
             return Err(ATONError::AlreadyStarted(AlreadyStarted{}));
         }
         // 3) Set fields in storage
-        e.eventIdBytes.set(id8);
+        e.event_id_bytes.set(id8);
         e.start_date.set(Uint::<64, 1>::from(start_date));
         e.sport.set(Uint::<8, 1>::from(sport));
         e.winner.set(Uint::<8, 1>::from(99u8));
