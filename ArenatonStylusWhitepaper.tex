@@ -1,0 +1,191 @@
+\documentclass[9pt]{article}
+\usepackage[a4paper,margin=1in,top=1.2in,bottom=1in]{geometry} % Adjusted margins for compactness
+\usepackage{multicol}
+\usepackage{titlesec}
+\usepackage{lipsum}
+
+% Set font to serif
+\renewcommand{\familydefault}{\rmdefault}
+
+% Adjust title format
+\titleformat{\section}[block]{\bfseries\large}{\thesection}{0.5em}{} % Reduced spacing before section titles
+\titleformat{\subsection}[block]{\bfseries\normalsize}{\thesubsection}{0.5em}{} % Reduced spacing before subsection titles
+
+% Reduce vertical spacing in lists
+\usepackage{enumitem}
+\setlist{itemsep=0.2em, topsep=0.2em}
+
+% Begin document
+\begin{document}
+	
+	% Title Page
+	\begin{titlepage}
+		\centering
+		\vspace*{1.5cm} % Reduced vertical space
+		\Large
+		\textbf{Arenaton: Redefining Sports Betting with Decentralized Blockchain Technology}
+		
+		\vspace{0.8cm} % Reduced vertical space
+		\rule{\linewidth}{0.5mm}
+		
+		\section*{Abstract}
+		\normalsize % Set abstract font size to normal
+		The sports betting industry has long been criticized for its lack of transparency, centralized control, and high transaction costs. Arenaton addresses these challenges by leveraging blockchain technology to deliver a decentralized, transparent, and efficient platform for sports enthusiasts worldwide. Built on the \textbf{Arbitrum blockchain} and powered by the \textbf{Stylus SDK}, Arenaton offers unmatched gas efficiency and scalability by utilizing Rust-powered execution environments.
+		
+		The platform features an innovative \textbf{ERC20 ATON token} for staking, payouts, and commission sharing, alongside the \textbf{Oracle Role} for fair and tamper-proof event management. Arenaton introduces gasless staking and seamless user onboarding through \textbf{account abstraction}, ensuring inclusivity and accessibility. This document provides a detailed overview of Arenaton’s transparent economic model, event lifecycle, and cutting-edge architecture, showcasing its potential to redefine the future of sports betting.
+		\vspace{1cm} % Reduced vertical space
+		\rule{\linewidth}{0.5mm}
+	\end{titlepage}
+	
+	% Switch to two-column format for the rest of the document
+	\setlength{\columnsep}{0.5cm} % Reduced column separation
+	\begin{multicols}{2}
+		
+		\section{Introduction to Arenaton}
+		Sports betting platforms often face issues such as opaque odds, unfair fees, and centralized manipulation. Arenaton revolutionizes this landscape by combining blockchain’s trustless infrastructure with advanced smart contract logic to create a community-driven ecosystem.
+		
+		Key innovations include:
+		\begin{itemize}
+			\item \textbf{ERC20 ATON tokens} for seamless economic integration.
+			\item \textbf{Oracle Role} for secure event management and outcome declaration.
+			\item Gasless staking powered by \textbf{Stylus SDK} for cost-effective user interactions.
+		\end{itemize}
+		Arenaton’s decentralized architecture ensures fairness and accessibility, providing users with a transparent, trustless platform for sports betting.
+		
+		\section{Challenges in Traditional Sports Betting}
+		\subsection{Opaque Operations}
+		Traditional platforms lack transparency in odds calculation and revenue distribution.
+		
+		\subsection{High Fees}
+		Centralized operators impose significant fees, reducing user payouts.
+		
+		\subsection{Limited Access}
+		Geographic and regulatory restrictions prevent global user participation.
+		
+		\subsection{Trust Issues}
+		Centralized systems are vulnerable to manipulation and lack accountability.
+		
+		\section{Arenaton’s Key Features}
+		\subsection{ERC20 ATON: The Foundation of Tokenomics}
+		ATON serves as the primary token for the Arenaton ecosystem.
+		\begin{itemize}
+			\item \textbf{Utility}:
+			\begin{itemize}
+				\item Staking on events.
+				\item Receiving payouts and rewards.
+				\item Earning passive income through commission sharing.
+			\end{itemize}
+			\item \textbf{Economic Model}:
+			\begin{itemize}
+				\item 1:1 pegged with ETH for stability.
+				\item Minted dynamically based on user staking activity.
+			\end{itemize}
+		\end{itemize}
+		
+		\subsection{Event Management by Oracle Role}
+		The Oracle Role is integral to Arenaton’s fair event lifecycle:
+		\begin{itemize}
+			\item \textbf{Event Creation}: Oracles initialize events with a unique ID, start date, and sport.
+			\item \textbf{Outcome Declaration}: Oracles finalize results and trigger payouts using smart contracts.
+		\end{itemize}
+		
+		\subsection{Transparent Commission Sharing}
+		Arenaton implements a fair commission-sharing model to reward token holders:
+		\begin{itemize}
+			\item \textbf{2\% Commission}: Deducted from all stakes.
+			\item \textbf{Real-Time Distribution}: Commissions are calculated using the `accumulated\_commission\_per\_token` variable and distributed during transactions.
+		\end{itemize}
+		
+		\subsection{Gasless Transactions with Stylus SDK}
+		Stylus SDK enables Arenaton to achieve unprecedented gas efficiency:
+		\begin{itemize}
+			\item \textbf{Rust-Powered Execution}: Reduces transaction costs by up to 50\%.
+			\item \textbf{Scalable Operations}: Handles high-volume betting events seamlessly.
+		\end{itemize}
+		
+		\section{How Arenaton Works}
+		\subsection{Event Lifecycle Managed by Oracle}
+		\begin{enumerate}
+			\item \textbf{Event Creation}: Oracles use the `add\_event` function to initialize new events with parameters like event ID, start date, and sport.
+			\item \textbf{Betting Phase}: Users stake ETH or ATON tokens on outcomes. Odds dynamically adjust based on total stakes.
+			\item \textbf{Outcome Declaration}: Oracles close the event and declare the winner via the `close\_event` function.
+			\item \textbf{Payout Processing}: The Oracle triggers the `pay\_event` function to distribute rewards to participants.
+		\end{enumerate}
+		
+		\subsection{Dynamic Odds Calculation}
+		Odds are calculated in real time based on the total pool distribution for each outcome. This ensures fairness and eliminates fixed odds manipulation.
+		
+		\subsection{Commission Redistribution Flow}
+		\begin{enumerate}
+			\item \textbf{Collection}: A flat 2\% commission is deducted from stakes.
+			\item \textbf{Accumulation}: Tracked in `accumulated\_commission\_per\_token`.
+			\item \textbf{Distribution}: Commissions are distributed to ATON holders during token transactions.
+		\end{enumerate}
+		
+		\section{Technical Architecture}
+		\subsection{ERC20 ATON Token}
+		\begin{itemize}
+			\item \textbf{Minting}: Tokens are minted when users stake ETH.
+			\item \textbf{Burning}: Tokens are burned when swapped back to ETH.
+			\item \textbf{Commission Tracking}:
+			\begin{itemize}
+				\item `accumulated\_commission\_per\_token` stores unclaimed commissions.
+				\item `claimed\_commissions` ensures accurate payouts.
+			\end{itemize}
+		\end{itemize}
+		
+		\subsection{ArenatonEngine Smart Contract}
+		\begin{itemize}
+			\item \textbf{Access Control}: Managed by the `AccessControl` module, restricting event management to Oracles.
+			\item \textbf{Event Lifecycle}: Handles creation, betting, outcome declaration, and payout distribution.
+		\end{itemize}
+		
+		\subsection{Stylus SDK for Gas Efficiency}
+		\begin{itemize}
+			\item \textbf{Execution in Rust}: Optimized smart contracts for lower gas fees.
+			\item \textbf{Scalable Infrastructure}: Handles high transaction volumes with minimal latency.
+		\end{itemize}
+		
+		\section{User Journey and Accessibility}
+		\begin{enumerate}
+			\item \textbf{Onboarding}: Users register using Web3Auth social logins (Google, Facebook).
+			\item \textbf{Staking}: Users stake ETH or ATON on their chosen outcomes.
+			\item \textbf{Real-Time Updates}: Monitor live odds and event status via the dashboard.
+			\item \textbf{Rewards and Commissions}: Winnings and commissions are processed automatically.
+		\end{enumerate}
+		
+		\section{Tokenomics}
+		\subsection{Utility of ATON Tokens}
+		\begin{itemize}
+			\item \textbf{Staking and Betting}: Core currency for event participation.
+			\item \textbf{Rewards}: Event winners receive payouts in ATON tokens.
+			\item \textbf{Passive Income}: ATON holders earn commissions proportionally.
+		\end{itemize}
+		
+		\subsection{Economic Sustainability}
+		\begin{itemize}
+			\item \textbf{Dynamic Supply}: Adjusts based on staking activity.
+			\item \textbf{Burn Mechanism}: Maintains token value by reducing supply when swapped for ETH.
+		\end{itemize}
+		
+		\section{Advantages of Arenaton}
+		\begin{enumerate}
+			\item \textbf{Transparency}: Immutable records of bets, odds, and payouts on the blockchain.
+			\item \textbf{Fairness}: Dynamic odds and Oracle-managed outcomes ensure an unbiased system.
+			\item \textbf{Accessibility}: Gasless staking and social logins make the platform user-friendly.
+			\item \textbf{Community Rewards}: Token holders benefit from platform growth through commissions.
+		\end{enumerate}
+		
+		\section{Roadmap and Vision}
+		\begin{itemize}
+			\item \textbf{Phase 1}: Expand the variety of supported sports and events.
+			\item \textbf{Phase 2}: Launch mobile-friendly apps for broader accessibility.
+			\item \textbf{Phase 3}: Introduce community governance via ATON tokens.
+			\item \textbf{Phase 4}: Explore cross-chain compatibility to reach global users.
+		\end{itemize}
+		
+		\section{Legal Disclaimer}
+		This document is for informational purposes only. Participation in Arenaton involves inherent risks. Users are advised to consult professionals before engaging in cryptocurrency or sports betting activities.
+		
+	\end{multicols}
+\end{document}
