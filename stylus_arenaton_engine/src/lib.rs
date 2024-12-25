@@ -232,9 +232,32 @@ impl ArenatonEngine {
 
         // Insert into the events mapping
         let event = self.events.get(event_id_key);
-        // if event.is_none() {
-        //     return Err(false);
-        // }
+//    validate event exists
+        if event.status.get() != Uint::<8, 1>::from(1u8) {
+            return Err(ATONError::WrongStatus(WrongStatus{}));
+        }
+//validate evnt hast started
+        if Uint::<64, 1>::from(block::timestamp()) < event.start_date.get() {
+            return Err(ATONError::AlreadyStarted(AlreadyStarted{}));
+        }
+        // 2) "Borrow" a mutable reference to the storage for `events[event_id_bytes]`
+        let mut e = self.events.setter(event_id_key);
+
+
+        let _player = msg::sender();
+
+        let _previous_stake = e.stake_player.get(_player);
+        if _previous_stake != U256::ZERO {
+            e.stake_player.insert(_player, _amount);
+            e.team_player.insert(_player, Uint::<8, 1>::from(_team));
+        }
+
+
+        // 3) Set fields in storage
+        // e is a `StorageGuardMut<Event>`
+
+
+// }
 
         // Your logic
         Ok(true)
