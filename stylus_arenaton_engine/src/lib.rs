@@ -1,38 +1,40 @@
 #![cfg_attr(not(feature = "export-abi"), no_main)]
 extern crate alloc;
-mod ownable;
-mod control;
 mod constants;
+mod control;
+mod ownable;
 mod structs;
 mod tools;
 
-use crate::tools::{string_to_bytes32, bytes32_to_string};
 use crate::ownable::Ownable;
+use crate::tools::{bytes32_to_string, string_to_bytes32};
 
 use crate::control::AccessControl;
 
 use alloy_sol_types::sol;
 
 // --- Use standard String ---
-use std::string::String;
-use alloy_primitives::Uint;
-use alloy_primitives::{ Address, U256, B256 };
-use stylus_sdk::{
-    abi::Bytes,
-    call::{call, transfer_eth, Call},    contract,
-    evm,
-    msg,
-    stylus_proc::{ public, sol_storage, SolidityError },
-};
-use stylus_sdk::storage::{StorageAddress, StorageArray, StorageBool, StorageFixedBytes, StorageMap, StorageSigned, StorageUint, StorageVec};
-use stylus_sdk::prelude::*;
 use alloy_primitives::FixedBytes;
 use alloy_primitives::Signed;
+use alloy_primitives::Uint;
+use alloy_primitives::{Address, B256, U256};
+use std::string::String;
+use stylus_sdk::prelude::*;
+use stylus_sdk::storage::{
+    StorageAddress, StorageArray, StorageBool, StorageFixedBytes, StorageMap, StorageSigned,
+    StorageUint, StorageVec,
+};
+use stylus_sdk::{
+    abi::Bytes,
+    call::{call, transfer_eth, Call},
+    contract, evm, msg,
+    stylus_proc::{public, sol_storage, SolidityError},
+};
 
 sol_interface! {
     interface IATON {
     function mintAtonFromEth() external payable returns (bool);
-    function transferFrom(address from, address to, uint256 value) external returns (bool);    
+    function transferFrom(address from, address to, uint256 value) external returns (bool);
 }
 }
 
@@ -42,6 +44,8 @@ sol! {
     error ZeroEther(address sender);
     error ZeroAton(address sender);
     error AlreadyInitialized();
+    error AleadyAdded();
+    error AlreadyStarted();
 
     event AddEvent(        bytes8 event_id,
         uint64 start_date,
@@ -77,7 +81,7 @@ sol_storage! {
   bytes8[]  closedEvents;
     }
 
-  
+
 
  /**
    * @dev Structure representing a player's data within the platform.
@@ -98,7 +102,7 @@ sol_storage! {
   pub struct Stake {
     uint256 amount; // The total amount of tokens staked by the player.
     uint8 team; // The team the player is betting on: 1 for Team A, 2 for Team B.
-uint64 timestamp;  
+uint64 timestamp;
 }
 
   /**
@@ -114,7 +118,7 @@ uint64 timestamp;
     uint256[2] total; // Total stakes for each team: index 0 for Team A, index 1 for Team B.
     uint8 winner; // The winner of the event: 1 for Team A, 2 for Team B, -2 for a tie, -1 for no result yet, -3 for event canceled.
     uint8 sport; // Identifier representing the sport associated with the event.
-    uint256 playersPaid; // Number of players who have been paid out.
+    uint256 players_paid; // Number of players who have been paid out.
     bool active; // Indicates whether the event is currently open for participation.
     bool closed; // Indicates whether the event has ended.
     bool paid; // Indicates whether all payouts for the event have been processed.
@@ -127,32 +131,46 @@ uint64 timestamp;
 #[public]
 #[inherit(Ownable, AccessControl)]
 impl ArenatonEngine {
-pub fn add_event(
-    &mut self,
-    event_id: String,
-    start_date: u64,
-    sport: u8
-) -> Result<bool, ATONError> {
-    // Convert event_id to 8 bytes
-    let id8 = string_to_bytes32(&event_id);
-// 2) "Borrow" a mutable reference to the storage for `events[id8]`
+    pub fn add_event(
+        &mut self,
+        event_id: String,
+        start_date: u64,
+        sport: u8,
+    ) -> Result<bool, ATONError> {
+        // Convert event_id to 8 bytes
+        let id8 = string_to_bytes32(&event_id);
+        // 2) "Borrow" a mutable reference to the storage for `events[id8]`
         let mut e = self.events.setter(id8);
 
+        if e.active.get() == false {
+            return Err(ATONError::AleadyAdded());
+        }
+
+        if block::timestamp() < start_date {
+            return Err(ATONError::AlreadyStarted());
+        }
         // 3) Set fields in storage
         e.eventIdBytes.set(id8);
-        e.start_date.set(Uint::<64,1>::from(start_date));
-        e.sport.set(Uint::<8,1>::from(sport));
-        e.winner.set(Uint::<8,1>::from(99u8));
-        e.playersPaid.set(U256::ZERO);
+        e.start_date.set(Uint::<64, 1>::from(start_date));
+        e.sport.set(Uint::<8, 1>::from(sport));
+        e.winner.set(Uint::<8, 1>::from(99u8));
+        e.players_paid.set(U256::ZERO);
         e.active.set(true);
         e.closed.set(false);
         e.paid.set(false);
+        // e is a `StorageGuardMut<Event>`
 
-        // // Zero out the total array:
-        // e.total.get(0).set(U256::ZERO);
-        // e.total.get(1).set(U256::ZERO);
+        // Update the first element in the `total` array
+        e.total
+            .get_mut(0)
+            .expect("Failed to get the first element")
+            .set(U256::ZERO);
 
-        // If you want to push players, do e.players.push(...) etc.
+        // Update the second element in the `total` array
+        e.total
+            .get_mut(1)
+            .expect("Failed to get the second element")
+            .set(U256::ZERO);
 
         // 4) Push to activeEvents
         self.activeEvents.push(id8);
@@ -167,20 +185,16 @@ pub fn add_event(
         Ok(true)
     }
 
-
-    
     /// Stake with ETH
     #[payable]
     pub fn stake_eth(&mut self, _event_id: String, _team: u8) -> Result<bool, ATONError> {
         let _amount = msg::value(); // Ether sent with the transaction
         let _player = msg::sender();
 
-
         // Parse the const &str as a local Address variable
         let aton_address = Address::parse_checksummed(ATON, None).expect("Invalid address");
         let aton_contract = IATON::new(aton_address);
-       
-       
+
         let config = Call::new_in(self).value(_amount);
 
         let _ = match aton_contract.mint_aton_from_eth(config) {
@@ -188,9 +202,7 @@ pub fn add_event(
             Err(e) => Err(false),
         };
 
-    
-
-let _ = self.stake(_event_id,_amount, _team);
+        let _ = self.stake(_event_id, _amount, _team);
         Ok(true)
     }
     /// Stake with ATON
@@ -198,7 +210,7 @@ let _ = self.stake(_event_id,_amount, _team);
         &mut self,
         _event_id: String,
         _amount: U256,
-        _team: u8
+        _team: u8,
     ) -> Result<bool, ATONError> {
         // convert _event_id to bytes8
         let mut event_id_bytes = [0u8; 8];
@@ -213,41 +225,35 @@ let _ = self.stake(_event_id,_amount, _team);
         let event = self.events.get(event_id_key);
         // if event.is_none() {
         //     return Err(false);
-        // }   
+        // }
 
         // Your logic
         Ok(true)
     }
 
-
-       pub fn stake_aton(
+    pub fn stake_aton(
         &mut self,
         _event_id: String,
         _amount: U256,
-        _team: u8
+        _team: u8,
     ) -> Result<bool, ATONError> {
         let _player = msg::sender();
-
 
         // Parse the const &str as a local Address variable
         let aton_address = Address::parse_checksummed(ATON, None).expect("Invalid address");
         let aton_contract = IATON::new(aton_address);
-       
-       
+
         let config = Call::new_in(self);
 
-        let _ =match aton_contract.transfer_from(config, _player, contract::address(),_amount) {
+        let _ = match aton_contract.transfer_from(config, _player, contract::address(), _amount) {
             Ok(_) => Ok(true),
             Err(e) => Err(false),
         };
 
-    
-
-let _ = self.stake(_event_id,_amount, _team);
+        let _ = self.stake(_event_id, _amount, _team);
         // Your logic
         Ok(true)
     }
-
 
     pub fn close_event(&mut self, _event_id: String, _winner: u8) -> Result<bool, ATONError> {
         // Your logic

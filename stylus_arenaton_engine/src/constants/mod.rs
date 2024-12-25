@@ -3,5 +3,3 @@ pub const ARENATON_ENGINE_ROLE: [u8; 32] = [
     83, 71, 59, 73, 89, 67, 97,
 ];
 pub const DEFAULT_ADMIN_ROLE: [u8; 32] = [0; 32];
-
-
