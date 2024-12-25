@@ -27,7 +27,7 @@ use stylus_sdk::storage::{
 use stylus_sdk::{
     abi::Bytes,
     call::{call, transfer_eth, Call},
-    contract, evm, msg,
+    contract, evm, msg,block,
     stylus_proc::{public, sol_storage, SolidityError},
 };
 
@@ -59,6 +59,8 @@ pub enum ATONError {
     ZeroEther(ZeroEther),
     ZeroAton(ZeroAton),
     AlreadyInitialized(AlreadyInitialized),
+    AleadyAdded(AleadyAdded),
+    AlreadyStarted(AlreadyStarted),
 }
 const ATON: &str = "0xa6e41ffd769491a42a6e5ce453259b93983a22ef";
 // `ArenatonEngine` will be the entrypoint.
@@ -143,11 +145,11 @@ impl ArenatonEngine {
         let mut e = self.events.setter(id8);
 
         if e.active.get() == false {
-            return Err(ATONError::AleadyAdded());
+            return Err(ATONError::AleadyAdded(AleadyAdded {}));
         }
 
         if block::timestamp() < start_date {
-            return Err(ATONError::AlreadyStarted());
+            return Err(ATONError::AlreadyStarted(AlreadyStarted{}));
         }
         // 3) Set fields in storage
         e.eventIdBytes.set(id8);
