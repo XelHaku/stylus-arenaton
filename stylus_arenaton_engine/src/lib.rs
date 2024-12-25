@@ -115,15 +115,16 @@ uint64 timestamp;
     bytes8 event_id_bytes; // Unique identifier for the event in bytes8 format.
     uint64 start_date; // The start date and time of the event.
     address[] players; // List of players who have placed stakes in the event.
-    Stake[] stakes; // Mapping of player addresses to their respective stakes.
-    mapping(address => bool) stake_finalized; // Mapping to track whether a player's stake has been finalized and paid out.
+    Stake[] stakes; // Array of stakes made by players in the event.
+    mapping(address => uint256) stake_player; // Mapping of player addresses to their respective stakes.
+    mapping(address =>uint8) team_player; // Mapping of player addresses to their respective stakes.
+    mapping(address => bool) paid_player; // Mapping to track whether a player's stake has been finalized and paid out.
     uint256[2] total; // Total stakes for each team: index 0 for Team A, index 1 for Team B.
     uint8 winner; // The winner of the event: 1 for Team A, 2 for Team B, -2 for a tie, -1 for no result yet, -3 for event canceled.
     uint8 sport; // Identifier representing the sport associated with the event.
     uint256 players_paid; // Number of players who have been paid out.
-    bool active; // Indicates whether the event is currently open for participation.
-    bool closed; // Indicates whether the event has ended.
-    bool paid; // Indicates whether all payouts for the event have been processed.
+
+    uint8 status;// 0 unopende | 1 opened | 2 closed | 3 paid
   }
 
 
@@ -144,7 +145,7 @@ impl ArenatonEngine {
         // 2) "Borrow" a mutable reference to the storage for `events[id8]`
         let mut e = self.events.setter(id8);
 
-        if e.active.get() == false {
+        if e.status.get() != Uint::<8, 1>::from(0u8) {
             return Err(ATONError::AleadyAdded(AleadyAdded {}));
         }
 
@@ -157,9 +158,7 @@ impl ArenatonEngine {
         e.sport.set(Uint::<8, 1>::from(sport));
         e.winner.set(Uint::<8, 1>::from(99u8));
         e.players_paid.set(U256::ZERO);
-        e.active.set(true);
-        e.closed.set(false);
-        e.paid.set(false);
+        e.status.set(Uint::<8, 1>::from(1u8));
         // e is a `StorageGuardMut<Event>`
 
         // Update the first element in the `total` array
