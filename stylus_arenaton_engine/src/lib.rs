@@ -46,6 +46,7 @@ sol! {
     error AlreadyInitialized();
     error AleadyAdded();
     error AlreadyStarted();
+    error WrongStatus();
 error NotAuthorized();
     event AddEvent(        bytes8 event_id,
         uint64 start_date,
@@ -62,6 +63,7 @@ pub enum ATONError {
     AleadyAdded(AleadyAdded),
     AlreadyStarted(AlreadyStarted),
     NotAuthorized(NotAuthorized),
+    WrongStatus(WrongStatus),
 }
 const ATON: &str = "0xa6e41ffd769491a42a6e5ce453259b93983a22ef";
 // `ArenatonEngine` will be the entrypoint.
@@ -263,8 +265,24 @@ impl ArenatonEngine {
     }
 
     pub fn close_event(&mut self, _event_id: String, _winner: u8) -> Result<bool, ATONError> {
-        // Your logic
-        Ok(true)
+             match   self.control.only_role(constants::ORACLE_ROLE.into()) {
+        Ok(_) => {},
+        Err(e) => return Err(ATONError::NotAuthorized(NotAuthorized {})),
+    };
+let event_id_bytes = string_to_bytes32(&_event_id);
+        // 2) "Borrow" a mutable reference to the storage for `events[event_id_bytes]`
+        let mut e = self.events.setter(event_id_bytes);
+
+        if e.status.get() != Uint::<8, 1>::from(1u8) {
+            return Err(ATONError::WrongStatus(WrongStatus{}));
+        }
+        // 3) Set fields in storage
+        e.winner.set(Uint::<8, 1>::from(_winner));
+        e.status.set(Uint::<8, 1>::from(2u8));
+
+
+
+    Ok(true)
     }
 
     pub fn pay_event(&mut self, _event_id: String, _batch_size: u128) -> Result<bool, ATONError> {
