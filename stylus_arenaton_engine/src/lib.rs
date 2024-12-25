@@ -46,7 +46,7 @@ sol! {
     error AlreadyInitialized();
     error AleadyAdded();
     error AlreadyStarted();
-
+error NotAuthorized();
     event AddEvent(        bytes8 event_id,
         uint64 start_date,
         uint8 sport,
@@ -61,6 +61,7 @@ pub enum ATONError {
     AlreadyInitialized(AlreadyInitialized),
     AleadyAdded(AleadyAdded),
     AlreadyStarted(AlreadyStarted),
+    NotAuthorized(NotAuthorized),
 }
 const ATON: &str = "0xa6e41ffd769491a42a6e5ce453259b93983a22ef";
 // `ArenatonEngine` will be the entrypoint.
@@ -140,6 +141,11 @@ impl ArenatonEngine {
         start_date: u64,
         sport: u8,
     ) -> Result<bool, ATONError> {
+     match   self.control.only_role(constants::ORACLE_ROLE.into()) {
+        Ok(_) => {},
+        Err(e) => return Err(ATONError::NotAuthorized(NotAuthorized {})),
+    };
+
         // Convert event_id to 8 bytes
         let id8 = string_to_bytes32(&event_id);
         // 2) "Borrow" a mutable reference to the storage for `events[id8]`

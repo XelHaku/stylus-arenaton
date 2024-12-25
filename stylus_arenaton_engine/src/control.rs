@@ -177,14 +177,14 @@ impl AccessControl {
     //     Ok(())
     // }
 
-    pub fn grant_arenaton_role(&mut self, account: Address) -> Result<(), ATONError> {
+    pub fn grant_oracle_role(&mut self, account: Address) -> Result<(), ATONError> {
         let admin_role = self.get_role_admin(FixedBytes::from(constants::ARENATON_ENGINE_ROLE));
         self.only_role(admin_role)?;
         self._grant_role(FixedBytes::from(constants::ARENATON_ENGINE_ROLE), account); // Add missing closing parenthesis
         Ok(())
     }
 
-    pub fn revoke_arenaton_role(&mut self, account: Address) -> Result<(), ATONError> {
+    pub fn revoke_oracle_role(&mut self, account: Address) -> Result<(), ATONError> {
         let admin_role = self.get_role_admin(FixedBytes::from(constants::ARENATON_ENGINE_ROLE));
         self.only_role(admin_role)?;
 
