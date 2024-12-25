@@ -15,7 +15,7 @@ use alloy_sol_types::sol;
 
 // --- Use standard String ---
 use std::string::String;
-
+use alloy_primitives::Uint;
 use alloy_primitives::{ Address, U256, B256 };
 use stylus_sdk::{
     abi::Bytes,
@@ -24,9 +24,10 @@ use stylus_sdk::{
     msg,
     stylus_proc::{ public, sol_storage, SolidityError },
 };
+use stylus_sdk::storage::{StorageAddress, StorageArray, StorageBool, StorageFixedBytes, StorageMap, StorageSigned, StorageUint, StorageVec};
 use stylus_sdk::prelude::*;
 use alloy_primitives::FixedBytes;
-
+use alloy_primitives::Signed;
 
 sol_interface! {
     interface IATON {
@@ -35,7 +36,6 @@ sol_interface! {
 }
 }
 
-/// Additional events and errors
 sol! {
     event DonateATON(address indexed sender, uint256 amount);
     event Accumulate(uint256 new_commission, uint256 accumulated, uint256 total);
@@ -107,12 +107,12 @@ uint64 timestamp;
    */
   pub struct Event {
     bytes8 eventIdBytes; // Unique identifier for the event in bytes8 format.
-    uint256 startDate; // The start date and time of the event.
+    uint64 start_date; // The start date and time of the event.
     address[] players; // List of players who have placed stakes in the event.
     mapping(address => Stake) stakes; // Mapping of player addresses to their respective stakes.
     mapping(address => bool) stakeFinalized; // Mapping to track whether a player's stake has been finalized and paid out.
     uint256[2] total; // Total stakes for each team: index 0 for Team A, index 1 for Team B.
-    int8 winner; // The winner of the event: 1 for Team A, 2 for Team B, -2 for a tie, -1 for no result yet, -3 for event canceled.
+    uint8 winner; // The winner of the event: 1 for Team A, 2 for Team B, -2 for a tie, -1 for no result yet, -3 for event canceled.
     uint8 sport; // Identifier representing the sport associated with the event.
     uint256 playersPaid; // Number of players who have been paid out.
     bool active; // Indicates whether the event is currently open for participation.
@@ -127,33 +127,46 @@ uint64 timestamp;
 #[public]
 #[inherit(Ownable, AccessControl)]
 impl ArenatonEngine {
-    /// Add a new event
-      pub fn add_event(
-        &mut self,
-        event_id: String,
-        start_date: u64,
-        sport: u8
-    ) -> Result<bool, ATONError> {
-        // Convert event_id to bytes8
-        let event_id_key = string_to_bytes32(&event_id);
+pub fn add_event(
+    &mut self,
+    event_id: String,
+    start_date: u64,
+    sport: u8
+) -> Result<bool, ATONError> {
+    // Convert event_id to 8 bytes
+    let id8 = string_to_bytes32(&event_id);
+// 2) "Borrow" a mutable reference to the storage for `events[id8]`
+        let mut e = self.events.setter(id8);
 
-        // Insert into the events mapping
-        let event = self.events.get(event_id_key);
+        // 3) Set fields in storage
+        e.eventIdBytes.set(id8);
+        e.start_date.set(Uint::<64,1>::from(start_date));
+        e.sport.set(Uint::<8,1>::from(sport));
+        e.winner.set(Uint::<8,1>::from(99u8));
+        e.playersPaid.set(U256::ZERO);
+        e.active.set(true);
+        e.closed.set(false);
+        e.paid.set(false);
 
+        // // Zero out the total array:
+        // e.total.get(0).set(U256::ZERO);
+        // e.total.get(1).set(U256::ZERO);
 
-        // event.startDate = start_date;
-        // event.sport = sport;    
+        // If you want to push players, do e.players.push(...) etc.
 
+        // 4) Push to activeEvents
+        self.activeEvents.push(id8);
 
-        // Log the event
+        // 5) Emit the AddEvent(...) log
         evm::log(AddEvent {
-            event_id: event_id_key, // Use the FixedBytes<8> type here
+            event_id: id8,
             start_date,
             sport,
         });
 
         Ok(true)
     }
+
 
     
     /// Stake with ETH
