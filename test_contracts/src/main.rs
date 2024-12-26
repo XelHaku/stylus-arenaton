@@ -3,13 +3,14 @@ mod call_contract;
 mod methods;
 mod constants;
 mod players; 
-
+mod erc20aton;
 // Importa las funciones necesarias
 use crate::players::fund_players_eth::fund_players_eth;
 use crate::players::eth_balance::eth_balance;
 use methods::{
-    debug_mint_aton, approve, balance_of, total_supply, name, stake_eth, initialize_contract,owner,grant_arenaton_role,mint_aton_from_eth
+    debug_mint_aton, stake_eth,
 };
+use erc20aton::{owner,name,total_supply,initialize_contract,grant_arenaton_role,approve,balance_of};
 use ethers::prelude::*;
 use eyre::Result;
 
@@ -33,7 +34,7 @@ async fn main() -> Result<()> {
     fund_players_eth("1000000000000000000", &env.rpc_url, env.chain_id, Some(2)).await?;
     owner(&env.rpc_url, &env.erc20aton_address).await?;
     // Inicializa el contrato (opcional)
-    //  initialize_-contract(&env.erc20aton_address, &_owner.private_key, &env.rpc_url, env.chain_id).await?;
+     initialize_contract(&env.erc20aton_address, &_owner.private_key, &env.rpc_url, env.chain_id).await?;
 
     owner(&env.rpc_url, &env.erc20aton_address).await?;
 
@@ -44,10 +45,10 @@ async fn main() -> Result<()> {
 
     eth_balance(&arenaton_engine_mock.address, &env.rpc_url).await?;
 
-mint_aton_from_eth(&env.erc20aton_address, U256::from(100), &arenaton_engine_mock.private_key, &env.rpc_url, env.chain_id).await?;
+// mint_aton_from_eth(&env.erc20aton_address, U256::from(100), &arenaton_engine_mock.private_key, &env.rpc_url, env.chain_id).await?;
 
 
-    eth_balance(&arenaton_engine_mock.address, &env.rpc_url).await?;
+    // eth_balance(&arenaton_engine_mock.address, &env.rpc_url).await?;
 
 
 
