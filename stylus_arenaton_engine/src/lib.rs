@@ -308,25 +308,6 @@ let event_id_bytes = string_to_bytes32(&_event_id);
     Ok(true)
     }
 
-    // pub fn pay_event(&mut self, _event_id: String, _batch_size: u128) -> Result<bool, ATONError> {
-    //     // Your logic
-    //     Ok(true)
-    // }
-
-    // pub fn get_event(&self, _event_id: String) -> Result<bool, ATONError> {
-    //     // Your logic
-    //     Ok(true)
-    // }
-
-    // pub fn get_event_list(&self) -> Result<bool, ATONError> {
-    //     // Your logic
-    //     Ok(true)
-    // }
-
-    // pub fn get_player_event_list(&self, _player: Address) -> Result<bool, ATONError> {
-    //     // Your logic
-    //     Ok(true)
-    // }
 }
 
 impl ArenatonEngine {

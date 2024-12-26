@@ -1,0 +1,127 @@
+\documentclass[11pt,twocolumn]{article}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{multicol}
+
+% Configuración de fuente en serif
+\renewcommand{\familydefault}{\rmdefault}
+
+% Ajustar formato de títulos
+\titleformat{\section}[block]{\bfseries\large}{\thesection}{0.5em}{}
+\titleformat{\subsection}[block]{\bfseries\normalsize}{\thesubsection}{0.5em}{}
+
+% Personalización del resumen
+\renewcommand{\abstractname}{\large\bfseries Resumen}
+\newenvironment{abstractcustom}
+  {\begin{center}\textit}
+  {\end{center}}
+
+\begin{document}
+
+% Título y sección de resumen
+\twocolumn[
+\begin{center}
+    \LARGE \textbf{Arenaton Whitepaper: Redefiniendo las Apuestas Deportivas con Tecnología Blockchain Descentralizada} \\
+    \vspace{0.5cm}
+\end{center}
+
+\begin{abstractcustom}
+ Arenaton es una plataforma descentralizada de apuestas deportivas construida sobre la blockchain de Arbitrum, una solución de escalabilidad de capa 2 que ofrece bajos costos de transacción y alta eficiencia. Al integrar el SDK de Stylus, Arenaton garantiza una operación eficiente en términos de costos de gas y escalabilidad, permitiendo una experiencia de usuario fluida incluso durante períodos de alta demanda. Además, la plataforma adopta la abstracción de cuentas de Privy.io y Gnosis Safe, lo que proporciona un nivel adicional de seguridad y control para los usuarios, al tiempo que simplifica el proceso de gestión de cuentas. Arenaton se destaca como un entorno transparente, seguro y fácil de usar, diseñado para entusiastas deportivos de todo el mundo que buscan participar en apuestas deportivas de manera descentralizada y segura.
+
+
+\end{abstractcustom}
+\vspace{0.5cm}
+]
+
+% Contenido principal
+\section{Introducción}
+
+La industria tradicional de apuestas deportivas enfrenta desafíos como la falta de transparencia, altos costos de transacción y control centralizado. Arenaton aborda estos problemas proporcionando una plataforma descentralizada que garantiza equidad, seguridad y accesibilidad.
+
+\section{Desafíos en las Apuestas Deportivas Tradicionales}
+\begin{itemize}[itemsep=0.5em]
+    \item \textbf{Opacidad:} Probabilidades y distribución de ingresos poco claras.
+    \item \textbf{Altas Tarifas:} Costos significativos que reducen los pagos a los usuarios.
+    \item \textbf{Acceso Limitado:} Restricciones geográficas y regulatorias.
+    \item \textbf{Problemas de Confianza:} Vulnerabilidad a manipulaciones.
+\end{itemize}
+
+\section{Características Clave de Arenaton}
+\begin{itemize}[itemsep=0.5em]
+    \item \textbf{Token ERC20 ATON:} Utilizado para apuestas, pagos y compartir comisiones.
+    \item \textbf{Rol de Oráculo:} Garantiza una gestión justa y a prueba de manipulaciones de los eventos.
+    \item \textbf{Abstracción de Cuenta con Privy.io:} Simplifica el registro de usuarios.
+    \item \textbf{Seguridad con Gnosis Safe:} Mejora la gestión de fondos y la seguridad en transacciones.
+\end{itemize}
+
+\section{Arquitectura Técnica}
+\subsection{Token ERC20 ATON}
+\begin{itemize}[itemsep=0.5em]
+    \item \textbf{Suministro Dinámico:} Tokens creados al apostar y quemados durante intercambios.
+    \item \textbf{Utilidad:} Moneda central para apuestas, pagos y compartir comisiones.
+\end{itemize}
+
+\subsection{Rol de Oráculo}
+Gestiona los ciclos de vida de los eventos, incluyendo la inicialización y declaración de resultados. Toda la información de eventos proviene de flashscore.com.
+
+\subsection{Integración con Privy.io}
+Simplifica la interacción y registro de usuarios mediante abstracción de cuentas.
+
+\subsection{Gnosis Safe}
+Asegura la gestión de fondos con billeteras de múltiples firmas para mayor seguridad.
+
+\subsection{SDK de Stylus}
+Permite procesamiento de transacciones eficiente y escalable.
+
+\section{Trayectoria del Usuario}
+\begin{enumerate}[itemsep=0.5em]
+    \item \textbf{Registro:} Inscripción fluida a través de Privy.io.
+    \item \textbf{Apuestas:} Transacciones sin costo de gas para la participación de usuarios.
+    \item \textbf{Actualizaciones en Tiempo Real:} Monitorización de probabilidades y estado de eventos en vivo.
+\end{enumerate}
+
+\section{Tokenómica}
+\subsection{Utilidad del Token ATON}
+\begin{itemize}[itemsep=0.5em]
+    \item \textbf{Apuestas:} Participación central en eventos.
+    \item \textbf{Recompensas:} Pagos a ganadores en tokens ATON.
+    \item \textbf{Distribución de Comisiones:} Ingresos pasivos para poseedores de ATON.
+\end{itemize}
+
+\subsection{Modelo Económico}
+\begin{itemize}[itemsep=0.5em]
+    \item \textbf{Suministro Dinámico:} Ajustado según actividad de apuestas.
+    \item \textbf{Mecanismo de Quema:} Garantiza la estabilidad del token al reducir el suministro.
+\end{itemize}
+
+\section{Ventajas de Arenaton}
+\begin{itemize}[itemsep=0.5em]
+    \item \textbf{Transparencia:} Registros inmutables en la blockchain.
+    \item \textbf{Equidad:} Probabilidades dinámicas y resultados gestionados por Oráculos.
+    \item \textbf{Accesibilidad:} Registro simplificado y transacciones sin gas.
+    \item \textbf{Recompensas Comunitarias:} Ingresos pasivos para poseedores de tokens.
+\end{itemize}
+
+\section{Hoja de Ruta}
+\begin{itemize}[itemsep=0.5em]
+    \item \textbf{Fase 1:} Ampliar deportes y eventos soportados.
+    \item \textbf{Fase 2:} Lanzar aplicaciones amigables para dispositivos móviles.
+    \item \textbf{Fase 3:} Despliegue completo del Motor Descentralizado de Oráculos.
+\end{itemize}
+
+\section{Consideraciones de Seguridad}
+Arenaton garantiza la seguridad mediante una arquitectura descentralizada, transacciones transparentes y auditorías regulares. Gnosis Safe es fundamental para la gestión segura de fondos.
+
+\section{Conclusión}
+Arenaton revoluciona la industria de apuestas deportivas al ofrecer una plataforma descentralizada, transparente y segura. Sus características innovadoras y compromiso con la experiencia del usuario lo posicionan como líder en el espacio blockchain.
+
+\section*{Referencias}
+\begin{itemize}[itemsep=0.5em]
+    \item Documentación de Privy.io: \url{https://privy.io/docs}
+    \item Documentación de Gnosis Safe: \url{https://gnosis-safe.io/docs}
+    \item Documentación del SDK de Stylus: \url{https://arbitrum.io/stylus}
+\end{itemize}
+
+\end{document}

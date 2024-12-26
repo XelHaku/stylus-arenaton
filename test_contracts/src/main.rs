@@ -20,6 +20,7 @@ use constants::env_vars::{get_env_vars, EnvVars};
 async fn main() -> Result<()> {
     dotenv::dotenv().ok();
     tracing_subscriber::fmt::init();
+
     let env = get_env_vars();
     println!("RPC URL is: {}", env.rpc_url);
     // Obtiene el nombre del contrato del motor y del token ATON
@@ -32,7 +33,7 @@ async fn main() -> Result<()> {
     fund_players_eth("1000000000000000000", &env.rpc_url, env.chain_id, Some(2)).await?;
     owner(&env.rpc_url, &env.erc20aton_address).await?;
     // Inicializa el contrato (opcional)
-    // initialize_contract(&env.erc20aton_address, &_owner.private_key, &env.rpc_url, env.chain_id).await?;
+    //  initialize_-contract(&env.erc20aton_address, &_owner.private_key, &env.rpc_url, env.chain_id).await?;
 
     owner(&env.rpc_url, &env.erc20aton_address).await?;
 
