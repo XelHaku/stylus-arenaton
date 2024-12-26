@@ -1,0 +1,8 @@
+ Terminal #1
+ ./nitro-devnode/run-dev-node.sh 
+
+ Terminal #2
+ cd stylus_erc20aton/ && cargo stylus deploy --private-key 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659    && cd ..
+
+  Terminal #3
+ cd stylus_arenaton_engine/ && cargo stylus deploy --private-key 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659     && cd .. 
