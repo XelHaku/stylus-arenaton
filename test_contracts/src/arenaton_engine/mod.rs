@@ -161,3 +161,48 @@ pub async fn grant_oracle_role(
 
     Ok(())
 }
+
+
+
+
+
+pub async fn initialize_engine_contract(
+) -> Result<()> {
+    let abi_json = r#"[
+  {
+    "inputs": [],
+    "name": "initializeContract",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "nonpayable", 
+    "type": "function"
+  }
+]"#;
+    let env = get_env_vars();
+
+    let engine_address = env.engine_address;
+    let rpc_url = env.rpc_url;
+    let chain_id = env.chain_id;
+    // Create signer from private key
+    let wallet = WALLETS[0].private_key.parse::<LocalWallet>()?.with_chain_id(chain_id);
+    let signer = Arc::new(SignerMiddleware::new(
+        Provider::<Http>::try_from(rpc_url)?,
+        wallet,
+    ));
+
+    let receipt = call_contract_method_signed(
+        "initializeContract",
+        (), // No arguments
+        abi_json,
+        &engine_address,
+        signer,
+        U256::zero(), // No value sent
+    )
+    .await?;
+
+    match receipt {
+        Some(receipt) => println!("\nTransaction successful: {:?}", receipt),
+        None => println!("\nTransaction executed successfully, but no receipt was returned."),
+    }
+
+    Ok(())
+}

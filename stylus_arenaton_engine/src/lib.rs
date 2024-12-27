@@ -84,6 +84,9 @@ sol_storage! {
   // Array for tracking active events
   bytes8[]  activeEvents;
   bytes8[]  closedEvents;
+
+        bool initialized ;
+
     }
 
 
@@ -137,6 +140,17 @@ uint64 timestamp;
 #[public]
 #[inherit(Ownable, AccessControl)]
 impl ArenatonEngine {
+
+       pub fn initialize_contract(&mut self) -> Result<bool, ATONError> {
+        if self.initialized.get() {
+            // Access the value using .get()
+            return Err(ATONError::AlreadyInitialized(AlreadyInitialized {})); // Add the error struct
+        }
+        self.initialized.set(true); // Set initialized to true
+        self.ownable._owner.set(msg::sender());
+        self.control._grant_role(FixedBytes::from(constants::DEFAULT_ADMIN_ROLE), msg::sender());
+        Ok(true)
+    }
     pub fn add_event(
         &mut self,
         event_id: String,

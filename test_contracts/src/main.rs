@@ -8,7 +8,7 @@ mod arenaton_engine;
 use crate::players::fund_players_eth::fund_players_eth;
 use crate::players::eth_balance::eth_balance;
 use erc20aton::{owner, name, total_supply, initialize_erc20aton_contract, grant_arenaton_role, approve, balance_of};
-use arenaton_engine::{add_event, grant_oracle_role, stake_eth};
+use arenaton_engine::{add_event, grant_oracle_role, stake_eth,initialize_engine_contract};
 
 use ethers::prelude::*;
 use eyre::Result;
@@ -40,7 +40,8 @@ async fn main() -> Result<()> {
     owner().await?;
 
     // Initialize the contract (optional)
-    // initialize_erc20aton_contract().await?;
+    initialize_erc20aton_contract().await?;
+    initialize_engine_contract().await?;
 
     // Grant Arenaton role
     grant_arenaton_role(&engine_address).await?;
