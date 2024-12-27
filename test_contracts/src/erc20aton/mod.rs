@@ -178,7 +178,7 @@ let receipt = call_contract_method_signed( // Remove <bool>
 
 
 
-pub async fn initialize_contract(
+pub async fn initialize_erc20aton_contract(
 ) -> Result<()> {
     let abi_json = r#"[
   {

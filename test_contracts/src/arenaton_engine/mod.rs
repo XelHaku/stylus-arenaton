@@ -4,235 +4,49 @@ use ethers::prelude::*;
 use eyre::Result;
 use serde::de::value;
 use std::sync::Arc;
-
-
-/// Function to get the owner of the contract
-pub async fn owner(rpc_url: &str, contract_address: &str) -> Result<()> {
-    let abi_json = r#"
-    [
-        {
-            "inputs": [],
-            "name": "owner",
-            "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
-            "stateMutability": "view",
-            "type": "function"
-        }
-    ]
-    "#;
-
-    // Debug: Print the ABI to ensure it's correct
-    println!("ABI: {}", abi_json);
-
-    let contract_owner: Address = call_contract_method(
-        "owner",
-        (),
-        abi_json,
-        contract_address,
-        rpc_url,
-    ).await?;
-
-    println!("\nContract owner: {}", contract_owner);
-    Ok(())
-}
-
-
-/// Function to get the name of the contract
-pub async fn name(rpc_url: &str, contract_address: &str) -> Result<()> {
-    let abi_json = r#"[
-        {
-            "inputs": [],
-            "name": "name",
-            "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
-            "stateMutability": "pure",
-            "type": "function"
-        }
-    ]"#;
-
-    let contract_name: String = call_contract_method(
-        "name",
-        (), // No arguments
-        abi_json,
-        contract_address,
-        rpc_url,
-    )
-    .await?;
-
-    println!("\nContract Name: {}", contract_name);
-    Ok(())
-}
-
-/// Function to get the total supply of the contract
-pub async fn total_supply(rpc_url: &str, contract_address: &str) -> Result<()> {
-    let abi_json = r#"[
-        {
-            "inputs": [],
-            "name": "totalSupply",
-            "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-            "stateMutability": "view",
-            "type": "function"
-        }
-    ]"#;
-
-    let total_supply: u128 = call_contract_method(
-        "totalSupply",
-        (), // No arguments
-        abi_json,
-        contract_address,
-        rpc_url,
-    )
-    .await?;
-
-    println!("\nTotal Supply: {}", total_supply);
-    Ok(())
-}
-
-/// Function to get the balance of a specific address
-pub async fn balance_of(
-    owner_address: &str,
-    rpc_url: &str,
-    contract_address: &str,
-) -> Result<()> {
-    let abi_json = r#"[
-        {
-            "inputs": [
-                { "internalType": "address", "name": "owner", "type": "address" }
-            ],
-            "name": "balanceOf",
-            "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-            "stateMutability": "view",
-            "type": "function"
-        }
-    ]"#;
-
-    let owner: Address = owner_address.parse()?;
-
-    let balance: U256 = call_contract_method(
-        "balanceOf",
-        owner, // Pass owner as argument
-        abi_json,
-        contract_address,
-        rpc_url,
-    )
-    .await?;
-
-    println!("\nATON balance of {}: {}", owner, balance);
-    Ok(())
-}
-
-
-pub async fn debug_mint_aton(
-    contract_address: &str,
-    private_key: &str,
-    rpc_url: &str,
-    chain_id: u64,
-) -> Result<()> {
-    let abi_json = r#"[{"inputs":[],"name":"debugMintAton","outputs":[],"stateMutability":"nonpayable","type":"function"}]"#;
-
-    // Create signer from private key
-    let wallet = private_key.parse::<LocalWallet>()?.with_chain_id(chain_id);
-    let signer = Arc::new(SignerMiddleware::new(
-        Provider::<Http>::try_from(rpc_url)?,
-        wallet,
-    ));
-
-    let receipt = call_contract_method_signed(
-        "debugMintAton",
-        (),
-        abi_json,
-        contract_address,
-        signer,
-        U256::from(100000),
-    )
-    .await?;
-
-    match receipt {
-        Some(receipt) => println!("\nTransaction successful: {:?}", receipt),
-        None => println!("\nTransaction executed successfully, but no receipt was returned."),
-    }
-
-    Ok(())
-}
-
-pub async fn approve(
-    contract_address: &str,
-    private_key: &str,
-    rpc_url: &str,
-    chain_id: u64,
-    spender: Address,
-    value: U256,
-) -> Result<()> {
-    let abi_json = r#"[
-  {
-    "inputs": [
-      { "internalType": "address", "name": "spender", "type": "address" },
-      { "internalType": "uint256", "name": "value", "type": "uint256" }
-    ],
-    "name": "approve",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  }
-]"#;
-
-    // Create signer from private key
-    let wallet = private_key.parse::<LocalWallet>()?.with_chain_id(chain_id);
-    let signer = Arc::new(SignerMiddleware::new(
-        Provider::<Http>::try_from(rpc_url)?,
-        wallet,
-    ));
-
-let receipt = call_contract_method_signed( // Remove <bool>
-    "approve",
-    (spender, value),
-    abi_json,
-    contract_address,
-    signer,
-    U256::from(0),
-)
-.await?;
-
-    match receipt {
-        Some(receipt) => println!("\nTransaction successful: {:?}", receipt),
-        None => println!("\nTransaction executed successfully, but no receipt was returned."),
-    }
-
-    Ok(())
-}   
+use crate::constants::env_vars::{get_env_vars, EnvVars};
+use crate::constants::wallets::{WALLETS, Wallet};
 
 
 
 pub async fn stake_eth(
     contract_address: &str,
-    private_key: &str,
+    player_private_key: &str,
     rpc_url: &str,
     chain_id: u64,
     player: Address,
     value: U256,
 ) -> Result<()> {
     let abi_json = r#"[
-  {
-    "inputs": [
-      { "internalType": "address", "name": "_player", "type": "address" }
-    ],
-    "name": "stakeEth",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
-    "stateMutability": "payable",
-    "type": "function"
-  }
+{
+        "inputs": [
+            { "internalType": "address", "name": "_player", "type": "address" }
+        ],
+        "name": "stakeEth",
+        "outputs": [
+            { "internalType": "bool", "name": "", "type": "bool" }
+        ],
+        "stateMutability": "payable",
+        "type": "function"
+    }
 ]"#;
 
+
+    let env = get_env_vars();
+
     // Create signer from private key
-    let wallet = private_key.parse::<LocalWallet>()?.with_chain_id(chain_id);
+    let wallet = player_private_key.parse::<LocalWallet>()?.with_chain_id(chain_id);
     let signer = Arc::new(SignerMiddleware::new(
         Provider::<Http>::try_from(rpc_url)?,
         wallet,
     ));
+    let engine_address = env.engine_address;
 
     let receipt = call_contract_method_signed(
         "stakeEth",
         player,
         abi_json,
-        contract_address,
+        &engine_address,
         signer,
         value,
     )
@@ -246,137 +60,102 @@ pub async fn stake_eth(
     Ok(())
 }
 
-
-pub async fn initialize_contract(
-    contract_address: &str,
-    private_key: &str,
-    rpc_url: &str,
-    chain_id: u64,
+pub async fn add_event(
+    event_id: &str,
+    start_date: u64,
+    sport: u8,
 ) -> Result<()> {
     let abi_json = r#"[
-  {
-    "inputs": [],
-    "name": "initializeContract",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
-    "stateMutability": "nonpayable", 
-    "type": "function"
-  }
-]"#;
+        {
+            "inputs": [
+                { "internalType": "string", "name": "event_id", "type": "string" },
+                { "internalType": "uint64", "name": "start_date", "type": "uint64" },
+                { "internalType": "uint8", "name": "sport", "type": "uint8" }
+            ],
+            "name": "addEvent",
+            "outputs": [
+                { "internalType": "bool", "name": "", "type": "bool" }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        }
+    ]"#;
 
-    // Create signer from private key
-    let wallet = private_key.parse::<LocalWallet>()?.with_chain_id(chain_id);
+    // Convert event_id to String
+    let event_id = event_id.to_string();
+    let env = get_env_vars();
+
+    let engine_address = env.engine_address;
+    let rpc_url = env.rpc_url;
+    let chain_id = env.chain_id;
+
+        let wallet = WALLETS[10].private_key.parse::<LocalWallet>()?.with_chain_id(chain_id);
     let signer = Arc::new(SignerMiddleware::new(
         Provider::<Http>::try_from(rpc_url)?,
         wallet,
     ));
 
     let receipt = call_contract_method_signed(
-        "initializeContract",
-        (), // No arguments
+        "addEvent",
+        (event_id, start_date, sport),
         abi_json,
-        contract_address,
-        signer,
-        U256::zero(), // No value sent
-    )
-    .await?;
-
-    match receipt {
-        Some(receipt) => println!("\nTransaction successful: {:?}", receipt),
-        None => println!("\nTransaction executed successfully, but no receipt was returned."),
-    }
-
-    Ok(())
-}
-
-
-pub async fn grant_arenaton_role(
-    contract_address: &str,
-    arenaton_engine_address: &str,
-    private_key: &str,
-    rpc_url: &str,
-    chain_id: u64,
-) -> Result<()> {
-    let abi_json = r#"[
-      {
-        "inputs": [{ "internalType": "address", "name": "account", "type": "address" }],
-        "name": "grantArenatonRole",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-      }
-    ]"#;
-
-    // Parse contract addresses
-    let arenaton_engine_addr = arenaton_engine_address.parse::<Address>()?;
-
-    // Create signer from private key
-    let wallet = private_key.parse::<LocalWallet>()?.with_chain_id(chain_id);
-    let provider = Provider::<Http>::try_from(rpc_url)?;
-    let signer = Arc::new(SignerMiddleware::new(provider, wallet));
-
-    // Call the contract method, passing arenaton_engine_addr as the function argument
-    let receipt = call_contract_method_signed(
-        "grantArenatonRole",
-        arenaton_engine_addr,  // the argument to 'grantArenatonRole'
-        abi_json,
-        contract_address,
+        &engine_address,
         signer,
         U256::zero(),
     )
     .await?;
 
     match receipt {
-        Some(receipt) => println!("\nTransaction successful: {:?}", receipt),
+        Some(receipt) => println!("\nEvent added successfully: {:?}", receipt),
         None => println!("\nTransaction executed successfully, but no receipt was returned."),
     }
-
-    
 
     Ok(())
 }
 
-
-
-
-pub async fn mint_aton_from_eth( contract_address: &str,value: U256,    private_key: &str,
-    rpc_url: &str,
-    chain_id: u64) -> Result<()> {
-
-/// Function to get the owner of the contract
-    let abi_json = r#"
-    [
+pub async fn grant_oracle_role(
+    oracle_address: &str,
+) -> Result<()> {
+    let abi_json = r#"[
         {
-            "inputs": [],
-            "name": "mintAtonFromEth",
-            "outputs": [{ "internalType": "address", "name": "", "type": "bool" }],
-            "stateMutability": "payable",
+            "inputs": [
+                { "internalType": "address", "name": "account", "type": "address" }
+            ],
+            "name": "grantOracleRole",
+            "outputs": [],
+            "stateMutability": "nonpayable",
             "type": "function"
         }
-    ]
-    "#;
-    // function mintAtonFromEth() external payable returns (bool);
+    ]"#;
 
-    // Parse contract addresses
-    // let arenaton_engine_addr = contract_address.parse::<Address>()?;
+    let env = get_env_vars();
+
+    let engine_address = env.engine_address;
+    let rpc_url = env.rpc_url;
+    let chain_id = env.chain_id;
 
     // Create signer from private key
-    let wallet = private_key.parse::<LocalWallet>()?.with_chain_id(chain_id);
-    let provider = Provider::<Http>::try_from(rpc_url)?;
-    let signer = Arc::new(SignerMiddleware::new(provider, wallet));
+    let wallet = WALLETS[0].private_key.parse::<LocalWallet>()?.with_chain_id(chain_id);
+    let signer = Arc::new(SignerMiddleware::new(
+        Provider::<Http>::try_from(rpc_url)?,
+        wallet,
+    ));
 
-    // Call the contract method, passing arenaton_engine_addr as the function argument
+    // Convert oracle_address to Address type
+    let oracle_address = oracle_address.parse::<Address>()?;
+
     let receipt = call_contract_method_signed(
-        "mintAtonFromEth",
-        (),  // the argument to 'grantArenatonRole'
+        "grantOracleRole",
+        oracle_address,
         abi_json,
-        contract_address,
+        &engine_address,
         signer,
-        value,
+        U256::zero(),
     )
     .await?;
 
     match receipt {
-        Some(receipt) => println!("\nTransaction successful: {:?}", receipt),
+        Some(receipt) => println!("\nOracle role granted successfully: {:?}", receipt),
         None => println!("\nTransaction executed successfully, but no receipt was returned."),
     }
 

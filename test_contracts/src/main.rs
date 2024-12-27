@@ -3,11 +3,13 @@ mod methods;
 mod constants;
 mod players;
 mod erc20aton;
+mod arenaton_engine;
 
 use crate::players::fund_players_eth::fund_players_eth;
 use crate::players::eth_balance::eth_balance;
-use methods::{debug_mint_aton, stake_eth};
-use erc20aton::{owner, name, total_supply, initialize_contract, grant_arenaton_role, approve, balance_of};
+use erc20aton::{owner, name, total_supply, initialize_erc20aton_contract, grant_arenaton_role, approve, balance_of};
+use arenaton_engine::{add_event, grant_oracle_role, stake_eth};
+
 use ethers::prelude::*;
 use eyre::Result;
 use constants::wallets::{WALLETS, print_wallets};
@@ -28,19 +30,23 @@ async fn main() -> Result<()> {
     total_supply().await?;
 
     let _owner = &WALLETS[0];
+    let _oracle = &WALLETS[10];
     let engine_address = env.engine_address;
 
     // Fund players with ETH
-    fund_players_eth("1000000000000000000", Some(2)).await?;
+    fund_players_eth("10000000000000000", Some(2)).await?;
 
     // Get contract owner
     owner().await?;
 
     // Initialize the contract (optional)
-    // initialize_contract().await?;
+    // initialize_erc20aton_contract().await?;
 
     // Grant Arenaton role
     grant_arenaton_role(&engine_address).await?;
+
+    // Grant Oracle role
+    grant_oracle_role( _oracle.address).await?;
 
 
 
