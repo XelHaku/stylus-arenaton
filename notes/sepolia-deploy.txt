@@ -5,9 +5,11 @@
  cd stylus_erc20aton/ && cargo clean && cargo stylus check    && cd ..
 
  wasm-opt stylus_erc20aton/target/wasm32-unknown-unknown/release/stylus_erc20aton.wasm -o stylus_erc20aton_opt.wasm -O --intrinsic-lowering
+
+
  
  
- cargo stylus deploy --private-key 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659  -e https://sepolia-rollup.arbitrum.io/rpc --wasm-file stylus_erc20aton_opt.wasm
+ cargo stylus deploy --private-key 0x9dc8c652a16755e58fe2ffae9991c895174f3746022b2a474f8d89694b4dc312  -e https://sepolia-rollup.arbitrum.io/rpc --wasm-file stylus_erc20aton_opt.wasm 
 
 
 
@@ -15,14 +17,21 @@
  cd stylus_arenaton_engine/ && cargo clean && cargo stylus check    && cd ..
 
  wasm-opt stylus_arenaton_engine/target/wasm32-unknown-unknown/release/stylus_arenaton_engine.wasm -o stylus_arenaton_engine_opt.wasm -O --intrinsic-lowering
+ wasm-opt stylus_arenaton_engine/target/wasm32-unknown-unknown/release/stylus_arenaton_engine.wasm -o stylus_arenaton_engine_opt2.wasm -O --intrinsic-lowering     --dce     --rse --signature-pruning --strip-debug  --strip-producers
+
  
  
- cargo stylus deploy --private-key 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659 -e https://sepolia-rollup.arbitrum.io/rpc  --wasm-file stylus_arenaton_engine_opt.wasm
+ cargo stylus deploy --private-key 0x9dc8c652a16755e58fe2ffae9991c895174f3746022b2a474f8d89694b4dc312 -e https://sepolia-rollup.arbitrum.io/rpc  --wasm-file stylus_arenaton_engine_opt2.wasm
 
 
 
+ cargo stylus deploy --private-key 0x9dc8c652a16755e58fe2ffae9991c895174f3746022b2a474f8d89694b4dc312 -e https://sepolia-rollup.arbitrum.io/rpc  
 
-
+cargo stylus cache bid 0b564b6c3930b7c792f0f47faee6c4c52e45ea97 0  --private-key 0x9dc8c652a16755e58fe2ffae9991c895174f3746022b2a474f8d89694b4dc312 -e https://sepolia-rollup.arbitrum.io/rpc 
 
  cargo stylus check --wasm-file stylus_arenaton_engine.wasm &&
- cargo stylus check --wasm-file stylus_arenaton_engine_opt.wasm
+ cargo stylus check --wasm-file stylus_arenaton_engine_opt.wasm &&
+ cargo stylus check --wasm-file stylus_arenaton_engine_opt2.wasm
+
+
+ cargo stylus cache bid fc46259bb805e615b50e49581818c81d2b064bbd 0  --private-key 0x9dc8c652a16755e58fe2ffae9991c895174f3746022b2a474f8d89694b4dc312  -e https://sepolia-rollup.arbitrum.io/rpc 

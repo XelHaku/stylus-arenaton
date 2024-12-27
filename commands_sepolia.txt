@@ -1,6 +1,6 @@
 cargo stylus check
 cargo stylus export-abi
 cargo stylus deploy --private-key 9dc8c652a16755e58fe2ffae9991c895174f3746022b2a474f8d89694b4dc312 -e https://sepolia-rollup.arbitrum.io/rpc    
-cargo stylus verify --deployment-tx 0xf5724716e7f70831958f01df977073bd8dd7ec452af5664b9708491ab3894e4f -e https://sepolia-rollup.arbitrum.io/rpc    
+cargo stylus verify --deployment-tx 0x485dc408500da0309c856cf662f54537d3eb8e15c54e5d0c6d15aa5607fd1945 -e https://sepolia-rollup.arbitrum.io/rpc    --wasm-file stylus_arenaton_engine_opt2.wasm
 
  cargo stylus cache bid d8ec21a01d75d003aff86d445c3361f2f0b2ee03 0 --private-key 9dc8c652a16755e58fe2ffae9991c895174f3746022b2a474f8d89694b4dc312 -e https://sepolia-rollup.arbitrum.io/rpc
