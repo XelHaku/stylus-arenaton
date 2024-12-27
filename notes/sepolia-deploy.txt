@@ -1,0 +1,28 @@
+ Terminal #1// neds its own Terminal
+ ./nitro-devnode/run-dev-node.sh 
+
+ Terminal #2
+ cd stylus_erc20aton/ && cargo clean && cargo stylus check    && cd ..
+
+ wasm-opt stylus_erc20aton/target/wasm32-unknown-unknown/release/stylus_erc20aton.wasm -o stylus_erc20aton_opt.wasm -O --intrinsic-lowering
+ 
+ 
+ cargo stylus deploy --private-key 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659  -e https://sepolia-rollup.arbitrum.io/rpc --wasm-file stylus_erc20aton_opt.wasm
+
+
+
+
+ cd stylus_arenaton_engine/ && cargo clean && cargo stylus check    && cd ..
+
+ wasm-opt stylus_arenaton_engine/target/wasm32-unknown-unknown/release/stylus_arenaton_engine.wasm -o stylus_arenaton_engine_opt.wasm -O --intrinsic-lowering
+ 
+ 
+ cargo stylus deploy --private-key 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659 -e https://sepolia-rollup.arbitrum.io/rpc  --wasm-file stylus_arenaton_engine_opt.wasm
+
+
+
+
+
+
+ cargo stylus check --wasm-file stylus_arenaton_engine.wasm &&
+ cargo stylus check --wasm-file stylus_arenaton_engine_opt.wasm
