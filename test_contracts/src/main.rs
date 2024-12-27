@@ -50,6 +50,12 @@ async fn main() -> Result<()> {
     grant_oracle_role( _oracle.address).await?;
 
 
+    //
+
+    // Add event
+    add_event("event_id", 1650000000, 1).await?;
+
+
 
     // Print wallet addresses (optional)
     print_wallets(Some(1));
