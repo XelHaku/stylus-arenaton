@@ -5,14 +5,16 @@ use eyre::Result;
 use std::sync::Arc;
 
 use crate::constants::wallets::{WALLETS, Wallet};
+use crate::constants::env_vars::{get_env_vars, EnvVars};
 
 pub async fn fund_players_eth(
     amount: &str, // Amount in Wei
-    rpc_url: &str,
-    chain_id: u64,
     limit: Option<u64>,
 ) -> Result<()> {
     let whale_private_key = std::env::var("PRIVATE_KEY").expect("Please set the PRIVATE_KEY environment variable");
+    let env = get_env_vars();
+    let rpc_url = env.rpc_url;
+    let chain_id = env.chain_id;
     
     // Set up the whale signer
     let whale_wallet = whale_private_key.parse::<LocalWallet>()?.with_chain_id(chain_id);

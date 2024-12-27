@@ -30,6 +30,8 @@ pub mod env_vars {
             .parse::<u64>()
             .expect("CHAIN_ID is not a valid u64");
 
+        
+
         EnvVars {
             rpc_url,
             erc20aton_address,

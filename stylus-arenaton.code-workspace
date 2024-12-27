@@ -2,6 +2,9 @@
   "folders": [
     {
       "path": "."
+    },
+    {
+      "path": "test_contracts"
     }
   ],
   "settings": {
