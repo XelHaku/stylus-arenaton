@@ -177,26 +177,28 @@ impl AccessControl {
     }
 
 
-    // pub fn grant_role(&mut self, role: B256, account: Address) -> Result<(), ATONError> {
-    //     let admin_role = self.get_role_admin(role);
-    //     self.only_role(admin_role)?;
-    //     self._grant_role(role, account);
-    //     Ok(())
-    // }
-
-pub fn grant_arenaton_role(&mut self, account: Address) -> Result<(), ATONError> {
+pub fn grant_engine_and__oracle_role(&mut self, account: Address,role_id:u8) -> Result<(), ATONError> {
     let admin_role = self.get_role_admin(FixedBytes::from(constants::ARENATON_ENGINE_ROLE));
     self.only_role(admin_role)?;
-    self._grant_role(FixedBytes::from(constants::ARENATON_ENGINE_ROLE), account); // Add missing closing parenthesis
+    if role_id == 1 {
+        self._grant_role(FixedBytes::from(constants::ARENATON_ENGINE_ROLE), account); // Add missing closing parenthesis
+    }
+    if role_id == 2 {
+        self._grant_role(FixedBytes::from(constants::ARENATON_ORACLE_ROLE), account); // Add missing closing parenthesis
+    }
     Ok(())
 }
 
 
-    pub fn revoke_arenaton_role(&mut self, account: Address) -> Result<(), ATONError> {
+    pub fn revoke_engine_and__oracle_role(&mut self, account: Address,role_id:u8) -> Result<(), ATONError> {
         let admin_role = self.get_role_admin(FixedBytes::from(constants::ARENATON_ENGINE_ROLE));
         self.only_role(admin_role)?;
-
-        self._revoke_role(FixedBytes::from(constants::ARENATON_ENGINE_ROLE), account);
+        if role_id == 1 {
+            self._revoke_role(FixedBytes::from(constants::ARENATON_ENGINE_ROLE), account);  
+        }
+        if role_id == 2 {
+            self._revoke_role(FixedBytes::from(constants::ARENATON_ORACLE_ROLE), account);
+        }
         Ok(())
     }
 
