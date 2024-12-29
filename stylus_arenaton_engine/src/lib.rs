@@ -75,10 +75,6 @@ pub enum ATONError {
 sol_storage! {
     #[entrypoint]
     pub struct ArenatonEngine {
-        #[borrow]
-        AccessControl control;
-//   uint256 private premium = 200000;
-//   uint256 constant pct_denom = 10000000;
 
   // Mapping for storing event and player data
   mapping(bytes8 => Event)  events;
@@ -92,7 +88,6 @@ sol_storage! {
 
  uint256 number;
  address aton_address;
-        address _owner;
 
     }
 
@@ -145,20 +140,8 @@ uint64 timestamp;
 
 // Remove or provide Erc20 trait below if needed
 #[public]
-#[inherit( AccessControl)]
 impl ArenatonEngine {
-  /// Gets the number from storage.
-    pub fn number(&self) -> U256 {
-        self.number.get()
-    }
-
-
-
-    /// Increments `number` and updates its value in storage.
-    pub fn increment(&mut self) {
-        let number = self.number.get();
-        self.number.set(number + U256::from(1));
-    }
+ 
     pub fn initialize_arenaton_engine(&mut self, _aton_address: Address) -> Result<bool, ATONError> {
         if self.initialized.get() {
             // Access the value using .get()
@@ -166,8 +149,6 @@ impl ArenatonEngine {
         }
         self.initialized.set(true); // Set initialized to true
         self.aton_address.set(_aton_address);
-        self._owner.set(msg::sender());
-        self.control._grant_role(FixedBytes::from(constants::DEFAULT_ADMIN_ROLE), msg::sender());
         Ok(true)
     }
     pub fn add_event(
@@ -176,10 +157,7 @@ impl ArenatonEngine {
         start_date: u64,
         sport: u8,
     ) -> Result<bool, ATONError> {
-     match   self.control.only_role(constants::ORACLE_ROLE.into()) {
-        Ok(_) => {},
-        Err(e) => return Err(ATONError::NotAuthorized(NotAuthorized {})),
-    };
+
 
         // Convert event_id to 8 bytes
         let id8 = string_to_bytes32(&event_id);
@@ -227,51 +205,8 @@ impl ArenatonEngine {
         Ok(true)
     }
 
-    /// Stake with ETH
-    #[payable]
-    pub fn stake_eth(&mut self, _event_id: String, _team: u8) -> Result<bool, ATONError> {
-        let _amount = msg::value(); // Ether sent with the transaction
-        let _player = msg::sender();
-
-        // Parse the const &str as a local Address variable
-        let aton_contract = IATON::new(self.aton_address.get());
-
-        let config = Call::new_in(self).value(_amount);
-
-        let _ = match aton_contract.mint_aton_from_eth(config) {
-            Ok(_) => Ok(true),
-            Err(e) => Err(false),
-        };
-
-        let _ = self._add_stake(_event_id, _amount, _team);
-        Ok(true)
-    }
-    /// Stake with ATON
  
-    // pub fn stake_aton(
-    //     &mut self,
-    //     _event_id: String,
-    //     _amount: U256,
-    //     _team: u8,
-    // ) -> Result<bool, ATONError> {
-    //     let _player = msg::sender();
-
-    //     // Parse the const &str as a local Address variable
-    //     let aton_contract = IATON::new(self.aton_address.get());
-
-
-    //     let config = Call::new_in(self);
-
-    //     let _ = match aton_contract.transfer_from(config, _player, contract::address(), _amount) {
-    //         Ok(_) => Ok(true),
-    //         Err(e) => Err(false),
-    //     };
-
-    //     let _ = self._add_stake(_event_id, _amount, _team);
-    //     // Your logic
-    //     Ok(true)
-    // }
-
+    #[payable]
 
     pub fn stake(
         &mut self,
@@ -295,12 +230,14 @@ impl ArenatonEngine {
             };
         }
         
-        // else{
-        //     let _ = match aton_contract.transfer_from(config, _player, contract::address(), _amount) {
-        //         Ok(_) => Ok(true),
-        //         Err(e) => Err(false),
-        //     };  
-        // }
+        else{    
+            let config = Call::new_in(self);
+
+            let _ = match aton_contract.transfer_from(config, _player, contract::address(), _amount) {
+                Ok(_) => Ok(true),
+                Err(e) => Err(false),
+            };  
+        }
 
 
         let _ = self._add_stake(_event_id, _amount, _team);
@@ -309,10 +246,7 @@ impl ArenatonEngine {
     }
 
     pub fn close_event(&mut self, _event_id: String, _winner: u8) -> Result<bool, ATONError> {
-             match   self.control.only_role(constants::ORACLE_ROLE.into()) {
-        Ok(_) => {},
-        Err(e) => return Err(ATONError::NotAuthorized(NotAuthorized {})),
-    };
+
 let event_id_bytes = string_to_bytes32(&_event_id);
         // 2) "Borrow" a mutable reference to the storage for `events[event_id_bytes]`
         let mut e = self.events.setter(event_id_bytes);
@@ -330,23 +264,7 @@ let event_id_bytes = string_to_bytes32(&_event_id);
     }
 
 
-   fn owner(&self) -> Address {
-        self._owner.get()
-    }
-
-    fn transfer_ownership(&mut self, new_owner: Address) -> Result<(), ATONError> {
-        self.only_owner()?;
-
-        if new_owner.is_zero() {
-            return Err(ATONError::InvalidOwner(OwnableInvalidOwner {
-                owner: Address::ZERO,
-            }));
-        }
-
-        self._transfer_ownership(new_owner);
-
-        Ok(())
-    }
+ 
 }
 
 impl ArenatonEngine {
@@ -398,23 +316,4 @@ impl ArenatonEngine {
         Ok(true)
     }
 
-        pub fn only_owner(&self) -> Result<(), ATONError> {
-        let account = msg::sender();
-        if self._owner.get() != account {
-            return Err(ATONError::UnauthorizedAccount(
-                OwnableUnauthorizedAccount { account },
-            ));
-        }
-
-        Ok(())
-    }
-
-    pub fn _transfer_ownership(&mut self, new_owner: Address) {
-        let previous_owner = self._owner.get();
-        self._owner.set(new_owner);
-        evm::log(OwnershipTransferred {
-            previous_owner,
-            new_owner,
-        });
-    }
 }
