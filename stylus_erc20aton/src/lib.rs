@@ -25,7 +25,7 @@
 #![cfg_attr(not(feature = "export-abi"), no_main)]
 extern crate alloc;
 mod erc20;
-use crate::erc20::{ Erc20, Erc20Error };
+use crate::erc20::{Erc20, Erc20Error};
 
 mod ownable;
 use crate::ownable::Ownable;
@@ -38,16 +38,14 @@ mod constants;
 mod structs;
 use alloy_sol_types::sol;
 
-use alloy_primitives::{ Address, U256 };
+use alloy_primitives::{Address, U256};
 
+use alloy_primitives::FixedBytes;
 use stylus_sdk::{
     call::transfer_eth,
-    contract,
-    evm,
-    msg,
-    stylus_proc::{ public, sol_storage, SolidityError },
+    contract, evm, msg,
+    stylus_proc::{public, sol_storage, SolidityError},
 };
-use alloy_primitives::FixedBytes;
 
 use stylus_sdk::prelude::*;
 
@@ -55,14 +53,15 @@ use stylus_sdk::prelude::*;
 sol_storage! {
     #[entrypoint]
     pub struct ATON {
-                #[borrow]
+        #[borrow]
 
         Erc20 erc20;
-                #[borrow]
+        #[borrow]
         Ownable ownable;
-#[borrow]
-AccessControl control;
+        #[borrow]
+        AccessControl control;
         uint256 number;
+        address _owner;
 
 
           uint256  accumulated_commission_per_token;
@@ -80,7 +79,7 @@ AccessControl control;
 }
 
 sol! {
-   
+
 
     // ATON
     event DonateATON(address indexed sender, uint256 amount);
@@ -88,6 +87,12 @@ sol! {
     error ZeroEther(address sender);
     error ZeroAton(address sender);
     error AlreadyInitialized();
+
+        // Ownership
+        event OwnershipTransferred(address indexed previous_owner, address indexed new_owner);
+        error OwnableUnauthorizedAccount(address account);
+        error OwnableInvalidOwner(address owner);
+
 }
 
 /// Represents the ways methods may fail.
@@ -96,11 +101,31 @@ pub enum ATONError {
     ZeroEther(ZeroEther),
     ZeroAton(ZeroAton),
     AlreadyInitialized(AlreadyInitialized),
+    UnauthorizedAccount(OwnableUnauthorizedAccount),
+    InvalidOwner(OwnableInvalidOwner),
 }
 
 #[public]
-#[inherit(Erc20, Ownable, AccessControl)]
+#[inherit(Erc20, AccessControl)]
 impl ATON {
+    fn owner(&self) -> Address {
+        self._owner.get()
+    }
+
+    fn transfer_ownership(&mut self, new_owner: Address) -> Result<(), ATONError> {
+        self.only_owner()?;
+
+        if new_owner.is_zero() {
+            return Err(ATONError::InvalidOwner(OwnableInvalidOwner {
+                owner: Address::ZERO,
+            }));
+        }
+
+        self._transfer_ownership(new_owner);
+
+        Ok(())
+    }
+
     pub fn initialize_contract(&mut self) -> Result<bool, ATONError> {
         if self.initialized.get() {
             // Access the value using .get()
@@ -108,7 +133,10 @@ impl ATON {
         }
         self.initialized.set(true); // Set initialized to true
         self.ownable._owner.set(msg::sender());
-        self.control._grant_role(FixedBytes::from(constants::DEFAULT_ADMIN_ROLE), msg::sender());
+        self.control._grant_role(
+            FixedBytes::from(constants::DEFAULT_ADMIN_ROLE),
+            msg::sender(),
+        );
         Ok(true)
     }
 
@@ -130,12 +158,12 @@ impl ATON {
         Ok(true)
     }
 
-     pub fn accumulate_aton(&mut self, amount: U256) -> Result<bool, ATONError> {
+    pub fn accumulate_aton(&mut self, amount: U256) -> Result<bool, ATONError> {
         let sender = msg::sender(); // Address of the sender
 
         // Ensure the transaction includes some Ether to donate
         if amount == U256::from(0) {
-            return Err(ATONError::ZeroAton  (ZeroAton  { sender }));
+            return Err(ATONError::ZeroAton(ZeroAton { sender }));
         }
         let _ = self._accumulate_commission(amount);
         // Mint equivalent ATON tokens to the sender
@@ -148,7 +176,8 @@ impl ATON {
 
     #[payable]
     pub fn mint_aton_from_eth(&mut self) -> Result<bool, Vec<u8>> {
-        self.control.only_role(constants::ARENATON_ENGINE_ROLE.into())?;
+        self.control
+            .only_role(constants::ARENATON_ENGINE_ROLE.into())?;
         let _ = self.erc20.mint(msg::sender(), msg::value());
 
         Ok(true)
@@ -156,20 +185,16 @@ impl ATON {
 
     pub fn swap(&mut self, amount: U256) -> Result<bool, ATONError> {
         if amount == U256::from(0) {
-            return Err(
-                ATONError::ZeroAton(ZeroAton {
-                    sender: msg::sender(),
-                })
-            );
+            return Err(ATONError::ZeroAton(ZeroAton {
+                sender: msg::sender(),
+            }));
         }
         let balance_aton = self.erc20.balance_of(msg::sender());
 
         if balance_aton < amount {
-            return Err(
-                ATONError::ZeroAton(ZeroAton {
-                    sender: msg::sender(),
-                })
-            );
+            return Err(ATONError::ZeroAton(ZeroAton {
+                sender: msg::sender(),
+            }));
         }
         let balance_eth = contract::balance();
 
@@ -186,7 +211,11 @@ impl ATON {
         let player_commission = self._player_commission(msg::sender())?;
 
         let player_claimed = self.claimed_commissions.get(msg::sender());
-        Ok((player_commission, *self.total_commission_in_aton, player_claimed))
+        Ok((
+            player_commission,
+            *self.total_commission_in_aton,
+            player_claimed,
+        ))
     }
 }
 
@@ -211,11 +240,13 @@ impl ATON {
 
             // Access storage fields using `.get()` and `.set()`
             let current_accumulated = self.accumulated_commission_per_token.get();
-            self.accumulated_commission_per_token.set(current_accumulated + additional_commission);
+            self.accumulated_commission_per_token
+                .set(current_accumulated + additional_commission);
 
             // Update total commission in ATON
             let current_total = self.total_commission_in_aton.get();
-            self.total_commission_in_aton.set(current_total + new_commission_aton);
+            self.total_commission_in_aton
+                .set(current_total + new_commission_aton);
 
             // Emit the `Accumulate` event
             evm::log(Accumulate {
@@ -237,12 +268,30 @@ impl ATON {
     pub fn _player_commission(&mut self, player: Address) -> Result<U256, ATONError> {
         let pct_denom: U256 = U256::from(10000000);
 
-        let _owed_per_token =
-            self.accumulated_commission_per_token.get() -
-            self.last_commission_per_token.get(player);
-        let _unclaimed_commission =
-            (self.erc20.balance_of(player) * _owed_per_token * pct_denom) /
-            U256::from(10).pow(U256::from(18u8));
+        let _owed_per_token = self.accumulated_commission_per_token.get()
+            - self.last_commission_per_token.get(player);
+        let _unclaimed_commission = (self.erc20.balance_of(player) * _owed_per_token * pct_denom)
+            / U256::from(10).pow(U256::from(18u8));
         Ok(_unclaimed_commission)
+    }
+
+    pub fn only_owner(&self) -> Result<(), ATONError> {
+        let account = msg::sender();
+        if self._owner.get() != account {
+            return Err(ATONError::UnauthorizedAccount(
+                OwnableUnauthorizedAccount { account },
+            ));
+        }
+
+        Ok(())
+    }
+
+    pub fn _transfer_ownership(&mut self, new_owner: Address) {
+        let previous_owner = self._owner.get();
+        self._owner.set(new_owner);
+        evm::log(OwnershipTransferred {
+            previous_owner,
+            new_owner,
+        });
     }
 }

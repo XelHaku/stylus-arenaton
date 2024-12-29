@@ -39,7 +39,6 @@ sol! {
 
 }
 
-
 /// Represents the ways methods may fail.
 #[derive(SolidityError)]
 pub enum Erc20Error {
@@ -51,7 +50,7 @@ pub enum Erc20Error {
 // Methods marked as "pub" here are usable outside of the erc20 module (i.e. they're callable from lib.rs)
 // Note: modifying storage will become much prettier soon
 impl Erc20 {
- /// Movement of funds between 2 accounts
+    /// Movement of funds between 2 accounts
     /// (invoked by the public transfer() and transfer_from() functions )
     pub fn _transfer(&mut self, from: Address, to: Address, value: U256) -> Result<(), ERC20Error> {
         // Decreasing sender balance
@@ -95,14 +94,12 @@ impl Erc20 {
 
         Ok(())
     }
-
 }
 
 // These methods are public to other contracts
 // Note: modifying storage will become much prettier soon
 #[public]
 impl Erc20 {
-   
     /// Immutable token name
     pub fn name() -> String {
         "ATON Stylus".into()

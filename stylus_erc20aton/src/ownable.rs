@@ -10,7 +10,6 @@ use alloy_primitives::{Address, U256};
 use alloy_sol_types::sol;
 use stylus_sdk::{evm, msg, prelude::*};
 
-
 sol_storage! {
     /// Ownable implements all ERC-20 methods.
     pub struct Ownable {
@@ -30,10 +29,8 @@ sol! {
     error OwnableInvalidOwner(address owner);
 }
 
-
 #[derive(SolidityError)]
 pub enum OwnableError {
-
     UnauthorizedAccount(OwnableUnauthorizedAccount),
     InvalidOwner(OwnableInvalidOwner),
 }
@@ -53,29 +50,25 @@ impl Ownable {
         Ok(())
     }
 
-   
     pub fn _transfer_ownership(&mut self, new_owner: Address) {
         let previous_owner = self._owner.get();
         self._owner.set(new_owner);
-        evm::log(OwnershipTransferred { previous_owner, new_owner });
+        evm::log(OwnershipTransferred {
+            previous_owner,
+            new_owner,
+        });
     }
-
-    
-
 }
 
 // These methods are public to other contracts
 // Note: modifying storage will become much prettier soon
 #[public]
 impl Ownable {
-           fn owner(&self) -> Address {
+    fn owner(&self) -> Address {
         self._owner.get()
     }
 
-    fn transfer_ownership(
-        &mut self,
-        new_owner: Address,
-    ) -> Result<(), OwnableError> {
+    fn transfer_ownership(&mut self, new_owner: Address) -> Result<(), OwnableError> {
         self.only_owner()?;
 
         if new_owner.is_zero() {
@@ -89,4 +82,9 @@ impl Ownable {
         Ok(())
     }
 
+    fn renounce_ownership(&mut self) -> Result<(), OwnableError> {
+        self.only_owner()?;
+        self._transfer_ownership(Address::ZERO);
+        Ok(())
+    }
 }
