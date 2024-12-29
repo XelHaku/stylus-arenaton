@@ -248,24 +248,60 @@ impl ArenatonEngine {
     }
     /// Stake with ATON
  
-    pub fn stake_aton(
+    // pub fn stake_aton(
+    //     &mut self,
+    //     _event_id: String,
+    //     _amount: U256,
+    //     _team: u8,
+    // ) -> Result<bool, ATONError> {
+    //     let _player = msg::sender();
+
+    //     // Parse the const &str as a local Address variable
+    //     let aton_contract = IATON::new(self.aton_address.get());
+
+
+    //     let config = Call::new_in(self);
+
+    //     let _ = match aton_contract.transfer_from(config, _player, contract::address(), _amount) {
+    //         Ok(_) => Ok(true),
+    //         Err(e) => Err(false),
+    //     };
+
+    //     let _ = self._add_stake(_event_id, _amount, _team);
+    //     // Your logic
+    //     Ok(true)
+    // }
+
+
+    pub fn stake(
         &mut self,
         _event_id: String,
         _amount: U256,
         _team: u8,
     ) -> Result<bool, ATONError> {
         let _player = msg::sender();
+        let _value = msg::value(); // Ether sent with the transaction
 
         // Parse the const &str as a local Address variable
         let aton_contract = IATON::new(self.aton_address.get());
 
 
-        let config = Call::new_in(self);
+        
+        if _value > U256::from(0) {
+            let config = Call::new_in(self).value(_value);
+            let _ = match aton_contract.mint_aton_from_eth(config) {
+                Ok(_) => Ok(true),
+                Err(e) => Err(false),
+            };
+        }
+        
+        // else{
+        //     let _ = match aton_contract.transfer_from(config, _player, contract::address(), _amount) {
+        //         Ok(_) => Ok(true),
+        //         Err(e) => Err(false),
+        //     };  
+        // }
 
-        let _ = match aton_contract.transfer_from(config, _player, contract::address(), _amount) {
-            Ok(_) => Ok(true),
-            Err(e) => Err(false),
-        };
 
         let _ = self._add_stake(_event_id, _amount, _team);
         // Your logic
