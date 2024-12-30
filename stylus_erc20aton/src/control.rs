@@ -6,11 +6,11 @@
 //! Note that this code is unaudited and not fit for production use.
 
 // Imported packages
-use alloy_primitives::{Address, U256,B256};
+use crate::constants;
+use alloy_primitives::FixedBytes;
+use alloy_primitives::{Address, B256, U256};
 use alloy_sol_types::sol;
 use stylus_sdk::{evm, msg, prelude::*};
-use alloy_primitives::FixedBytes;
-use crate::constants;
 
 sol_storage! {
     /// AccessControl implements all ERC-20 methods.
@@ -38,8 +38,6 @@ sol! {
 
 }
 
-
-
 /// Represents the ways methods may fail.
 #[derive(SolidityError)]
 pub enum ATONError {
@@ -51,7 +49,7 @@ pub enum ATONError {
 // Methods marked as "pub" here are usable outside of the AccessControl module (i.e. they're callable from lib.rs)
 // Note: modifying storage will become much prettier soon
 impl AccessControl {
-  /// Sets `admin_role` as `role`'s admin role.
+    /// Sets `admin_role` as `role`'s admin role.
     ///
     /// # Arguments
     ///
@@ -152,20 +150,16 @@ impl AccessControl {
             false
         }
     }
-
-
 }
 
 // These methods are public to other contracts
 // Note: modifying storage will become much prettier soon
 #[public]
 impl AccessControl {
-
-     #[must_use]
+    #[must_use]
     pub fn has_role(&self, role: B256, account: Address) -> bool {
         self._roles.getter(role).has_role.get(account)
     }
-
 
     pub fn only_role(&self, role: B256) -> Result<(), ATONError> {
         self._check_role(role, msg::sender())
@@ -176,30 +170,37 @@ impl AccessControl {
         *self._roles.getter(role).admin_role
     }
 
-
-    // pub fn grant_role(&mut self, role: B256, account: Address) -> Result<(), ATONError> {
-    //     let admin_role = self.get_role_admin(role);
-    //     self.only_role(admin_role)?;
-    //     self._grant_role(role, account);
-    //     Ok(())
-    // }
-
-pub fn grant_arenaton_role(&mut self, account: Address) -> Result<(), ATONError> {
-    let admin_role = self.get_role_admin(FixedBytes::from(constants::ARENATON_ENGINE_ROLE));
-    self.only_role(admin_role)?;
-    self._grant_role(FixedBytes::from(constants::ARENATON_ENGINE_ROLE), account); // Add missing closing parenthesis
-    Ok(())
-}
-
-
-    pub fn revoke_arenaton_role(&mut self, account: Address) -> Result<(), ATONError> {
+    pub fn grant_engine_and__oracle_role(
+        &mut self,
+        account: Address,
+        role_id: u8,
+    ) -> Result<(), ATONError> {
         let admin_role = self.get_role_admin(FixedBytes::from(constants::ARENATON_ENGINE_ROLE));
         self.only_role(admin_role)?;
-
-        self._revoke_role(FixedBytes::from(constants::ARENATON_ENGINE_ROLE), account);
+        if role_id == 1 {
+            self._grant_role(FixedBytes::from(constants::ARENATON_ENGINE_ROLE), account);
+            // Add missing closing parenthesis
+        }
+        if role_id == 2 {
+            self._grant_role(FixedBytes::from(constants::ARENATON_ORACLE_ROLE), account);
+            // Add missing closing parenthesis
+        }
         Ok(())
     }
 
-  
-
+    pub fn revoke_engine_and__oracle_role(
+        &mut self,
+        account: Address,
+        role_id: u8,
+    ) -> Result<(), ATONError> {
+        let admin_role = self.get_role_admin(FixedBytes::from(constants::ARENATON_ENGINE_ROLE));
+        self.only_role(admin_role)?;
+        if role_id == 1 {
+            self._revoke_role(FixedBytes::from(constants::ARENATON_ENGINE_ROLE), account);
+        }
+        if role_id == 2 {
+            self._revoke_role(FixedBytes::from(constants::ARENATON_ORACLE_ROLE), account);
+        }
+        Ok(())
+    }
 }
