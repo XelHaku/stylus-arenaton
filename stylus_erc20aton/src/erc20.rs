@@ -1,9 +1,3 @@
-//! Implementation of the ERC-20 standard
-//!
-//! The eponymous [`Erc20`] type provides all the standard methods,
-//! and is intended to be inherited by other contract types.
-
-//! Note that this code is unaudited and not fit for production use.
 
 // Imported packages
 use alloy_primitives::{Address, U256};
@@ -102,7 +96,7 @@ impl Erc20 {
 impl Erc20 {
     /// Immutable token name
     pub fn name() -> String {
-        "ATON Stylus".into()
+        "".into()
     }
 
     /// Immutable token symbol

@@ -2,7 +2,7 @@
 #![cfg_attr(not(feature = "export-abi"), no_main)]
 extern crate alloc;
 mod erc20;
-use crate::erc20::{Erc20, ERC20Error};
+use crate::erc20::Erc20;
 
 // Modules and imports
 mod constants;
@@ -11,7 +11,6 @@ use alloy_sol_types::sol;
 
 use alloy_primitives::{Address, B256, U256};
 
-use alloy_primitives::FixedBytes;
 use stylus_sdk::{
     call::transfer_eth,
     contract, evm, msg,
@@ -106,7 +105,7 @@ impl ATON {
         self.initialized.set(true); // Set initialized to true
         self.owner.set(msg::sender());
         self._grant_role(
-            FixedBytes::from(constants::DEFAULT_ADMIN_ROLE),
+           constants::DEFAULT_ADMIN_ROLE.into(),
             msg::sender(),
         );
         Ok(true)
@@ -199,32 +198,32 @@ impl ATON {
         Ok(true)
     }
 
-    pub fn summary(&mut self,player: Address) -> Result<(U256, U256, U256, U256,U256), ATONError> {
-        let player_commission = self._player_commission(player);
+    // pub fn summary(&mut self,player: Address) -> Result<(U256, U256, U256, U256,U256), ATONError> {
+    //     let player_commission = self._player_commission(player);
 
-        let player_claimed = self.players.get(player).claimed_commissions.get();
+    //     let player_claimed = self.players.get(player).claimed_commissions.get();
 
-        Ok((self.erc20.balance_of(contract::address()),
-        self.erc20.balance_of(player),
-            player_commission,
-            *self.total_commission_in_aton,
-            player_claimed,
-        ))
+    //     Ok((self.erc20.balance_of(contract::address()),
+    //     self.erc20.balance_of(player),
+    //         player_commission,
+    //         *self.total_commission_in_aton,
+    //         player_claimed,
+    //     ))
+    // }
+
+    pub fn is_oracle(&self, account: Address) -> bool {
+        self._has_role(
+            constants::ARENATON_ORACLE_ROLE.into(),
+            account,
+        )
     }
 
-    // pub fn is_oracle(&self, account: Address) -> bool {
-    //     self._has_role(
-    //         FixedBytes::from(constants::ARENATON_ORACLE_ROLE),
-    //         account,
-    //     )
-    // }
-
-    // pub fn is_engine(&self, account: Address) -> bool {
-    //     self._has_role(
-    //         FixedBytes::from(constants::ARENATON_ENGINE_ROLE),
-    //         account,
-    //     )
-    // }
+    pub fn is_engine(&self, account: Address) -> bool {
+        self._has_role(
+            constants::ARENATON_ENGINE_ROLE.into(),
+            account,
+        )
+    }
 
     // Ownable
 
@@ -239,14 +238,14 @@ impl ATON {
         account: Address,
         role_id: u8,
     ) -> Result<(), ATONError> {
-        let admin_role = self._get_role_admin(FixedBytes::from(constants::ARENATON_ENGINE_ROLE));
+        let admin_role = self._get_role_admin(constants::ARENATON_ENGINE_ROLE.into());
         self._check_role(admin_role , msg::sender())?;   
         if role_id == 1 {
-            self._grant_role(FixedBytes::from(constants::ARENATON_ENGINE_ROLE), account);
+            self._grant_role(constants::ARENATON_ENGINE_ROLE.into(), account);
             // Add missing closing parenthesis
         }
         if role_id == 2 {
-            self._grant_role(FixedBytes::from(constants::ARENATON_ORACLE_ROLE), account);
+            self._grant_role(constants::ARENATON_ORACLE_ROLE.into(), account);
             // Add missing closing parenthesis
         }
         Ok(())
@@ -257,14 +256,14 @@ impl ATON {
         account: Address,
         role_id: u8,
     ) -> Result<(), ATONError> {
-        let admin_role = self._get_role_admin(FixedBytes::from(constants::ARENATON_ENGINE_ROLE));
+        let admin_role = self._get_role_admin(constants::ARENATON_ENGINE_ROLE.into());
         self._check_role(admin_role , msg::sender())?;   
 
         if role_id == 1 {
-            self._revoke_role(FixedBytes::from(constants::ARENATON_ENGINE_ROLE), account);
+            self._revoke_role(constants::ARENATON_ENGINE_ROLE.into(), account);
         }
         if role_id == 2 {
-            self._revoke_role(FixedBytes::from(constants::ARENATON_ORACLE_ROLE), account);
+            self._revoke_role(constants::ARENATON_ORACLE_ROLE.into(), account);
         }
         Ok(())
     }
@@ -272,14 +271,7 @@ impl ATON {
 
 // Private Functions
 impl ATON {
-    /// Accumulates commission generated from swaps and stores it as ATON tokens.
-    /// Updates the `accumulated_commission_per_token` and `totalCommissionInATON` fields.
-    ///
-    /// # Parameters
-    /// - `new_commission_aton`: The commission amount in ATON tokens to be accumulated.
-    ///
-    /// # Note
-    /// Assumes `total_supply()` is non-zero. If it is zero, this function will have no effect.
+
     pub fn _accumulate_commission(&mut self, new_commission_aton: U256) -> Result<(), ATONError> {
         let total_supply_tokens = self.erc20.total_supply();
 
@@ -374,17 +366,7 @@ let decimals = U256::from(10).pow(U256::from(18));
         info.last_commission_per_token.set(self.accumulated_commission_per_token.get());
     }
     // Access Control
-    /// Sets `admin_role` as `role`'s admin role.
-    ///
-    /// # Arguments
-    ///
-    /// * `&mut self` - Write access to the contract's state.
-    /// * `role` - The identifier of the role we are changing the admin to.
-    /// * `new_admin_role` - The new admin role.
-    ///
-    /// # Events
-    ///
-    /// Emits a [`RoleAdminChanged`] event.
+  
     pub fn _set_role_admin(&mut self, role: B256, new_admin_role: B256) {
         let previous_admin_role = self._get_role_admin(role);
         self._roles.setter(role).admin_role.set(new_admin_role);
@@ -395,18 +377,7 @@ let decimals = U256::from(10).pow(U256::from(18));
         });
     }
 
-    /// Checks if `account` has been granted `role`.
-    ///
-    /// # Arguments
-    ///
-    /// * `&self` - Read access to the contract's state.
-    /// * `role` - The role identifier.
-    /// * `account` - The account to check for membership.
-    ///
-    /// # Errors
-    ///
-    /// If [`msg::sender`] has not been granted `role`, then the error
-    /// [`Error::AccessUnauthorizedAccount`] is returned.
+ 
     pub fn _check_role(&self, role: B256, account: Address) -> Result<(), ATONError> {
         if !self._has_role(role, account) {
             return Err(ATONError::AccessUnauthorizedAccount(
@@ -420,20 +391,7 @@ let decimals = U256::from(10).pow(U256::from(18));
         Ok(())
     }
 
-    /// Attempts to grant `role` to `account` and returns a boolean indicating
-    /// if `role` was granted.
-    ///
-    /// Internal function without access restriction.
-    ///
-    /// # Arguments
-    ///
-    /// * `&mut self` - Write access to the contract's state.
-    /// * `role` - The role identifier.
-    /// * `account` - The account which will be granted the role.
-    ///
-    /// # Events
-    ///
-    /// May emit a [`RoleGranted`] event.
+    
     pub fn _grant_role(&mut self, role: B256, account: Address) -> bool {
         if self._has_role(role, account) {
             false
@@ -448,20 +406,6 @@ let decimals = U256::from(10).pow(U256::from(18));
         }
     }
 
-    /// Attempts to revoke `role` from `account` and returns a boolean
-    /// indicating if `role` was revoked.
-    ///
-    /// Internal function without access restriction.
-    ///
-    /// # Arguments
-    ///
-    /// * `&mut self` - Write access to the contract's state.
-    /// * `role` - The role identifier.
-    /// * `account` - The account which will be granted the role.
-    ///
-    /// # Events
-    ///
-    /// May emit a [`RoleRevoked`] event.
     pub fn _revoke_role(&mut self, role: B256, account: Address) -> bool {
         if self._has_role(role, account) {
             self._roles.setter(role).has_role.insert(account, false);
