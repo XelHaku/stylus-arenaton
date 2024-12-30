@@ -17,8 +17,6 @@ interface IErc20  {
 
     function balanceOf(address owner) external view returns (uint256);
 
-    function transfer(address to, uint256 value) external returns (bool);
-
     function transferFrom(address from, address to, uint256 value) external returns (bool);
 
     function approve(address spender, uint256 value) external returns (bool);
@@ -30,38 +28,14 @@ interface IErc20  {
     error InsufficientAllowance(address, address, uint256, uint256);
 }
 
-interface IOwnable  {
-    function owner() external view returns (address);
-
-    function transferOwnership(address new_owner) external;
-
-    error OwnableUnauthorizedAccount(address);
-
-    error OwnableInvalidOwner(address);
-}
-
-interface IAccessControl  {
-    function hasRole(bytes32 role, address account) external view returns (bool);
-
-    function onlyRole(bytes32 role) external view;
-
-    function getRoleAdmin(bytes32 role) external view returns (bytes32);
-
-    function grantArenatonRole(address account) external;
-
-    function revokeArenatonRole(address account) external;
-
-    error AccessControlUnauthorizedAccount(address, bytes32);
-
-    error AccessControlBadConfirmation();
-}
-
-interface IATON is IErc20, IOwnable, IAccessControl  {
+interface IATON is IErc20  {
     function initializeContract() external returns (bool);
 
     function donateEth() external payable returns (bool);
 
     function accumulateAton(uint256 amount) external returns (bool);
+
+    function transfer(address to, uint256 amount) external returns (bool);
 
     function mintAtonFromEth() external payable returns (bool);
 
@@ -69,9 +43,27 @@ interface IATON is IErc20, IOwnable, IAccessControl  {
 
     function summary() external returns (uint256, uint256, uint256);
 
+    function isOracle(address account) external view returns (bool);
+
+    function isEngine(address account) external view returns (bool);
+
+    function getRoleAdmin(bytes32 role) external view returns (bytes32);
+
+    function grantEngineAndOracleRole(address account, uint8 role_id) external;
+
+    function revokeEngineAndOracleRole(address account, uint8 role_id) external;
+
     error ZeroEther(address);
 
     error ZeroAton(address);
 
     error AlreadyInitialized();
+
+    error AccessControlUnauthorizedAccount(address, bytes32);
+
+    error AccessControlBadConfirmation();
+
+    error OwnableUnauthorizedAccount(address);
+
+    error OwnableInvalidOwner(address);
 }

@@ -126,10 +126,10 @@ impl Erc20 {
     }
 
     /// Transfers `value` tokens from msg::sender() to `to`
-    pub fn transfer(&mut self, to: Address, value: U256) -> Result<bool, ERC20Error> {
-        self._transfer(msg::sender(), to, value)?;
-        Ok(true)
-    }
+    // pub fn transfer(&mut self, to: Address, value: U256) -> Result<bool, ERC20Error> {
+    //     self._transfer(msg::sender(), to, value)?;
+    //     Ok(true)
+    // }
 
     /// Transfers `value` tokens from `from` to `to`
     /// (msg::sender() must be able to spend at least `value` tokens from `from`)
