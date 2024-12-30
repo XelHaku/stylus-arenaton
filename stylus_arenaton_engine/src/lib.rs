@@ -7,7 +7,7 @@ mod structs;
 mod tools;
 
 // use crate::ownable::Ownable;
-use crate::tools::{bytes32_to_string, string_to_bytes32};
+use crate::tools::{ bytes32_to_string, string_to_bytes32 };
 
 use crate::control::AccessControl;
 
@@ -17,23 +17,34 @@ use alloy_sol_types::sol;
 use alloy_primitives::FixedBytes;
 use alloy_primitives::Signed;
 use alloy_primitives::Uint;
-use alloy_primitives::{Address, B256, U256};
+use alloy_primitives::{ Address, B256, U256 };
 use std::string::String;
 use stylus_sdk::prelude::*;
 use stylus_sdk::storage::{
-    StorageAddress, StorageArray, StorageBool, StorageFixedBytes, StorageMap, StorageSigned,
-    StorageUint, StorageVec,
+    StorageAddress,
+    StorageArray,
+    StorageBool,
+    StorageFixedBytes,
+    StorageMap,
+    StorageSigned,
+    StorageUint,
+    StorageVec,
 };
 use stylus_sdk::{
     abi::Bytes,
-    call::{call, transfer_eth, Call},
-    contract, evm, msg,block,
-    stylus_proc::{public, sol_storage, SolidityError},
+    call::{ call, transfer_eth, Call },
+    contract,
+    evm,
+    msg,
+    block,
+    stylus_proc::{ public, sol_storage, SolidityError },
 };
 
 sol_interface! {
     interface IATON {
     function mintAtonFromEth() external payable returns (bool);
+        function isOracle(address account) external view returns (bool);
+
     function transferFrom(address from, address to, uint256 value) external returns (bool);
 }
 }
@@ -141,8 +152,10 @@ uint64 timestamp;
 // Remove or provide Erc20 trait below if needed
 #[public]
 impl ArenatonEngine {
- 
-    pub fn initialize_arenaton_engine(&mut self, _aton_address: Address) -> Result<bool, ATONError> {
+    pub fn initialize_arenaton_engine(
+        &mut self,
+        _aton_address: Address
+    ) -> Result<bool, ATONError> {
         if self.initialized.get() {
             // Access the value using .get()
             return Err(ATONError::AlreadyInitialized(AlreadyInitialized {})); // Add the error struct
@@ -155,9 +168,17 @@ impl ArenatonEngine {
         &mut self,
         event_id: String,
         start_date: u64,
-        sport: u8,
+        sport: u8
     ) -> Result<bool, ATONError> {
+        
 
+             let aton_contract = IATON::new(self.aton_address.get());
+
+             let is_oracle = aton_contract.is_oracle(msg::sender());
+
+             if !is_oracle {
+                 return Err(ATONError::NotAuthorized(NotAuthorized {}));
+             }  
 
         // Convert event_id to 8 bytes
         let id8 = string_to_bytes32(&event_id);
@@ -169,7 +190,7 @@ impl ArenatonEngine {
         }
 
         if block::timestamp() < start_date {
-            return Err(ATONError::AlreadyStarted(AlreadyStarted{}));
+            return Err(ATONError::AlreadyStarted(AlreadyStarted {}));
         }
         // 3) Set fields in storage
         e.event_id_bytes.set(id8);
@@ -181,16 +202,10 @@ impl ArenatonEngine {
         // e is a `StorageGuardMut<Event>`
 
         // Update the first element in the `total` array
-        e.total
-            .get_mut(0)
-            .expect("Failed to get the first element")
-            .set(U256::ZERO);
+        e.total.get_mut(0).expect("Failed to get the first element").set(U256::ZERO);
 
         // Update the second element in the `total` array
-        e.total
-            .get_mut(1)
-            .expect("Failed to get the second element")
-            .set(U256::ZERO);
+        e.total.get_mut(1).expect("Failed to get the second element").set(U256::ZERO);
 
         // 4) Push to activeEvents
         self.activeEvents.push(id8);
@@ -205,14 +220,12 @@ impl ArenatonEngine {
         Ok(true)
     }
 
- 
     #[payable]
-
     pub fn stake(
         &mut self,
         _event_id: String,
         _amount: U256,
-        _team: u8,
+        _team: u8
     ) -> Result<bool, ATONError> {
         let _player = msg::sender();
         let _value = msg::value(); // Ether sent with the transaction
@@ -220,25 +233,22 @@ impl ArenatonEngine {
         // Parse the const &str as a local Address variable
         let aton_contract = IATON::new(self.aton_address.get());
 
-
-        
         if _value > U256::from(0) {
             let config = Call::new_in(self).value(_value);
             let _ = match aton_contract.mint_aton_from_eth(config) {
                 Ok(_) => Ok(true),
                 Err(e) => Err(false),
             };
-        }
-        
-        else{    
+        } else {
             let config = Call::new_in(self);
 
-            let _ = match aton_contract.transfer_from(config, _player, contract::address(), _amount) {
+            let _ = match
+                aton_contract.transfer_from(config, _player, contract::address(), _amount)
+            {
                 Ok(_) => Ok(true),
                 Err(e) => Err(false),
-            };  
+            };
         }
-
 
         let _ = self._add_stake(_event_id, _amount, _team);
         // Your logic
@@ -246,33 +256,27 @@ impl ArenatonEngine {
     }
 
     pub fn close_event(&mut self, _event_id: String, _winner: u8) -> Result<bool, ATONError> {
-
-let event_id_bytes = string_to_bytes32(&_event_id);
+        let event_id_bytes = string_to_bytes32(&_event_id);
         // 2) "Borrow" a mutable reference to the storage for `events[event_id_bytes]`
         let mut e = self.events.setter(event_id_bytes);
 
         if e.status.get() != Uint::<8, 1>::from(1u8) {
-            return Err(ATONError::WrongStatus(WrongStatus{}));
+            return Err(ATONError::WrongStatus(WrongStatus {}));
         }
         // 3) Set fields in storage
         e.winner.set(Uint::<8, 1>::from(_winner));
         e.status.set(Uint::<8, 1>::from(2u8));
 
-
-
-    Ok(true)
+        Ok(true)
     }
-
-
- 
 }
 
 impl ArenatonEngine {
-   pub fn _add_stake(
+    pub fn _add_stake(
         &mut self,
         _event_id: String,
         _amount: U256,
-        _team: u8,
+        _team: u8
     ) -> Result<bool, ATONError> {
         // convert _event_id to bytes8
         let mut event_id_bytes = [0u8; 8];
@@ -285,17 +289,16 @@ impl ArenatonEngine {
 
         // Insert into the events mapping
         let event = self.events.get(event_id_key);
-//    validate event exists
+        //    validate event exists
         if event.status.get() != Uint::<8, 1>::from(1u8) {
-            return Err(ATONError::WrongStatus(WrongStatus{}));
+            return Err(ATONError::WrongStatus(WrongStatus {}));
         }
-//validate evnt hast started
+        //validate evnt hast started
         if Uint::<64, 1>::from(block::timestamp()) < event.start_date.get() {
-            return Err(ATONError::AlreadyStarted(AlreadyStarted{}));
+            return Err(ATONError::AlreadyStarted(AlreadyStarted {}));
         }
         // 2) "Borrow" a mutable reference to the storage for `events[event_id_bytes]`
         let mut e = self.events.setter(event_id_key);
-
 
         let _player = msg::sender();
 
@@ -305,15 +308,12 @@ impl ArenatonEngine {
             e.team_player.insert(_player, Uint::<8, 1>::from(_team));
         }
 
-
         // 3) Set fields in storage
         // e is a `StorageGuardMut<Event>`
 
-
-// }
+        // }
 
         // Your logic
         Ok(true)
     }
-
 }
