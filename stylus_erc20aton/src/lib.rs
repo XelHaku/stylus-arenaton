@@ -27,8 +27,6 @@ extern crate alloc;
 mod erc20;
 use crate::erc20::{ Erc20, Erc20Error };
 
-mod ownable;
-use crate::ownable::Ownable;
 
 mod control;
 use crate::control::AccessControl;
@@ -56,10 +54,8 @@ sol_storage! {
     #[entrypoint]
     pub struct ATON {
                 #[borrow]
-
         Erc20 erc20;
-                #[borrow]
-        Ownable ownable;
+
 #[borrow]
 AccessControl control;
         uint256 number;
@@ -74,7 +70,7 @@ AccessControl control;
 
 
         bool initialized ;
-
+address owner;
 
     }
 }
@@ -99,7 +95,7 @@ pub enum ATONError {
 }
 
 #[public]
-#[inherit(Erc20, Ownable, AccessControl)]
+#[inherit(Erc20, AccessControl)]
 impl ATON {
     pub fn initialize_contract(&mut self) -> Result<bool, ATONError> {
         if self.initialized.get() {
@@ -107,7 +103,7 @@ impl ATON {
             return Err(ATONError::AlreadyInitialized(AlreadyInitialized {})); // Add the error struct
         }
         self.initialized.set(true); // Set initialized to true
-        self.ownable._owner.set(msg::sender());
+        self.owner.set(msg::sender());
         self.control._grant_role(FixedBytes::from(constants::DEFAULT_ADMIN_ROLE), msg::sender());
         Ok(true)
     }
