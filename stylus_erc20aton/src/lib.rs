@@ -181,17 +181,17 @@ impl ATON {
         Ok(true)
     }
 
-    pub fn summary(&mut self, player: Address) -> Result<(U256, U256, U256), ATONError> {
-        Ok((
-            self._player_commission(player),
-            self.players.get(player).claimed_commissions.get(),
-            *self.total_commission_in_aton,
-        ))
-    }
+    // pub fn summary(&mut self, player: Address) -> Result<(U256, U256, U256), ATONError> {
+    //     Ok((
+    //         self._player_commission(player),
+    //         self.players.get(player).claimed_commissions.get(),
+    //         *self.total_commission_in_aton,
+    //     ))
+    // }
 
-    pub fn is_oracle(&self, account: Address) -> bool {
-        self._has_role(constants::ARENATON_ORACLE_ROLE.into(), account)
-    }
+    // pub fn is_oracle(&self, account: Address) -> bool {
+    //     self._has_role(constants::ARENATON_ORACLE_ROLE.into(), account)
+    // }
 
     // Ownable
 
