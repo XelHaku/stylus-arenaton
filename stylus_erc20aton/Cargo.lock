@@ -3137,8 +3137,6 @@ dependencies = [
 name = "stylus_erc20aton"
 version = "0.1.9"
 dependencies = [
- "alloy-primitives",
- "alloy-sol-macro",
  "alloy-sol-types",
  "cfg-if",
  "derivative",

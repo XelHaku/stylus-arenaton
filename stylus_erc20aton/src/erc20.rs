@@ -1,8 +1,5 @@
-
 // Imported packages
-use alloy_primitives::{Address, U256};
-use alloy_sol_types::sol;
-use stylus_sdk::{evm, msg, prelude::*};
+use stylus_sdk::{alloy_sol_types::sol,evm, msg, prelude::*,alloy_primitives::{Address, U256}};
 
 /// Represents the ways methods may fail.
 #[derive(SolidityError)]
@@ -118,8 +115,6 @@ impl Erc20 {
     pub fn balance_of(&self, owner: Address) -> U256 {
         self.balances.get(owner)
     }
-
-
 
     /// Transfers `value` tokens from `from` to `to`
     /// (msg::sender() must be able to spend at least `value` tokens from `from`)

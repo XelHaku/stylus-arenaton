@@ -4,7 +4,6 @@
  Terminal #2
  cd stylus_erc20aton/ && cargo clean && cargo stylus check    && cd ..
 
- wasm-opt stylus_erc20aton/target/wasm32-unknown-unknown/release/stylus_erc20aton.wasm -o stylus_erc20aton_opt.wasm -O --intrinsic-lowering
  wasm-opt stylus_erc20aton/target/wasm32-unknown-unknown/release/stylus_erc20aton.wasm -o stylus_erc20aton_opt2.wasm -O --intrinsic-lowering     --dce     --rse --signature-pruning --strip-debug  --strip-producers
 
  cargo stylus check --wasm-file stylus_erc20aton_opt2.wasm
