@@ -96,7 +96,7 @@ impl Erc20 {
 impl Erc20 {
     /// Immutable token name
     pub fn name() -> String {
-        "".into()
+        "ATON Stylus".into()
     }
 
     /// Immutable token symbol
@@ -119,11 +119,7 @@ impl Erc20 {
         self.balances.get(owner)
     }
 
-    /// Transfers `value` tokens from msg::sender() to `to`
-    // pub fn transfer(&mut self, to: Address, value: U256) -> Result<bool, ERC20Error> {
-    //     self._transfer(msg::sender(), to, value)?;
-    //     Ok(true)
-    // }
+
 
     /// Transfers `value` tokens from `from` to `to`
     /// (msg::sender() must be able to spend at least `value` tokens from `from`)

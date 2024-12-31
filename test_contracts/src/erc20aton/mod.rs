@@ -278,7 +278,7 @@ let abi_json = r#"[
 
 
 
-// pub async fn mint_aton_from_eth( erc20aton_address: &str,value: U256,    private_key: &str,
+// pub async fn mint_aton( erc20aton_address: &str,value: U256,    private_key: &str,
 //     ,
 //     chain_id: u64) -> Result<()> {
 

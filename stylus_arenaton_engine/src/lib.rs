@@ -170,15 +170,18 @@ impl ArenatonEngine {
         start_date: u64,
         sport: u8
     ) -> Result<bool, ATONError> {
-        
 
              let aton_contract = IATON::new(self.aton_address.get());
+            let config = Call::new_in(self);
 
-             let is_oracle = aton_contract.is_oracle(msg::sender());
+    // Convert the error returned by `is_oracle` to `ATONError`
+    let is_oracle = aton_contract
+        .is_oracle(config, msg::sender())
+        .map_err(|_| ATONError::NotAuthorized(NotAuthorized {}))?;
 
-             if !is_oracle {
-                 return Err(ATONError::NotAuthorized(NotAuthorized {}));
-             }  
+    if !is_oracle {
+        return Err(ATONError::NotAuthorized(NotAuthorized {}));
+    }
 
         // Convert event_id to 8 bytes
         let id8 = string_to_bytes32(&event_id);
@@ -235,7 +238,7 @@ impl ArenatonEngine {
 
         if _value > U256::from(0) {
             let config = Call::new_in(self).value(_value);
-            let _ = match aton_contract.mint_aton_from_eth(config) {
+            let _ = match aton_contract.mint_aton(config) {
                 Ok(_) => Ok(true),
                 Err(e) => Err(false),
             };

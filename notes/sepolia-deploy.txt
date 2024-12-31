@@ -5,8 +5,9 @@
  cd stylus_erc20aton/ && cargo clean && cargo stylus check    && cd ..
 
  wasm-opt stylus_erc20aton/target/wasm32-unknown-unknown/release/stylus_erc20aton.wasm -o stylus_erc20aton_opt.wasm -O --intrinsic-lowering
+ wasm-opt stylus_erc20aton/target/wasm32-unknown-unknown/release/stylus_erc20aton.wasm -o stylus_erc20aton_opt2.wasm -O --intrinsic-lowering     --dce     --rse --signature-pruning --strip-debug  --strip-producers
 
-
+ cargo stylus check --wasm-file stylus_erc20aton_opt2.wasm
  
  
  cargo stylus deploy --private-key 0x9dc8c652a16755e58fe2ffae9991c895174f3746022b2a474f8d89694b4dc312  -e https://sepolia-rollup.arbitrum.io/rpc --wasm-file stylus_erc20aton_opt.wasm 

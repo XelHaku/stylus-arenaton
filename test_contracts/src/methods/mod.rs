@@ -338,7 +338,7 @@ pub async fn grant_arenaton_role(
 
 
 
-pub async fn mint_aton_from_eth( contract_address: &str,value: U256,    private_key: &str,
+pub async fn mint_aton( contract_address: &str,value: U256,    private_key: &str,
     rpc_url: &str,
     chain_id: u64) -> Result<()> {
 

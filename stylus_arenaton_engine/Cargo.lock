@@ -1931,6 +1931,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6877bb514081ee2a7ff5ef9de3281f14a4dd4bceac4c09388074a6b5df8a139a"
 
 [[package]]
+name = "mini-alloc"
+version = "0.7.0-beta.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6d79b46612e3fc76138ed930cd2e4bbd26ada11954a6d312e3affe4b56df0081"
+dependencies = [
+ "cfg-if",
+]
+
+[[package]]
 name = "miniz_oxide"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2950,15 +2959,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 
 [[package]]
-name = "signal-hook-registry"
-version = "1.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9e9e0b4211b72e7b8b6e85c807d36c212bdb33ea8587f7569562a84df5465b1"
-dependencies = [
- "libc",
-]
-
-[[package]]
 name = "signature"
 version = "2.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3117,9 +3117,9 @@ dependencies = [
 
 [[package]]
 name = "stylus-sdk"
-version = "0.7.0-beta.0"
+version = "0.7.0-beta.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "71d5f7f71ba3ecc441689eb5a5e6cd1cb5adf8a90c2030ad0da58e48119ef702"
+checksum = "caa33222d37101b3ba7064f1099ae38c7e388eaeac422e58260b7d00346a5267"
 dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
@@ -3128,6 +3128,7 @@ dependencies = [
  "hex",
  "keccak-const",
  "lazy_static",
+ "mini-alloc",
  "regex",
  "stylus-proc",
 ]
@@ -3137,13 +3138,16 @@ name = "stylus_arenaton_engine"
 version = "0.1.9"
 dependencies = [
  "alloy-primitives",
+ "alloy-sol-macro",
  "alloy-sol-types",
+ "cfg-if",
+ "derivative",
  "dotenv",
  "ethers",
  "eyre",
  "hex",
+ "stylus-proc",
  "stylus-sdk",
- "tokio",
 ]
 
 [[package]]
@@ -3384,23 +3388,9 @@ dependencies = [
  "bytes",
  "libc",
  "mio",
- "parking_lot",
  "pin-project-lite",
- "signal-hook-registry",
  "socket2",
- "tokio-macros",
  "windows-sys 0.52.0",
-]
-
-[[package]]
-name = "tokio-macros"
-version = "2.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "693d596312e88961bc67d7f1f97af8a70227d9f90c31bba5806eec004978d752"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.92",
 ]
 
 [[package]]

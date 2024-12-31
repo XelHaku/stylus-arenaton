@@ -6,7 +6,6 @@ use crate::erc20::Erc20;
 
 // Modules and imports
 mod constants;
-mod structs;
 use alloy_sol_types::sol;
 
 use alloy_primitives::{Address, B256, U256};
@@ -14,7 +13,6 @@ use alloy_primitives::{Address, B256, U256};
 use stylus_sdk::{
     call::transfer_eth,
     contract, evm, msg,
-    stylus_proc::{public, sol_storage, SolidityError},
 };
 
 
@@ -66,17 +64,12 @@ sol! {
     error AlreadyInitialized();
 
         // Access Control
-    event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previous_admin_role, bytes32 indexed new_admin_role);
     event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender);
     event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender);
-    error AccessControlUnauthorizedAccount(address account, bytes32 needed_role);
-    error AccessControlBadConfirmation();
 
 
     // Ownable
-    event OwnershipTransferred(address indexed previous_owner, address indexed new_owner);
-    error OwnableUnauthorizedAccount(address account);
-    error OwnableInvalidOwner(address owner);
+    error UnauthorizedAccount(address account);
 }
 
 /// Represents the ways methods may fail.
@@ -87,17 +80,13 @@ pub enum ATONError {
     AlreadyInitialized(AlreadyInitialized),
 
     // Access Control
-    AccessUnauthorizedAccount(AccessControlUnauthorizedAccount),
-    BadConfirmation(AccessControlBadConfirmation),
-    // Ownable
-    UnauthorizedAccount(OwnableUnauthorizedAccount),
-    InvalidOwner(OwnableInvalidOwner),
+    UnauthorizedAccount(UnauthorizedAccount),
 }
 
 #[public]
 #[inherit(Erc20)]
 impl ATON {
-    pub fn initialize_contract(&mut self) -> Result<bool, ATONError> {
+    pub fn initialize(&mut self) -> Result<bool, ATONError> {
         if self.initialized.get() {
             // Access the value using .get()
             return Err(ATONError::AlreadyInitialized(AlreadyInitialized {})); // Add the error struct
@@ -111,21 +100,43 @@ impl ATON {
         Ok(true)
     }
 
-    #[payable]
-    pub fn donate_eth_and_accumulate_aton(&mut self) -> Result<bool, ATONError> {
-        let amount = msg::value(); // Ether sent with the transaction
-        let sender = msg::sender(); // Address of the sender
+    /// 4. Emit a `DonateATON` event.
+    ///
+    /// # Errors
+// #[payable]
+//     pub fn donate_eth(&mut self) -> Result<bool, ATONError> {
+//         let amount = msg::value(); // Ether sent with the transaction
+//         let sender = msg::sender(); // Address of the sender
 
-        // Ensure the transaction includes some Ether to donate
-        if amount == U256::from(0) {
-            return Err(ATONError::ZeroEther(ZeroEther { sender }));
-        }
-        let _ = self._accumulate_commission(amount);
-        // Mint equivalent ATON tokens to the sender
-        let _ = self.erc20.mint(contract::address(), amount);
+//         // Ensure the transaction includes some Ether to donate
+//         if amount == U256::from(0) {
+//             return Err(ATONError::ZeroEther(ZeroEther { sender }));
+//         }
+//         let _ = self.add_commission(amount);
+//         // Mint equivalent ATON tokens to the sender
+//         let _ = self.erc20.mint(contract::address(), amount);
 
-        // Emit the `DonateATON` event
-        evm::log(DonateATON { sender, amount });
+//         // Emit the `DonateATON` event
+//         evm::log(DonateATON { sender, amount });
+//         Ok(true)
+//     }
+
+            #[payable]
+    pub fn mint_aton(&mut self) -> Result<bool, ATONError> {
+   let is_engine =  self._has_role(
+            constants::ARENATON_ENGINE_ROLE.into(),
+            msg::sender(),
+        );  
+
+        if is_engine == false {
+     return Err(ATONError::UnauthorizedAccount(
+                UnauthorizedAccount {
+                   account:   msg::sender()
+                },
+            ));}
+        
+                let _ = self.erc20.mint(msg::sender(), msg::value());
+
         Ok(true)
     }
 
@@ -136,7 +147,7 @@ impl ATON {
             return Err(ATONError::ZeroAton(ZeroAton { sender: msg::sender() }));
         }
         let _ = self.transfer(contract::address(), amount);
-        let _ = self._accumulate_commission(amount);
+        let _ = self.add_commission(amount);
 
         // Emit the `DonateATON` event
         evm::log(CommissionAccumulate {
@@ -152,12 +163,12 @@ impl ATON {
         let caller = msg::sender();
 
         // Distribute commissions to both parties
-        self._distribute_commission(caller);
-        self._distribute_commission(to);
+        self.distribute_commission(caller);
+        self.distribute_commission(to);
 
         // If the contract is involved, also pay out the owner
         if to == contract::address() || caller == contract::address() {
-            self._distribute_commission(self.owner.get());
+            self.distribute_commission(self.owner.get());
         }
 
        match self.erc20._transfer(caller, to, amount){
@@ -166,13 +177,7 @@ impl ATON {
                     Err(_) => {Err(ATONError::ZeroAton(ZeroAton { sender: msg::sender() }))?}
                 }}
 
-    #[payable]
-    pub fn mint_aton_from_eth(&mut self) -> Result<bool, Vec<u8>> {
-        self._check_role(constants::ARENATON_ENGINE_ROLE.into(), msg::sender())?;
-        let _ = self.erc20.mint(msg::sender(), msg::value());
 
-        Ok(true)
-    }
 
     pub fn swap(&mut self, amount: U256) -> Result<bool, ATONError> {
         if amount == U256::from(0) {
@@ -180,16 +185,14 @@ impl ATON {
                 sender: msg::sender(),
             }));
         }
-        let balance_aton = self.erc20.balance_of(msg::sender());
 
-        if balance_aton < amount {
+        if self.erc20.balance_of(msg::sender()) < amount {
             return Err(ATONError::ZeroAton(ZeroAton {
                 sender: msg::sender(),
             }));
         }
-        let balance_eth = contract::balance();
 
-        if balance_eth < amount {
+        if contract::balance() < amount {
             return Err(ATONError::ZeroEther(ZeroEther { sender: msg::sender() })); // error
         }
 
@@ -198,18 +201,16 @@ impl ATON {
         Ok(true)
     }
 
-    // pub fn summary(&mut self,player: Address) -> Result<(U256, U256, U256, U256,U256), ATONError> {
-    //     let player_commission = self._player_commission(player);
+    pub fn summary(&mut self,player: Address) -> Result<(U256, U256, U256, U256,U256), ATONError> {
 
-    //     let player_claimed = self.players.get(player).claimed_commissions.get();
+        Ok((self.erc20.balance_of(contract::address()),
+        self.erc20.balance_of(player),
+            self._player_commission(player),
+            *self.total_commission_in_aton,
+             self.players.get(player).claimed_commissions.get(),
+        ))
+    }
 
-    //     Ok((self.erc20.balance_of(contract::address()),
-    //     self.erc20.balance_of(player),
-    //         player_commission,
-    //         *self.total_commission_in_aton,
-    //         player_claimed,
-    //     ))
-    // }
 
     pub fn is_oracle(&self, account: Address) -> bool {
         self._has_role(
@@ -233,46 +234,38 @@ impl ATON {
 
 
 
-    pub fn grant_engine_and_oracle_role(
-        &mut self,
-        account: Address,
-        role_id: u8,
-    ) -> Result<(), ATONError> {
-        let admin_role = self._get_role_admin(constants::ARENATON_ENGINE_ROLE.into());
-        self._check_role(admin_role , msg::sender())?;   
+pub fn update_role(
+    &mut self,
+    account: Address,
+    role_id: u8,
+    grant: bool, // Boolean to specify grant or revoke
+) -> Result<(), ATONError> {
+    let admin_role = self._get_role_admin(constants::ARENATON_ENGINE_ROLE.into());
+    self._check_role(admin_role, msg::sender())?;
+
+    if grant {
         if role_id == 1 {
             self._grant_role(constants::ARENATON_ENGINE_ROLE.into(), account);
-            // Add missing closing parenthesis
-        }
-        if role_id == 2 {
+        } else if role_id == 2 {
             self._grant_role(constants::ARENATON_ORACLE_ROLE.into(), account);
-            // Add missing closing parenthesis
         }
-        Ok(())
-    }
-
-    pub fn revoke_engine_and_oracle_role(
-        &mut self,
-        account: Address,
-        role_id: u8,
-    ) -> Result<(), ATONError> {
-        let admin_role = self._get_role_admin(constants::ARENATON_ENGINE_ROLE.into());
-        self._check_role(admin_role , msg::sender())?;   
-
+    } else {
         if role_id == 1 {
             self._revoke_role(constants::ARENATON_ENGINE_ROLE.into(), account);
-        }
-        if role_id == 2 {
+        } else if role_id == 2 {
             self._revoke_role(constants::ARENATON_ORACLE_ROLE.into(), account);
         }
-        Ok(())
     }
+
+    Ok(())
+}
+
 }
 
 // Private Functions
 impl ATON {
 
-    pub fn _accumulate_commission(&mut self, new_commission_aton: U256) -> Result<(), ATONError> {
+    pub fn add_commission(&mut self, new_commission_aton: U256) -> Result<(), ATONError> {
         let total_supply_tokens = self.erc20.total_supply();
 
         // Ensure no division by zero
@@ -308,7 +301,7 @@ impl ATON {
 
         // 2) Multiply that by player balance
         let balance = self.erc20.balance_of(player);
-let decimals = U256::from(10).pow(U256::from(18));
+        let decimals = U256::from(10).pow(U256::from(18));
     // Optional extra precision factor (pct_denom)
         let pct_denom = U256::from(10000000u64);
 
@@ -329,7 +322,7 @@ let decimals = U256::from(10).pow(U256::from(18));
 
 
        /// Pays out the unclaimed commission to the given player (or to owner if player == contract).
-    pub fn _distribute_commission(&mut self, player: Address) {
+    pub fn distribute_commission(&mut self, player: Address) {
         let unclaimed = self._player_commission(player);
 
         let mut info = self.players.setter(player);
@@ -358,32 +351,19 @@ let decimals = U256::from(10).pow(U256::from(18));
             }
         }
 
-        // Finally, update player's last known commission-per-token
-
-
-
 
         info.last_commission_per_token.set(self.accumulated_commission_per_token.get());
     }
     // Access Control
   
-    pub fn _set_role_admin(&mut self, role: B256, new_admin_role: B256) {
-        let previous_admin_role = self._get_role_admin(role);
-        self._roles.setter(role).admin_role.set(new_admin_role);
-        evm::log(RoleAdminChanged {
-            role,
-            previous_admin_role,
-            new_admin_role,
-        });
-    }
+
 
  
     pub fn _check_role(&self, role: B256, account: Address) -> Result<(), ATONError> {
         if !self._has_role(role, account) {
-            return Err(ATONError::AccessUnauthorizedAccount(
-                AccessControlUnauthorizedAccount {
-                    account,
-                    needed_role: role,
+            return Err(ATONError::UnauthorizedAccount(
+                UnauthorizedAccount {
+                    account
                 },
             ));
         }
