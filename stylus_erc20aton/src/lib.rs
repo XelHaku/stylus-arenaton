@@ -197,36 +197,36 @@ impl ATON {
 
     // Access Control
 
-    pub fn update_role(
-        &mut self,
-        account: Address,
-        role_id: u8,
-        grant: bool, // Boolean to specify grant or revoke
-    ) -> Result<(), ATONError> {
-        if !self._has_role(
-            self._get_role_admin(constants::ARENATON_ENGINE_ROLE.into()),
-            msg::sender(),
-        ) {
-            return Err(ATONError::UnauthorizedAccount(UnauthorizedAccount {
-                account,
-            }));
-        }
-        if grant {
-            if role_id == 1 {
-                self._grant_role(constants::ARENATON_ENGINE_ROLE.into(), account);
-            } else if role_id == 2 {
-                self._grant_role(constants::ARENATON_ORACLE_ROLE.into(), account);
-            }
-        } else {
-            if role_id == 1 {
-                self._revoke_role(constants::ARENATON_ENGINE_ROLE.into(), account);
-            } else if role_id == 2 {
-                self._revoke_role(constants::ARENATON_ORACLE_ROLE.into(), account);
-            }
-        }
+    // pub fn update_role(
+    //     &mut self,
+    //     account: Address,
+    //     role_id: u8,
+    //     grant: bool, // Boolean to specify grant or revoke
+    // ) -> Result<(), ATONError> {
+    //     if !self._has_role(
+    //         self._get_role_admin(constants::ARENATON_ENGINE_ROLE.into()),
+    //         msg::sender(),
+    //     ) {
+    //         return Err(ATONError::UnauthorizedAccount(UnauthorizedAccount {
+    //             account,
+    //         }));
+    //     }
+    //     if grant {
+    //         if role_id == 1 {
+    //             self._grant_role(constants::ARENATON_ENGINE_ROLE.into(), account);
+    //         } else if role_id == 2 {
+    //             self._grant_role(constants::ARENATON_ORACLE_ROLE.into(), account);
+    //         }
+    //     } else {
+    //         if role_id == 1 {
+    //             self._revoke_role(constants::ARENATON_ENGINE_ROLE.into(), account);
+    //         } else if role_id == 2 {
+    //             self._revoke_role(constants::ARENATON_ORACLE_ROLE.into(), account);
+    //         }
+    //     }
 
-        Ok(())
-    }
+    //     Ok(())
+    // }
 }
 
 // Private Functions
