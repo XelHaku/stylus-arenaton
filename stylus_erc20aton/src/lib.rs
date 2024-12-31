@@ -1,8 +1,6 @@
 // Allow `cargo stylus export-abi` to generate a main function.
 #![cfg_attr(not(feature = "export-abi"), no_main)]
 extern crate alloc;
-mod erc20;
-use crate::erc20::Erc20;
 
 // Modules and imports
 mod constants;
@@ -18,8 +16,6 @@ sol_storage! {
     pub struct ATON {
         bool initialized ;
 
-        #[borrow]
-        Erc20 erc20;
 
         uint256  accumulated_commission_per_token;
         uint256  total_commission_in_aton;
@@ -29,6 +25,12 @@ sol_storage! {
 
         address owner;
         mapping(bytes32 => RoleData) _roles;
+                            /// Maps users to balances
+        mapping(address => uint256) balances;
+        /// Maps users to a mapping of each spender's allowance
+        mapping(address => mapping(address => uint256)) allowances;
+        /// The total supply of the token
+        uint256 total_supply;
 
     }
 
@@ -44,6 +46,9 @@ sol_storage! {
         uint256 last_commission_per_token;
         uint256 claimed_commissions;
 }
+
+
+
 }
 
 sol! {
@@ -63,6 +68,12 @@ sol! {
 
     // Ownable
     error UnauthorizedAccount(address account);
+
+     // ERC20
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+    error InsufficientBalance(address from, uint256 have, uint256 want);
+    error InsufficientAllowance(address owner, address spender, uint256 have, uint256 want);
 }
 
 /// Represents the ways methods may fail.
@@ -74,11 +85,84 @@ pub enum ATONError {
 
     // Access Control
     UnauthorizedAccount(UnauthorizedAccount),
+
+        InsufficientBalance(InsufficientBalance),
+    InsufficientAllowance(InsufficientAllowance),
 }
 
 #[public]
-#[inherit(Erc20)]
 impl ATON {
+
+      /// Immutable token name
+    pub fn name() -> String {
+        "ATON Stylus".into()
+    }
+
+    /// Immutable token symbol
+    pub fn symbol() -> String {
+        "ATON".into()
+    }
+
+    /// Immutable token decimals
+    pub fn decimals() -> u8 {
+        18u8
+    }
+
+    /// Total supply of tokens
+    pub fn total_supply(&self) -> U256 {
+        self.total_supply.get()
+    }
+
+    /// Balance of `address`
+    pub fn balance_of(&self, owner: Address) -> U256 {
+        self.balances.get(owner)
+    }
+
+    /// Transfers `value` tokens from `from` to `to`
+    /// (msg::sender() must be able to spend at least `value` tokens from `from`)
+    pub fn transfer_from(
+        &mut self,
+        from: Address,
+        to: Address,
+        value: U256,
+    ) -> Result<bool, ATONError> {
+        // Check msg::sender() allowance
+        let mut sender_allowances = self.allowances.setter(from);
+        let mut allowance = sender_allowances.setter(msg::sender());
+        let old_allowance = allowance.get();
+        if old_allowance < value {
+            return Err(ATONError::InsufficientAllowance(InsufficientAllowance {
+                owner: from,
+                spender: msg::sender(),
+                have: old_allowance,
+                want: value,
+            }));
+        }
+
+        // Decreases allowance
+        allowance.set(old_allowance - value);
+
+        // Calls the internal transfer function
+        self._transfer(from, to, value)?;
+
+        Ok(true)
+    }
+
+    /// Approves the spenditure of `value` tokens of msg::sender() to `spender`
+    pub fn approve(&mut self, spender: Address, value: U256) -> bool {
+        self.allowances.setter(msg::sender()).insert(spender, value);
+        evm::log(Approval {
+            owner: msg::sender(),
+            spender,
+            value,
+        });
+        true
+    }
+
+    /// Returns the allowance of `spender` on `owner`'s tokens
+    pub fn allowance(&self, owner: Address, spender: Address) -> U256 {
+        self.allowances.getter(owner).get(spender)
+    }
     pub fn initialize(&mut self) -> Result<bool, ATONError> {
         if self.initialized.get() {
             // Access the value using .get()
@@ -104,7 +188,7 @@ impl ATON {
     //         }
     //         let _ = self.add_commission(amount);
     //         // Mint equivalent ATON tokens to the sender
-    //         let _ = self.erc20.mint(contract::address(), amount);
+    //         let _ = self.mint(contract::address(), amount);
 
     //         // Emit the `DonateATON` event
     //         evm::log(DonateATON { sender, amount });
@@ -121,7 +205,7 @@ impl ATON {
             }));
         }
 
-        let _ = self.erc20.mint(msg::sender(), msg::value());
+        let _ = self.mint(msg::sender(), msg::value());
 
         Ok(true)
     }
@@ -151,35 +235,35 @@ impl ATON {
         self.handle_commissions(caller, to);
 
         // Perform the transfer
-        self.erc20
+        self
             ._transfer(caller, to, amount)
             .map(|_| true)
             .map_err(|_| ATONError::ZeroAton(ZeroAton { sender: caller }))
     }
 
-    pub fn swap(&mut self, amount: U256) -> Result<bool, ATONError> {
-        if amount == U256::from(0) {
-            return Err(ATONError::ZeroAton(ZeroAton {
-                sender: msg::sender(),
-            }));
-        }
+    // pub fn swap(&mut self, amount: U256) -> Result<bool, ATONError> {
+    //     if amount == U256::from(0) {
+    //         return Err(ATONError::ZeroAton(ZeroAton {
+    //             sender: msg::sender(),
+    //         }));
+    //     }
 
-        if self.erc20.balance_of(msg::sender()) < amount {
-            return Err(ATONError::ZeroAton(ZeroAton {
-                sender: msg::sender(),
-            }));
-        }
+    //     if self.balance_of(msg::sender()) < amount {
+    //         return Err(ATONError::ZeroAton(ZeroAton {
+    //             sender: msg::sender(),
+    //         }));
+    //     }
 
-        if contract::balance() < amount {
-            return Err(ATONError::ZeroEther(ZeroEther {
-                sender: msg::sender(),
-            })); // error
-        }
+    //     if contract::balance() < amount {
+    //         return Err(ATONError::ZeroEther(ZeroEther {
+    //             sender: msg::sender(),
+    //         })); // error
+    //     }
 
-        let _ = transfer_eth(msg::sender(), amount);
+    //     let _ = transfer_eth(msg::sender(), amount);
 
-        Ok(true)
-    }
+    //     Ok(true)
+    // }
 
     // pub fn summary(&mut self, player: Address) -> Result<(U256, U256, U256), ATONError> {
     //     Ok((
@@ -249,7 +333,7 @@ impl ATON {
     }
 
     pub fn add_commission(&mut self, new_commission_aton: U256) -> Result<(), ATONError> {
-        let total_supply_tokens = self.erc20.total_supply();
+        let total_supply_tokens = self.total_supply();
 
         // Ensure no division by zero
         if total_supply_tokens > U256::from(0) {
@@ -269,9 +353,9 @@ impl ATON {
         Ok(())
     }
 
-    pub fn _get_role_admin(&self, role: B256) -> B256 {
-        *self._roles.getter(role).admin_role
-    }
+    // pub fn _get_role_admin(&self, role: B256) -> B256 {
+    //     *self._roles.getter(role).admin_role
+    // }
     /// Returns the unclaimed commission for a player
     pub fn _player_commission(&self, player: Address) -> U256 {
         // 1) Figure out how much is owed per token since last time
@@ -280,7 +364,7 @@ impl ATON {
             .saturating_sub(self.players.get(player).last_commission_per_token.get());
 
         // 2) Multiply that by player balance
-        let balance = self.erc20.balance_of(player);
+        let balance = self.balance_of(player);
         let decimals = U256::from(10).pow(U256::from(18));
         // Optional extra precision factor (pct_denom)
         let pct_denom = U256::from(10000000u64);
@@ -301,47 +385,47 @@ impl ATON {
     }
 
     /// Pays out the unclaimed commission to the given player (or to owner if player == contract).
-    pub fn distribute_commission(&mut self, player: Address) {
-        let unclaimed = self._player_commission(player);
+pub fn distribute_commission(&mut self, player: Address) {
+    let unclaimed = self._player_commission(player);
 
-        let mut info = self.players.setter(player);
+    if unclaimed > U256::ZERO {
+        let pay_to = if player == contract::address() {
+            self.owner.get()
+        } else {
+            player
+        };
 
-        if unclaimed > U256::ZERO {
-            // If the contract itself is the "player," pay to owner
-            let pay_to = if player == contract::address() {
-                self.owner.get()
-            } else {
-                player
-            };
-
-            // Transfer from contract to pay_to
-            // Make sure the contract has enough balanceOf(contract).
-            if self.erc20.balance_of(contract::address()) >= unclaimed {
-                match self.erc20._transfer(contract::address(), pay_to, unclaimed) {
-                    Ok(_) => {
-                        let _claimed = info.claimed_commissions.get();
-                        // Update claimed commissions for the real player in storage
-                        info.claimed_commissions.set(unclaimed + _claimed);
-                    }
-                    Err(_) => {}
+        // Check balance and perform transfer in a separate block
+        if self.balance_of(contract::address()) >= unclaimed {
+            // Perform the transfer
+            if let Ok(_) = self._transfer(contract::address(), pay_to, unclaimed) {
+                // Update claimed commissions in a separate scope to avoid mutable borrow overlap
+                {
+                    let mut info = self.players.setter(player);
+                    let _claimed = info.claimed_commissions.get();
+                    info.claimed_commissions.set(unclaimed + _claimed);
                 }
             }
         }
-
-        info.last_commission_per_token
-            .set(self.accumulated_commission_per_token.get());
     }
+
+    // Update last_commission_per_token after mutable borrows are dropped
+    self.players.setter(player)
+        .last_commission_per_token
+        .set(self.accumulated_commission_per_token.get());
+}
+
     // Access Control
 
-    pub fn _check_role(&self, role: B256, account: Address) -> Result<(), ATONError> {
-        if !self._has_role(role, account) {
-            return Err(ATONError::UnauthorizedAccount(UnauthorizedAccount {
-                account,
-            }));
-        }
+    // pub fn _check_role(&self, role: B256, account: Address) -> Result<(), ATONError> {
+    //     if !self._has_role(role, account) {
+    //         return Err(ATONError::UnauthorizedAccount(UnauthorizedAccount {
+    //             account,
+    //         }));
+    //     }
 
-        Ok(())
-    }
+    //     Ok(())
+    // }
 
     pub fn _grant_role(&mut self, role: B256, account: Address) -> bool {
         if self._has_role(role, account) {
@@ -357,21 +441,66 @@ impl ATON {
         }
     }
 
-    pub fn _revoke_role(&mut self, role: B256, account: Address) -> bool {
-        if self._has_role(role, account) {
-            self._roles.setter(role).has_role.insert(account, false);
-            evm::log(RoleRevoked {
-                role,
-                account,
-                sender: msg::sender(),
-            });
-            true
-        } else {
-            false
-        }
-    }
+    // pub fn _revoke_role(&mut self, role: B256, account: Address) -> bool {
+    //     if self._has_role(role, account) {
+    //         self._roles.setter(role).has_role.insert(account, false);
+    //         evm::log(RoleRevoked {
+    //             role,
+    //             account,
+    //             sender: msg::sender(),
+    //         });
+    //         true
+    //     } else {
+    //         false
+    //     }
+    // }
 
     pub fn _has_role(&self, role: B256, account: Address) -> bool {
         self._roles.getter(role).has_role.get(account)
+    }
+
+     /// Movement of funds between 2 accounts
+    /// (invoked by the public transfer() and transfer_from() functions )
+    pub fn _transfer(&mut self, from: Address, to: Address, value: U256) -> Result<(), ATONError> {
+        // Decreasing sender balance
+        let mut sender_balance = self.balances.setter(from);
+        let old_sender_balance = sender_balance.get();
+        if old_sender_balance < value {
+            return Err(ATONError::InsufficientBalance(InsufficientBalance {
+                from,
+                have: old_sender_balance,
+                want: value,
+            }));
+        }
+        sender_balance.set(old_sender_balance - value);
+
+        // Increasing receiver balance
+        let mut to_balance = self.balances.setter(to);
+        let new_to_balance = to_balance.get() + value;
+        to_balance.set(new_to_balance);
+
+        // Emitting the transfer event
+        evm::log(Transfer { from, to, value });
+        Ok(())
+    }
+
+    /// Mints `value` tokens to `address`
+    pub fn mint(&mut self, address: Address, value: U256) -> Result<(), ATONError> {
+        // Increasing balance
+        let mut balance = self.balances.setter(address);
+        let new_balance = balance.get() + value;
+        balance.set(new_balance);
+
+        // Increasing total supply
+        self.total_supply.set(self.total_supply.get() + value);
+
+        // Emitting the transfer event
+        evm::log(Transfer {
+            from: Address::ZERO,
+            to: address,
+            value,
+        });
+
+        Ok(())
     }
 }
