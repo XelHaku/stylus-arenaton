@@ -3,11 +3,9 @@
 extern crate alloc;
 
 // Modules and imports
-mod constants;
-mod ownable;
 
 // use alloy_sol_types::sol;
-use stylus_sdk::{alloy_sol_types::sol,call::transfer_eth, contract, evm, msg,alloy_primitives::{Address, B256, U256}};
+use stylus_sdk::{alloy_sol_types::sol,call::transfer_eth, contract, evm, msg,alloy_primitives::{Address, U256}};
 
 use stylus_sdk::prelude::*;
 
@@ -21,7 +19,8 @@ sol_storage! {
         uint256  accumulated_commission_per_token;
         uint256  total_commission_in_aton;
         uint256  current_pot;
-        mapping(address => PlayerInfo) players;
+        mapping(address => uint256) last_commission_per_token;
+        mapping(address => uint256) claimed_commissions;
 
 
         address owner;
@@ -37,11 +36,6 @@ sol_storage! {
 
 
 
-    pub struct PlayerInfo {
-        uint256 last_commission_per_token;
-        uint256 claimed_commissions;
-}
-
 
 
 }
@@ -53,11 +47,11 @@ sol! {
     event DonateATON(address indexed sender, uint256 indexed amount);
     event CommissionAccumulate(uint256 indexed amount, uint256 indexed newAccPerToken, uint256 indexed totalCommission);
 
-    error AlreadyInitialized();
+    error Zero(address account);
 
         // Access Control
-    event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender);
-    event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender);
+    // event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender);
+    // event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender);
 
 
     // Ownership
@@ -75,7 +69,7 @@ sol! {
 #[derive(SolidityError)]
 pub enum ATONError {
     InsufficientBalance(InsufficientBalance),
-    AlreadyInitialized(AlreadyInitialized),
+    Zero(Zero),
     InsufficientAllowance(InsufficientAllowance),
     UnauthorizedAccount(UnauthorizedAccount),
 }
@@ -175,40 +169,19 @@ impl ATON {
     pub fn initialize(&mut self) -> Result<bool, ATONError> {
         if self.initialized.get() {
             // Access the value using .get()
-            return Err(ATONError::AlreadyInitialized(AlreadyInitialized {})); // Add the error struct
+            return Err(ATONError::Zero(Zero {account: msg::sender()})); // Add the error struct
         }
         self.initialized.set(true); // Set initialized to true
         self.owner.set(msg::sender());
         Ok(true)
     }
 
-    /// 4. Emit a `DonateATON` event.
-    ///
-    /// # Errors
-    #[payable]
-        pub fn donate_eth(&mut self) -> Result<bool, ATONError> {
-            let amount = msg::value(); // Ether sent with the transaction
-            let sender = msg::sender(); // Address of the sender
 
-            // Ensure the transaction includes some Ether to donate
-            if amount == U256::from(0) {
-                return Err(ATONError::InsufficientBalance(InsufficientBalance {                 from: msg::sender(),want: amount, have: self.balance_of(msg::sender())
-
-                }));
-            }
-            let _ = self.add_commission(amount);
-            // Mint equivalent ATON tokens to the sender
-            let _ = self.mint(contract::address(), amount);
-
-            // Emit the `DonateATON` event
-            evm::log(DonateATON { sender, amount });
-            Ok(true)
-        }
 
     #[payable]
     pub fn mint_aton(&mut self) -> Result<bool, ATONError> {
         // let is_engine = self._has_role(constants::ARENATON_ENGINE_ROLE.into(), msg::sender());
- let is_engine = true;
+     let is_engine = true;
         if is_engine == false {
             return Err(ATONError::UnauthorizedAccount(UnauthorizedAccount {
                 account: msg::sender(),
@@ -223,15 +196,12 @@ impl ATON {
     pub fn accumulate_aton(&mut self, amount: U256) -> Result<bool, ATONError> {
         // Ensure the transaction includes some Ether to donate
         if amount == U256::from(0) {
-            return Err(ATONError::InsufficientBalance(InsufficientBalance {
-                             from: msg::sender(),want: amount, have: self.balance_of(msg::sender())
+                     return Err(ATONError::Zero(Zero {account: msg::sender()})); // Add the error struct
 
-            }));
         }
         let _ = self.transfer(contract::address(), amount);
         let _ = self.add_commission(amount);
 
-        // Emit the `DonateATON` event
         evm::log(CommissionAccumulate {
             amount,
             newAccPerToken: self.accumulated_commission_per_token.get(),
@@ -253,39 +223,30 @@ impl ATON {
  }))
     }
 
-    pub fn swap(&mut self, amount: U256) -> Result<bool, ATONError> {
-        if amount == U256::from(0) {
-            return Err(ATONError::InsufficientBalance(InsufficientBalance {
-                from: msg::sender(),want: amount, have: self.balance_of(msg::sender())
-            }));
-        }
+pub fn swap(&mut self, amount: U256) -> Result<bool, ATONError> {
+    let sender = msg::sender();
+    // let sender_balance = self.balance_of(sender);
+       let sender_balance =  self.balances.get(sender);
 
-        if self.balance_of(msg::sender()) < amount {
-            return Err(ATONError::InsufficientBalance(InsufficientBalance {
-                              from: msg::sender(),want: amount, have: self.balance_of(msg::sender())
+    let contract_balance = contract::balance();
 
-            }));
-        }
+    if amount == U256::from(0) || sender_balance < amount || contract_balance < amount {
+            return Err(ATONError::Zero(Zero {account: msg::sender()})); // Add the error struct
 
-        if contract::balance() < amount {
-            return Err(ATONError::InsufficientBalance(InsufficientBalance {
-                              from: msg::sender(),want: amount, have: self.balance_of(msg::sender())
-
-            })); // error
-        }
-
-        let _ = transfer_eth(msg::sender(), amount);
-
-        Ok(true)
     }
+        let _ = transfer_eth(sender, amount);
 
-    pub fn summary(&mut self, player: Address) -> Result<(U256, U256, U256), ATONError> {
-        Ok((
-            self._player_commission(player),
-            self.players.get(player).claimed_commissions.get(),
-            *self.total_commission_in_aton,
-        ))
-    }
+    Ok(true)
+}
+
+
+    // pub fn summary(&mut self, player: Address) -> Result<(U256, U256, U256), ATONError> {
+    //     Ok((
+    //         self._player_commission(player),
+    //         self.players.get(player).claimed_commissions.get(),
+    //         *self.total_commission_in_aton,
+    //     ))
+    // }
 
 
 
@@ -361,10 +322,11 @@ impl ATON {
         // 1) Figure out how much is owed per token since last time
         let owed_per_token = self
             .accumulated_commission_per_token
-            .saturating_sub(self.players.get(player).last_commission_per_token.get());
+            .saturating_sub(self.last_commission_per_token.get(player));
 
         // 2) Multiply that by player balance
-        let balance = self.balance_of(player);
+       let balance =  self.balances.get(player);
+
         let decimals = U256::from(10).pow(U256::from(18));
         // Optional extra precision factor (pct_denom)
         let pct_denom = U256::from(10000000u64);
@@ -401,17 +363,16 @@ pub fn distribute_commission(&mut self, player: Address) {
             if let Ok(_) = self._transfer(contract::address(), pay_to, unclaimed) {
                 // Update claimed commissions in a separate scope to avoid mutable borrow overlap
                 {
-                    let mut info = self.players.setter(player);
-                    let _claimed = info.claimed_commissions.get();
-                    info.claimed_commissions.set(unclaimed + _claimed);
+                    let mut claimed_commissions = self.claimed_commissions.setter(player);
+                    let _claimed = claimed_commissions.get();
+                    claimed_commissions.set(unclaimed + _claimed);
                 }
             }
         }
     }
 
     // Update last_commission_per_token after mutable borrows are dropped
-    self.players.setter(player)
-        .last_commission_per_token
+    self.last_commission_per_token.setter(player)
         .set(self.accumulated_commission_per_token.get());
 }
 
