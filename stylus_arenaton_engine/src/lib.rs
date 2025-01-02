@@ -20,18 +20,7 @@ use alloy_primitives::Uint;
 use alloy_primitives::{ Address, B256, U256 };
 use std::string::String;
 use stylus_sdk::prelude::*;
-use stylus_sdk::storage::{
-    StorageAddress,
-    StorageArray,
-    StorageBool,
-    StorageFixedBytes,
-    StorageMap,
-    StorageSigned,
-    StorageUint,
-    StorageVec,
-};
 use stylus_sdk::{
-    abi::Bytes,
     call::{ call, transfer_eth, Call },
     contract,
     evm,
