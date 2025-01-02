@@ -162,35 +162,45 @@ impl ATON {
 
         Ok(())
     }
-    pub fn initialize(&mut self) -> Result<bool, ATONError> {
+    pub fn initialize(&mut self) -> bool{
         if self.owner.get() != Address::ZERO {
             // Access the value using .get()
-            return Err(ATONError::Zero(Zero {account: msg::sender()})); // Add the error struct
-        }
+return false;        }
         self.owner.set(msg::sender());
-        Ok(true)
+        true
     }
 
 
 
     #[payable]
-    pub fn mint_aton(&mut self) -> Result<bool, ATONError> {
-     let is_engine =self.arenaton_engine.get(msg::sender());
-        if is_engine == false {
-            return Err(ATONError::UnauthorizedAccount(UnauthorizedAccount {
-                account: msg::sender(),
-            }));
+    pub fn mint_aton(&mut self) -> bool {
+        if self.arenaton_engine.get(msg::sender()) == false {
+            return false;
         }
 
-        let _ = self.mint(msg::sender(), msg::value());
+        // let _ = self.mint(msg::sender(), msg::value());
+        // Increasing balance
+        let mut balance = self.balances.setter(msg::sender());
+        let new_balance = balance.get() + msg::value();
+        balance.set(new_balance);
 
-        Ok(true)
+        // Increasing total supply
+        self.total_supply.set(self.total_supply.get() + msg::value());
+
+        // Emitting the transfer event
+        evm::log(Transfer {
+            from: Address::ZERO,
+            to: msg::sender(),
+            value:msg::value(),
+        });
+
+    true
     }
 
-    pub fn accumulate_aton(&mut self, amount: U256) -> Result<bool, ATONError> {
+    pub fn accumulate_aton(&mut self, amount: U256) -> bool {
         // Ensure the transaction includes some Ether to donate
         if amount == U256::from(0) {
-                     return Err(ATONError::Zero(Zero {account: msg::sender()})); // Add the error struct
+                     return false;// Add the error struct
 
         }
         let _ = self.transfer(contract::address(), amount);
@@ -201,7 +211,7 @@ impl ATON {
             newAccPerToken: self.accumulated_commission_per_token.get(),
             totalCommission: self.total_commission_in_aton.get(),
         });
-        Ok(true)
+        true
     }
     pub fn transfer(&mut self, to: Address, amount: U256) -> Result<bool, ATONError> {
         let caller = msg::sender();
@@ -287,8 +297,8 @@ impl ATON {
         }
     }
 
-    pub fn add_commission(&mut self, new_commission_aton: U256) -> Result<(), ATONError> {
-        let total_supply_tokens = self.total_supply();
+    pub fn add_commission(&mut self, new_commission_aton: U256) -> () {
+        let total_supply_tokens = self.total_supply.get();
 
         // Ensure no division by zero
         if total_supply_tokens > U256::from(0) {
@@ -305,7 +315,6 @@ impl ATON {
                 .set(self.total_commission_in_aton.get() + new_commission_aton);
         }
 
-        Ok(())
     }
 
   
@@ -317,13 +326,12 @@ impl ATON {
             .saturating_sub(self.last_commission_per_token.get(player));
 
         // 2) Multiply that by player balance
-       let balance =  self.balances.get(player);
 
         let decimals = U256::from(10).pow(U256::from(18));
         // Optional extra precision factor (pct_denom)
         let pct_denom = U256::from(10000000u64);
 
-        let scaled = balance
+        let scaled = self.balances.get(player)
             .checked_mul(owed_per_token)
             .unwrap_or(U256::ZERO)
             .checked_mul(pct_denom)
@@ -392,23 +400,5 @@ pub fn distribute_commission(&mut self, player: Address) {
         Ok(())
     }
 
-    /// Mints `value` tokens to `address`
-    pub fn mint(&mut self, address: Address, value: U256) -> Result<(), ATONError> {
-        // Increasing balance
-        let mut balance = self.balances.setter(address);
-        let new_balance = balance.get() + value;
-        balance.set(new_balance);
 
-        // Increasing total supply
-        self.total_supply.set(self.total_supply.get() + value);
-
-        // Emitting the transfer event
-        evm::log(Transfer {
-            from: Address::ZERO,
-            to: address,
-            value,
-        });
-
-        Ok(())
-    }
 }
