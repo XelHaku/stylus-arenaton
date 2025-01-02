@@ -11,10 +11,6 @@ use stylus_sdk::prelude::*;
 sol_storage! {
     #[entrypoint]
     pub struct ATON {
-        uint256  accumulated_commission_per_token;
-        uint256  total_commission_in_aton;
-        mapping(address => uint256) last_commission_per_token;
-        mapping(address => uint256) claimed_commissions;
 
 
         address owner;
@@ -197,22 +193,6 @@ return false;        }
     true
     }
 
-    pub fn accumulate_aton(&mut self, amount: U256) -> bool {
-        // Ensure the transaction includes some Ether to donate
-        if amount == U256::from(0) {
-                     return false;// Add the error struct
-
-        }
-        let _ = self.transfer(contract::address(), amount);
-        let _ = self.add_commission(amount);
-
-        evm::log(CommissionAccumulate {
-            amount,
-            newAccPerToken: self.accumulated_commission_per_token.get(),
-            totalCommission: self.total_commission_in_aton.get(),
-        });
-        true
-    }
     pub fn transfer(&mut self, to: Address, amount: U256) -> Result<bool, ATONError> {
         let caller = msg::sender();
 
@@ -241,14 +221,6 @@ pub fn swap(&mut self, amount: U256) -> Result<bool, ATONError> {
     Ok(true)
 }
 
-
-    // pub fn summary(&mut self, player: Address) -> Result<(U256, U256, U256), ATONError> {
-    //     Ok((
-    //         self._player_commission(player),
-    //         self.players.get(player).claimed_commissions.get(),
-    //         *self.total_commission_in_aton,
-    //     ))
-    // }
 
 
 
@@ -297,83 +269,38 @@ impl ATON {
         }
     }
 
-    pub fn add_commission(&mut self, new_commission_aton: U256) -> () {
-        let total_supply_tokens = self.total_supply.get();
 
-        // Ensure no division by zero
-        if total_supply_tokens > U256::from(0) {
-            // Update accumulated commission per token
-            let additional_commission =
-                (new_commission_aton * U256::from(10).pow(U256::from(18u8))) / total_supply_tokens;
-
-            // Access storage fields using `.get()` and `.set()`
-            self.accumulated_commission_per_token
-                .set(self.accumulated_commission_per_token.get() + additional_commission);
-
-            // Update total commission in ATON
-            self.total_commission_in_aton
-                .set(self.total_commission_in_aton.get() + new_commission_aton);
-        }
-
-    }
 
   
-    /// Returns the unclaimed commission for a player
-    pub fn _player_commission(&self, player: Address) -> U256 {
-        // 1) Figure out how much is owed per token since last time
-        let owed_per_token = self
-            .accumulated_commission_per_token
-            .saturating_sub(self.last_commission_per_token.get(player));
-
-        // 2) Multiply that by player balance
-
-        let decimals = U256::from(10).pow(U256::from(18));
-        // Optional extra precision factor (pct_denom)
-        let pct_denom = U256::from(10000000u64);
-
-        let scaled = self.balances.get(player)
-            .checked_mul(owed_per_token)
-            .unwrap_or(U256::ZERO)
-            .checked_mul(pct_denom)
-            .unwrap_or(U256::ZERO)
-            / decimals;
-
-        // The final value is scaled / pct_denom
-        if scaled > U256::ZERO {
-            scaled / pct_denom
-        } else {
-            U256::ZERO
-        }
-    }
 
     /// Pays out the unclaimed commission to the given player (or to owner if player == contract).
 pub fn distribute_commission(&mut self, player: Address) {
-    let unclaimed = self._player_commission(player);
+    // let unclaimed = self._player_commission(player);
 
-    if unclaimed > U256::ZERO {
-        let pay_to = if player == contract::address() {
-            self.owner.get()
-        } else {
-            player
-        };
+    // if unclaimed > U256::ZERO {
+    //     let pay_to = if player == contract::address() {
+    //         self.owner.get()
+    //     } else {
+    //         player
+    //     };
 
-        // Check balance and perform transfer in a separate block
-        if self.balances.get(contract::address()) >= unclaimed {
-            // Perform the transfer
-            if let Ok(_) = self._transfer(contract::address(), pay_to, unclaimed) {
-                // Update claimed commissions in a separate scope to avoid mutable borrow overlap
-                {
-                    let mut claimed_commissions = self.claimed_commissions.setter(player);
-                    let _claimed = claimed_commissions.get();
-                    claimed_commissions.set(unclaimed + _claimed);
-                }
-            }
-        }
-    }
+    //     // Check balance and perform transfer in a separate block
+    //     if self.balances.get(contract::address()) >= unclaimed {
+    //         // Perform the transfer
+    //         if let Ok(_) = self._transfer(contract::address(), pay_to, unclaimed) {
+    //             // Update claimed commissions in a separate scope to avoid mutable borrow overlap
+    //             {
+    //                 let mut claimed_commissions = self.claimed_commissions.setter(player);
+    //                 let _claimed = claimed_commissions.get();
+    //                 claimed_commissions.set(unclaimed + _claimed);
+    //             }
+    //         }
+    //     }
+    // }
 
-    // Update last_commission_per_token after mutable borrows are dropped
-    self.last_commission_per_token.setter(player)
-        .set(self.accumulated_commission_per_token.get());
+    // // Update last_commission_per_token after mutable borrows are dropped
+    // self.last_commission_per_token.setter(player)
+    //     .set(self.accumulated_commission_per_token.get());
 }
 
 // Token Management   
