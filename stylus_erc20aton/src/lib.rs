@@ -38,8 +38,9 @@ sol! {
 
     // ATON
     event CommissionAccumulate(uint256 indexed amount, uint256 indexed newAccPerToken, uint256 indexed totalCommission);
-
+    event EngineUpdated(address indexed account, bool status);
     error Zero(address account);
+
 
         // Access Control
     // event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender);
@@ -55,6 +56,7 @@ sol! {
     event Approval(address indexed owner, address indexed spender, uint256 value);
     error InsufficientBalance(address from, uint256 have, uint256 want);
     error InsufficientAllowance(address owner, address spender, uint256 have, uint256 want);
+
 }
 
 /// Represents the ways methods may fail.
@@ -167,6 +169,19 @@ return false;        }
     }
 
 
+    pub fn transfer(&mut self, to: Address, amount: U256) -> Result<bool, ATONError> {
+        let caller = msg::sender();
+
+        // Distribute commissions
+        self.handle_commissions(caller, to);
+
+        // Perform the transfer
+        self
+            ._transfer(caller, to, amount)
+            .map(|_| true)
+            .map_err(|_| ATONError::InsufficientBalance(InsufficientBalance {                 from: msg::sender(),want: amount, have: self.balances.get(msg::sender())
+ }))
+    }
 
     #[payable]
     pub fn mint_aton(&mut self) -> bool {
@@ -193,19 +208,6 @@ return false;        }
     true
     }
 
-    pub fn transfer(&mut self, to: Address, amount: U256) -> Result<bool, ATONError> {
-        let caller = msg::sender();
-
-        // Distribute commissions
-        self.handle_commissions(caller, to);
-
-        // Perform the transfer
-        self
-            ._transfer(caller, to, amount)
-            .map(|_| true)
-            .map_err(|_| ATONError::InsufficientBalance(InsufficientBalance {                 from: msg::sender(),want: amount, have: self.balances.get(msg::sender())
- }))
-    }
 
 pub fn swap(&mut self, amount: U256) -> Result<bool, ATONError> {
     let sender = msg::sender();
@@ -221,7 +223,23 @@ pub fn swap(&mut self, amount: U256) -> Result<bool, ATONError> {
     Ok(true)
 }
 
+  /// Allows the owner to update the status of `arenaton_engine` for a specific address.
+    pub fn update_engine(&mut self, account: Address, status: bool) -> Result<(), ATONError> {
+        // Ensure only the owner can call this function
+        self.only_owner()?;
 
+        // Update the `arenaton_engine` mapping
+        let mut engine = self.arenaton_engine.setter(account);
+        engine.set(status);
+
+        // Emit an event (optional, but recommended for transparency)
+        evm::log(EngineUpdated {
+            account,
+            status,
+        });
+
+        Ok(())
+    }
 
 
 
