@@ -4,21 +4,15 @@ extern crate alloc;
 
 // Modules and imports
 
-// use alloy_sol_types::sol;
 use stylus_sdk::{alloy_sol_types::sol,call::transfer_eth, contract, evm, msg,alloy_primitives::{Address, U256}};
-
 use stylus_sdk::prelude::*;
-
+// use alloy_sol_macro::sol;
 // `Counter` will be the entrypoint.
 sol_storage! {
     #[entrypoint]
     pub struct ATON {
-        bool initialized ;
-
-
         uint256  accumulated_commission_per_token;
         uint256  total_commission_in_aton;
-        uint256  current_pot;
         mapping(address => uint256) last_commission_per_token;
         mapping(address => uint256) claimed_commissions;
 
@@ -30,6 +24,9 @@ sol_storage! {
         mapping(address => mapping(address => uint256)) allowances;
         /// The total supply of the token
         uint256 total_supply;
+
+        mapping(address => bool) arenaton_engine;
+
 
 
     }
@@ -44,7 +41,6 @@ sol! {
 
 
     // ATON
-    event DonateATON(address indexed sender, uint256 indexed amount);
     event CommissionAccumulate(uint256 indexed amount, uint256 indexed newAccPerToken, uint256 indexed totalCommission);
 
     error Zero(address account);
@@ -167,11 +163,10 @@ impl ATON {
         Ok(())
     }
     pub fn initialize(&mut self) -> Result<bool, ATONError> {
-        if self.initialized.get() {
+        if self.owner.get() != Address::ZERO {
             // Access the value using .get()
             return Err(ATONError::Zero(Zero {account: msg::sender()})); // Add the error struct
         }
-        self.initialized.set(true); // Set initialized to true
         self.owner.set(msg::sender());
         Ok(true)
     }
@@ -180,8 +175,7 @@ impl ATON {
 
     #[payable]
     pub fn mint_aton(&mut self) -> Result<bool, ATONError> {
-        // let is_engine = self._has_role(constants::ARENATON_ENGINE_ROLE.into(), msg::sender());
-     let is_engine = true;
+     let is_engine =self.arenaton_engine.get(msg::sender());
         if is_engine == false {
             return Err(ATONError::UnauthorizedAccount(UnauthorizedAccount {
                 account: msg::sender(),
@@ -219,19 +213,17 @@ impl ATON {
         self
             ._transfer(caller, to, amount)
             .map(|_| true)
-            .map_err(|_| ATONError::InsufficientBalance(InsufficientBalance {                 from: msg::sender(),want: amount, have: self.balance_of(msg::sender())
+            .map_err(|_| ATONError::InsufficientBalance(InsufficientBalance {                 from: msg::sender(),want: amount, have: self.balances.get(msg::sender())
  }))
     }
 
 pub fn swap(&mut self, amount: U256) -> Result<bool, ATONError> {
     let sender = msg::sender();
-    // let sender_balance = self.balance_of(sender);
-       let sender_balance =  self.balances.get(sender);
 
     let contract_balance = contract::balance();
 
-    if amount == U256::from(0) || sender_balance < amount || contract_balance < amount {
-            return Err(ATONError::Zero(Zero {account: msg::sender()})); // Add the error struct
+    if amount == U256::from(0) || self.balances.get(sender) < amount || contract_balance < amount {
+            return Err(ATONError::Zero(Zero {account: sender})); // Add the error struct
 
     }
         let _ = transfer_eth(sender, amount);
@@ -358,7 +350,7 @@ pub fn distribute_commission(&mut self, player: Address) {
         };
 
         // Check balance and perform transfer in a separate block
-        if self.balance_of(contract::address()) >= unclaimed {
+        if self.balances.get(contract::address()) >= unclaimed {
             // Perform the transfer
             if let Ok(_) = self._transfer(contract::address(), pay_to, unclaimed) {
                 // Update claimed commissions in a separate scope to avoid mutable borrow overlap
