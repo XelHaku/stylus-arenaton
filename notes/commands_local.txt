@@ -15,3 +15,5 @@ cargo stylus verify --deployment-tx 0x9c95bfdb4e7e4de64ca32a96fd750dd078b2dd326f
 deployed code at address: 0xa6e41ffd769491a42a6e5ce453259b93983a22ef
 deployment tx hash: 0x9c95bfdb4e7e4de64ca32a96fd750dd078b2dd326f8cba66b8a5b6a7f443f7b2
 contract activated and ready onchain with tx hash: 0x3f5032940a9086bced2356ba106a59da0f7434d7e992268700387e2c86b3eb5c
+
+sudo chown -R "$USER":"$USER" target
