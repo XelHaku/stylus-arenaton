@@ -281,36 +281,36 @@ impl ATON {
 
     // Access Control
 
-    // pub fn update_role(
-    //     &mut self,
-    //     account: Address,
-    //     role_id: u8,
-    //     grant: bool, // Boolean to specify grant or revoke
-    // ) -> Result<(), ATONError> {
-    //     if !self._has_role(
-    //         self._get_role_admin(constants::ARENATON_ENGINE_ROLE.into()),
-    //         msg::sender(),
-    //     ) {
-    //         return Err(ATONError::UnauthorizedAccount(UnauthorizedAccount {
-    //             account,
-    //         }));
-    //     }
-    //     if grant {
-    //         if role_id == 1 {
-    //             self._grant_role(constants::ARENATON_ENGINE_ROLE.into(), account);
-    //         } else if role_id == 2 {
-    //             self._grant_role(constants::ARENATON_ORACLE_ROLE.into(), account);
-    //         }
-    //     } else {
-    //         if role_id == 1 {
-    //             self._revoke_role(constants::ARENATON_ENGINE_ROLE.into(), account);
-    //         } else if role_id == 2 {
-    //             self._revoke_role(constants::ARENATON_ORACLE_ROLE.into(), account);
-    //         }
-    //     }
+    pub fn update_role(
+        &mut self,
+        account: Address,
+        role_id: u8,
+        grant: bool, // Boolean to specify grant or revoke
+    ) -> Result<(), ATONError> {
+        if !self._has_role(
+            self._get_role_admin(constants::ARENATON_ENGINE_ROLE.into()),
+            msg::sender(),
+        ) {
+            return Err(ATONError::UnauthorizedAccount(UnauthorizedAccount {
+                account,
+            }));
+        }
+        if grant {
+            if role_id == 1 {
+                self._grant_role(constants::ARENATON_ENGINE_ROLE.into(), account);
+            } else if role_id == 2 {
+                self._grant_role(constants::ARENATON_ORACLE_ROLE.into(), account);
+            }
+        } else {
+            if role_id == 1 {
+                self._revoke_role(constants::ARENATON_ENGINE_ROLE.into(), account);
+            } else if role_id == 2 {
+                self._revoke_role(constants::ARENATON_ORACLE_ROLE.into(), account);
+            }
+        }
 
-    //     Ok(())
-    // }
+        Ok(())
+    }
 }
 
 // Private Functions
@@ -353,9 +353,9 @@ impl ATON {
         Ok(())
     }
 
-    // pub fn _get_role_admin(&self, role: B256) -> B256 {
-    //     *self._roles.getter(role).admin_role
-    // }
+    pub fn _get_role_admin(&self, role: B256) -> B256 {
+        *self._roles.getter(role).admin_role
+    }
     /// Returns the unclaimed commission for a player
     pub fn _player_commission(&self, player: Address) -> U256 {
         // 1) Figure out how much is owed per token since last time
@@ -441,19 +441,19 @@ pub fn distribute_commission(&mut self, player: Address) {
         }
     }
 
-    // pub fn _revoke_role(&mut self, role: B256, account: Address) -> bool {
-    //     if self._has_role(role, account) {
-    //         self._roles.setter(role).has_role.insert(account, false);
-    //         evm::log(RoleRevoked {
-    //             role,
-    //             account,
-    //             sender: msg::sender(),
-    //         });
-    //         true
-    //     } else {
-    //         false
-    //     }
-    // }
+    pub fn _revoke_role(&mut self, role: B256, account: Address) -> bool {
+        if self._has_role(role, account) {
+            self._roles.setter(role).has_role.insert(account, false);
+            evm::log(RoleRevoked {
+                role,
+                account,
+                sender: msg::sender(),
+            });
+            true
+        } else {
+            false
+        }
+    }
 
     pub fn _has_role(&self, role: B256, account: Address) -> bool {
         self._roles.getter(role).has_role.get(account)
