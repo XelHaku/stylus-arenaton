@@ -9,9 +9,12 @@ mod tools;
 // use crate::ownable::Ownable;
 use crate::tools::{bytes32_to_string, string_to_bytes32};
 
-use crate::control::AccessControl;
 
 use alloy_sol_types::sol;
+use stylus_sdk::storage::StorageFixedBytes;
+use stylus_sdk::storage::StorageVec;
+
+
 
 // --- Use standard String ---
 use alloy_primitives::FixedBytes;
@@ -265,22 +268,103 @@ impl ArenatonEngine {
     }
 
     pub fn close_event(&mut self, _event_id: String, _winner: u8) -> Result<bool, ATONError> {
-        let event_id_bytes = string_to_bytes32(&_event_id);
+        let  event_id_bytes = string_to_bytes32(&_event_id);
         // 2) "Borrow" a mutable reference to the storage for `events[event_id_bytes]`
         let mut e = self.events.setter(event_id_bytes);
-
+        
         if e.status.get() != Uint::<8, 1>::from(1u8) {
             return Err(ATONError::WrongStatus(WrongStatus {}));
         }
         // 3) Set fields in storage
         e.winner.set(Uint::<8, 1>::from(_winner));
         e.status.set(Uint::<8, 1>::from(2u8));
+        self.remove_active_event(event_id_bytes)?;   
 
         Ok(true)
     }
+pub fn pay_event(&mut self, _event_id: String, _batch_size: U256) -> Result<bool, ATONError> {
+
+     let premium =U256::from(200000);
+  let pct_denom = U256::from(10000000);
+
+    let event_id_bytes = string_to_bytes32(&_event_id);
+    let mut e = self.events.setter(event_id_bytes);
+
+    // Ensure the event is closed but not yet paid
+    if e.status.get() != Uint::<8, 1>::from(2u8) {
+        return Err(ATONError::WrongStatus(WrongStatus {}));
+    }
+
+    // Calculate the total staked amount and the commission
+    let total_staked = e.total.get(0).unwrap() + e.total.get(1).unwrap();
+    let commission = total_staked * U256::from(premium) / U256::from(pct_denom);
+    let waive_commission = e.players.len() <= 1;
+
+    // Process payouts in batches
+    let mut players_processed = U256::ZERO;
+
+    while players_processed < _batch_size && e.players_paid.get() < U256::from(e.players.len()) {
+        let player_index = e.players_paid.get();
+        let player_address = e.players.get(player_index).unwrap();
+        let player_stake = e.stake_player.get(player_address);
+
+        if player_stake > U256::ZERO && !e.paid_player.get(player_address) {
+            // self.distribute_and_finalize(
+            //     player_address,
+            //     total_staked,
+            //     commission,
+            //     waive_commission,
+            //     event_id_bytes,
+            //     e.winner.get(),
+            //     e,
+            // )?;
+        }
+
+        e.players_paid.set(player_index + U256::from(1u8));
+        players_processed += U256::from(1u8);
+    }
+
+    // Check if all players have been processed
+    if e.players_paid.get() >= U256::from(e.players.len()) {
+        e.status.set(Uint::<8, 1>::from(3u8)); // Mark event as fully paid
+    }
+
+    Ok(true)
+}
+
+
+
+
 }
 
 impl ArenatonEngine {
+
+    //  pub  fn distribute_and_finalize(
+    //     &mut self,
+    //     player_address: Address,
+    //     total_staked: U256,
+    //     commission: U256,
+    //     waive_commission: bool,
+    //     event_id_bytes: [u8; 8],
+    //     winner: u8,
+    // ) -> Result<(), ATONError> {
+    //     // Logic for calculating and distributing player rewards
+    //     if winner == e.team_player.get(player_address) {
+    //         let player_reward = if waive_commission {
+    //             e.stake_player.get(player_address)
+    //         } else {
+    //             // Apply proportional rewards minus commission
+    //             (e.stake_player.get(player_address) * (total_staked - commission)) / total_staked
+    //         };
+
+    //         // Transfer the calculated reward to the player
+    //     }
+
+    //     // Mark the player's stake as finalized
+    //     e.paid_player.insert(player_address, true);
+
+    //     Ok(())
+    // }
     pub fn _add_stake(
         &mut self,
         _event_id: String,
@@ -324,5 +408,57 @@ impl ArenatonEngine {
 
         // Your logic
         Ok(true)
+    }
+
+
+    /// Generic function to remove an event from a `StorageVec`.
+    fn remove_event(
+        event_id_bytes: FixedBytes<8>,
+        events: &mut StorageVec<StorageFixedBytes<8>>,
+    ) -> Result<(), ATONError> {
+        // Get the length of the events vector
+        let length = events.len();
+
+        // Find the index of the event to remove
+        let mut index_to_remove: Option<usize> = None;
+
+        for i in 0..length {
+            if let Some(event) = events.get(i) {
+                if event == event_id_bytes {
+                    index_to_remove = Some(i);
+                    break;
+                }
+            }
+        }
+
+        // If the event is not found, return an error
+        if index_to_remove.is_none() {
+            return Err(ATONError::NotAuthorized(NotAuthorized {}));
+        }
+
+        // Swap the event to remove with the last element and pop it off
+        let index = index_to_remove.unwrap();
+
+        if index < length - 1 {
+            // Replace the element at `index` with the last element
+            if let Some(last_event) = events.get(length - 1) {
+                events.setter(index).unwrap().set(last_event);
+            }
+        }
+
+        // Remove the last element
+        events.pop();
+
+        Ok(())
+    }
+
+    /// Removes an event from the active events list.
+    pub fn remove_active_event(&mut self, event_id_bytes: FixedBytes<8>) -> Result<(), ATONError> {
+        ArenatonEngine::remove_event(event_id_bytes, &mut self.active_events)
+    }
+
+    /// Removes an event from the closed events list.
+    pub fn remove_closed_event(&mut self, event_id_bytes: FixedBytes<8>) -> Result<(), ATONError> {
+        ArenatonEngine::remove_event(event_id_bytes, &mut self.closed_events)
     }
 }
