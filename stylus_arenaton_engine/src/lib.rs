@@ -9,12 +9,9 @@ mod tools;
 // use crate::ownable::Ownable;
 use crate::tools::{bytes32_to_string, string_to_bytes32};
 
-
 use alloy_sol_types::sol;
 use stylus_sdk::storage::StorageFixedBytes;
 use stylus_sdk::storage::StorageVec;
-
-
 
 // --- Use standard String ---
 use alloy_primitives::FixedBytes;
@@ -268,89 +265,106 @@ impl ArenatonEngine {
     }
 
     pub fn close_event(&mut self, _event_id: String, _winner: u8) -> Result<bool, ATONError> {
-        let  event_id_bytes = string_to_bytes32(&_event_id);
+        let event_id_bytes = string_to_bytes32(&_event_id);
         // 2) "Borrow" a mutable reference to the storage for `events[event_id_bytes]`
         let mut e = self.events.setter(event_id_bytes);
-        
+
         if e.status.get() != Uint::<8, 1>::from(1u8) {
             return Err(ATONError::WrongStatus(WrongStatus {}));
         }
         // 3) Set fields in storage
         e.winner.set(Uint::<8, 1>::from(_winner));
         e.status.set(Uint::<8, 1>::from(2u8));
-        self.remove_active_event(event_id_bytes)?;   
+        self.remove_active_event(event_id_bytes)?;
 
         Ok(true)
     }
-pub fn pay_event(&mut self, _event_id: String, _batch_size: U256) -> Result<bool, ATONError> {
 
-     let premium =U256::from(200000);
-  let pct_denom = U256::from(10000000);
+    pub fn pay_event(&mut self, _event_id: String, _batch_size: U256) -> Result<bool, ATONError> {
+     
 
-    let event_id_bytes = string_to_bytes32(&_event_id);
-    let mut e = self.events.setter(event_id_bytes);
+        let event_id_bytes = string_to_bytes32(&_event_id);
 
-    // Ensure the event is closed but not yet paid
-    if e.status.get() != Uint::<8, 1>::from(2u8) {
-        return Err(ATONError::WrongStatus(WrongStatus {}));
+      let (waive_commission,event_winner,total_staked,commission,players_len) = self.calculate_commission(event_id_bytes.clone())?;
+        // let mut e = self.events.setter(event_id_bytes);
+
+        // if e.status.get() != Uint::<8, 1>::from(2u8) {
+        //     return Err(ATONError::WrongStatus(WrongStatus {}));
+        // }
+
+        // let total_staked = e.total.get(0).unwrap() + e.total.get(1).unwrap();
+        // let commission = total_staked * premium / pct_denom;
+        // let waive_commission = e.players.len() <= 1;
+
+        // let players_len = e.players.len();
+
+
+        let mut players_processed = U256::ZERO;
+
+
+        // while players_processed < _batch_size && e.players_paid.get() < U256::from(players_len) {
+        //     let player_index = e.players_paid.get();
+        //     let player_address = e.players.get(player_index).unwrap();
+        //     let player_stake = e.stake_player.get(player_address);
+        //     let player_team = e.team_player.get(player_address);
+
+        //     if player_stake > U256::ZERO && !e.paid_player.get(player_address) {
+        //         let player_reward = self.calculate_earnings(
+        //             player_stake,
+        //             player_team,
+        //             total_staked,
+        //             commission,
+        //             waive_commission,
+        //             event_winner,
+        //         )?;
+
+        //         // Perform the transfer (assuming `evm::transfer` exists)
+
+        //         e.paid_player.insert(player_address, true);
+        //     }
+
+        //     e.players_paid.set(player_index + U256::from(1u8));
+        //     players_processed += U256::from(1u8);
+        // }
+
+        // if e.players_paid.get() >= U256::from(players_len) {
+        //     e.status.set(Uint::<8, 1>::from(3u8));
+        // }
+
+        Ok(true)
     }
-
-    // Calculate the total staked amount and the commission
-    let total_staked = e.total.get(0).unwrap() + e.total.get(1).unwrap();
-    let commission = total_staked * U256::from(premium) / U256::from(pct_denom);
-    let waive_commission = e.players.len() <= 1;
-
-    // Process payouts in batches
-    let mut players_processed = U256::ZERO;
-
-    while players_processed < _batch_size && e.players_paid.get() < U256::from(e.players.len()) {
-        let player_index = e.players_paid.get();
-        let player_address = e.players.get(player_index).unwrap();
-        let player_stake = e.stake_player.get(player_address);
-
-        if player_stake > U256::ZERO && !e.paid_player.get(player_address) {
-            // self.calculate_earnings(
-            //     player_address,
-            //     total_staked,
-            //     commission,
-            //     waive_commission,
-            //     event_id_bytes,
-            //     e.winner.get(),
-            //     e,
-            // )?;
-        }
-
-        e.players_paid.set(player_index + U256::from(1u8));
-        players_processed += U256::from(1u8);
-    }
-
-    // Check if all players have been processed
-    if e.players_paid.get() >= U256::from(e.players.len()) {
-        e.status.set(Uint::<8, 1>::from(3u8)); // Mark event as fully paid
-    }
-
-    Ok(true)
-}
-
-
-
-
 }
 
 impl ArenatonEngine {
 
-     pub  fn calculate_earnings(
+    pub fn calculate_commission(&mut self, event_id_bytes: FixedBytes<8>) -> Result<(bool,alloy_primitives::Uint<8, 1>,U256,U256,usize), ATONError> {
+        let premium = U256::from(200000);
+        let pct_denom = U256::from(10000000);
+         
+             let mut e = self.events.setter(event_id_bytes);
+
+        if e.status.get() != Uint::<8, 1>::from(2u8) {
+            return Err(ATONError::WrongStatus(WrongStatus {}));
+        }
+
+        let total_staked = e.total.get(0).unwrap() + e.total.get(1).unwrap();
+        let commission = total_staked * premium / pct_denom;
+        let waive_commission = e.players.len() <= 1;
+
+        let players_len = e.players.len();
+            let event_winner = e.winner.get();
+
+        return Ok((waive_commission,event_winner,total_staked,commission,players_len));
+    }
+    pub fn calculate_earnings(
         &mut self,
-        player_address: Address,
         player_stake: U256,
-        player_team: u8,
+        player_team: Uint<8, 1>,
         total_staked: U256,
         commission: U256,
         waive_commission: bool,
-        event_id_bytes: FixedBytes<8>,
-        winner: u8,
-
-    ) -> Result<(), ATONError> {
+        winner: Uint<8, 1>,
+    ) -> Result<U256, ATONError> {
         // Logic for calculating and distributing player rewards
         if winner == player_team {
             let player_reward = if waive_commission {
@@ -361,10 +375,10 @@ impl ArenatonEngine {
             };
 
             // Transfer the calculated reward to the player
+            Ok(player_reward)
+        } else {
+            Ok(U256::ZERO)
         }
-
-
-        Ok(())
     }
     pub fn _add_stake(
         &mut self,
@@ -410,7 +424,6 @@ impl ArenatonEngine {
         // Your logic
         Ok(true)
     }
-
 
     /// Generic function to remove an event from a `StorageVec`.
     fn remove_event(
