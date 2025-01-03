@@ -7,7 +7,7 @@ mod structs;
 mod tools;
 
 // use crate::ownable::Ownable;
-use crate::tools::{ bytes32_to_string, string_to_bytes32 };
+use crate::tools::{bytes32_to_string, string_to_bytes32};
 
 use crate::control::AccessControl;
 
@@ -16,21 +16,19 @@ use alloy_sol_types::sol;
 // --- Use standard String ---
 use alloy_primitives::FixedBytes;
 use alloy_primitives::Uint;
-use alloy_primitives::{ Address, U256 };
+use alloy_primitives::{Address, U256};
 use std::string::String;
 use stylus_sdk::prelude::*;
 use stylus_sdk::{
-    call::{ call, Call },
-    contract,
-    evm,
-    msg,
     block,
-    stylus_proc::{ public, sol_storage, SolidityError },
+    call::{call, Call},
+    contract, evm, msg,
+    stylus_proc::{public, sol_storage, SolidityError},
 };
 
 sol_interface! {
     interface IATON {
-    function mintAtonFromEth() external payable returns (bool);
+    function mintAton() external payable returns (bool);
         function isOracle(address account) external view returns (bool);
 
     function transferFrom(address from, address to, uint256 value) external returns (bool);
@@ -84,13 +82,15 @@ sol_storage! {
   mapping(address => Player)  players;
 
   // Array for tracking active events
-  bytes8[]  activeEvents;
-  bytes8[]  closedEvents;
+  bytes8[]  active_events;
+  bytes8[]  closed_events;
 
         bool initialized ;
 
  uint256 number;
  address aton_address;
+ address oracle_address;
+ address vault_address;
 
     }
 
@@ -101,11 +101,9 @@ sol_storage! {
    * This structure includes details about the player's activity, level, and commission earnings.
    */
   struct Player {
-    bytes8[] activeEvents; // Array of event IDs in which the player is currently participating.
-    bytes8[] closedEvents; // Array of event IDs for events that the player participated in and that are now closed.
+    bytes8[] active_events; // Array of event IDs in which the player is currently participating.
+    bytes8[] closed_events; // Array of event IDs for events that the player participated in and that are now closed.
     uint32 level; // The player's current level, representing their experience or skill within the platform.
-    uint256 claimedCommissionsByPlayer; // Total amount of commissions claimed by the player.
-    uint256 lastCommissionPerTokenForPlayer; // The last recorded commission per token for the player, used to calculate unclaimed commissions.
   }
 
       /**
@@ -146,7 +144,8 @@ uint64 timestamp;
 impl ArenatonEngine {
     pub fn initialize_arenaton_engine(
         &mut self,
-        _aton_address: Address
+        _aton_address: Address,
+        _vault_address: Address,
     ) -> Result<bool, ATONError> {
         if self.initialized.get() {
             // Access the value using .get()
@@ -154,26 +153,36 @@ impl ArenatonEngine {
         }
         self.initialized.set(true); // Set initialized to true
         self.aton_address.set(_aton_address);
+        self.vault_address.set(_vault_address);
         Ok(true)
+    }
+    pub fn set_oracle(&mut self, _oracle_address: Address) -> bool {
+        if self.oracle_address.get() != contract::address()
+            || self.oracle_address.get() != Address::ZERO
+        {
+            return false;
+        }
+        self.oracle_address.set(_oracle_address);
+        true
+    }
+    pub fn is_oracle(&mut self) -> bool {
+        if self.oracle_address.get() != msg::sender() {
+            return false;
+        }
+        true
     }
     pub fn add_event(
         &mut self,
         event_id: String,
         start_date: u64,
-        sport: u8
+        sport: u8,
     ) -> Result<bool, ATONError> {
+        // Convert the error returned by `is_oracle` to `ATONError`
+        let is_oracle = self.is_oracle();
 
-             let aton_contract = IATON::new(self.aton_address.get());
-            let config = Call::new_in(self);
-
-    // Convert the error returned by `is_oracle` to `ATONError`
-    let is_oracle = aton_contract
-        .is_oracle(config, msg::sender())
-        .map_err(|_| ATONError::NotAuthorized(NotAuthorized {}))?;
-
-    if !is_oracle {
-        return Err(ATONError::NotAuthorized(NotAuthorized {}));
-    }
+        if !is_oracle {
+            return Err(ATONError::NotAuthorized(NotAuthorized {}));
+        }
 
         // Convert event_id to 8 bytes
         let id8 = string_to_bytes32(&event_id);
@@ -197,13 +206,19 @@ impl ArenatonEngine {
         // e is a `StorageGuardMut<Event>`
 
         // Update the first element in the `total` array
-        e.total.get_mut(0).expect("Failed to get the first element").set(U256::ZERO);
+        e.total
+            .get_mut(0)
+            .expect("Failed to get the first element")
+            .set(U256::ZERO);
 
         // Update the second element in the `total` array
-        e.total.get_mut(1).expect("Failed to get the second element").set(U256::ZERO);
+        e.total
+            .get_mut(1)
+            .expect("Failed to get the second element")
+            .set(U256::ZERO);
 
-        // 4) Push to activeEvents
-        self.activeEvents.push(id8);
+        // 4) Push to active_events
+        self.active_events.push(id8);
 
         // 5) Emit the AddEvent(...) log
         evm::log(AddEvent {
@@ -220,7 +235,7 @@ impl ArenatonEngine {
         &mut self,
         _event_id: String,
         _amount: U256,
-        _team: u8
+        _team: u8,
     ) -> Result<bool, ATONError> {
         let _player = msg::sender();
         let _value = msg::value(); // Ether sent with the transaction
@@ -237,8 +252,7 @@ impl ArenatonEngine {
         } else {
             let config = Call::new_in(self);
 
-            let _ = match
-                aton_contract.transfer_from(config, _player, contract::address(), _amount)
+            let _ = match aton_contract.transfer_from(config, _player, contract::address(), _amount)
             {
                 Ok(_) => Ok(true),
                 Err(e) => Err(false),
@@ -271,7 +285,7 @@ impl ArenatonEngine {
         &mut self,
         _event_id: String,
         _amount: U256,
-        _team: u8
+        _team: u8,
     ) -> Result<bool, ATONError> {
         // convert _event_id to bytes8
         let mut event_id_bytes = [0u8; 8];
