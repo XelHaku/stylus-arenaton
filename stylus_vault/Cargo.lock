@@ -3134,7 +3134,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "stylus_erc20aton"
+name = "stylus_vault"
 version = "0.1.9"
 dependencies = [
  "alloy-primitives",

@@ -114,7 +114,7 @@ impl Vault {
 
     pub fn summary(&mut self, player: Address) -> Result<(U256, U256, U256), VaultError> {
         Ok((
-            self._player_commission(player),
+            self.player_commission(player),
             self.claimed_commissions.get(player),
             *self.total_commission_in_aton,
         ))
@@ -123,34 +123,24 @@ impl Vault {
     fn handle_commissions(&mut self, caller: Address, to: Address) {
         // Distribute commission to the caller
         if caller != contract::address() {
-            self.distribute_commission(caller);
+            let _ = self.distribute_commission(caller);
         }
 
         // Distribute commission to the recipient
         if to != contract::address() {
-            self.distribute_commission(to);
+         let _ =   self.distribute_commission(to);
         }
 
         // If either party is the contract, distribute commission to the owner
         if caller == contract::address() || to == contract::address() {
-            self.distribute_commission(self.aton_address.get());
+         let _ =   self.distribute_commission(self.aton_address.get());
         }
     }
 }
 
 // Private Functions
 impl Vault {
-    // Ownable
-    pub fn only_owner(&self) -> Result<(), VaultError> {
-        let account = msg::sender();
-        if self.aton_address.get() != account {
-            return Err(VaultError::UnauthorizedAccount(UnauthorizedAccount {
-                account,
-            }));
-        }
-
-        Ok(())
-    }
+ 
 
     pub fn add_commission(&mut self, new_commission_aton: U256) -> Result<(), VaultError> {
         let aton_contract = IATON::new(self.aton_address.get());
@@ -181,7 +171,7 @@ impl Vault {
         Ok(())
     }
     /// Returns the unclaimed commisfor a player
-    pub fn _player_commission(&self, player: Address) -> U256 {
+    pub fn player_commission(&self, player: Address) -> U256 {
         // 1) Figure out how much is owed per token since last time
         let owed_per_token = self
             .accumulated_commission_per_token
@@ -221,7 +211,7 @@ impl Vault {
     }
 
     pub fn distribute_commission(&mut self, player: Address) -> Result<(), VaultError> {
-        let unclaimed = self._player_commission(player);
+        let unclaimed = self.player_commission(player);
 
         if unclaimed > U256::ZERO {
             let pay_to = if player == contract::address() {

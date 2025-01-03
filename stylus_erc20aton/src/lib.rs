@@ -4,8 +4,14 @@ extern crate alloc;
 
 // Modules and imports
 
-use stylus_sdk::{alloy_sol_types::sol,call::transfer_eth, contract, evm, msg,alloy_primitives::{Address, U256}};
 use stylus_sdk::prelude::*;
+use stylus_sdk::{
+    alloy_primitives::{Address, U256},
+    alloy_sol_types::sol,
+    call::transfer_eth,
+    call::{call, Call},
+    contract, evm, msg,
+};
 // use alloy_sol_macro::sol;
 // `Counter` will be the entrypoint.
 sol_storage! {
@@ -23,6 +29,8 @@ sol_storage! {
 
         mapping(address => bool) arenaton_engine;
 
+        address vault_address;
+
 
 
     }
@@ -33,6 +41,12 @@ sol_storage! {
 
 }
 
+sol_interface! {
+        interface IVault {
+
+    function handleCommissions(address caller, address to) external;
+        }
+}
 sol! {
 
 
@@ -43,8 +57,8 @@ sol! {
 
 
         // Access Control
-    // event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender);
-    // event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender);
+    event EngineRoleGranted( address indexed account, address indexed sender);
+    event EngineRoleRevoked( address indexed account, address indexed sender);
 
 
     // Ownership
@@ -70,8 +84,7 @@ pub enum ATONError {
 
 #[public]
 impl ATON {
-
-      /// Immutable token name
+    /// Immutable token name
     pub fn name() -> String {
         "ATON Stylus".into()
     }
@@ -142,7 +155,6 @@ impl ATON {
         self.allowances.getter(owner).get(spender)
     }
 
-
     fn owner(&self) -> Address {
         self.owner.get()
     }
@@ -160,27 +172,39 @@ impl ATON {
 
         Ok(())
     }
-    pub fn initialize(&mut self) -> bool{
+    pub fn initialize(&mut self) -> bool {
         if self.owner.get() != Address::ZERO {
             // Access the value using .get()
-return false;        }
+            return false;
+        }
         self.owner.set(msg::sender());
         true
     }
-
 
     pub fn transfer(&mut self, to: Address, amount: U256) -> Result<bool, ATONError> {
         let caller = msg::sender();
 
         // Distribute commissions
-        self.handle_commissions(caller, to);
+        // self.handle_commissions(caller, to);
+
+        let vault_contract = IVault::new(self.vault_address.get());
+        let config = Call::new_in(self);
+
+        // Convert the error returned by `is_oracle` to `ATONError`
+        let is_oracle = vault_contract
+            .handle_commissions(config, msg::sender(), to)
+            .map_err(|_| ATONError::Zero(Zero { account: to }))?;
 
         // Perform the transfer
-        self
-            ._transfer(caller, to, amount)
+        self._transfer(caller, to, amount)
             .map(|_| true)
-            .map_err(|_| ATONError::InsufficientBalance(InsufficientBalance {                 from: msg::sender(),want: amount, have: self.balances.get(msg::sender())
- }))
+            .map_err(|_| {
+                ATONError::InsufficientBalance(InsufficientBalance {
+                    from: msg::sender(),
+                    want: amount,
+                    have: self.balances.get(msg::sender()),
+                })
+            })
     }
 
     #[payable]
@@ -196,34 +220,36 @@ return false;        }
         balance.set(new_balance);
 
         // Increasing total supply
-        self.total_supply.set(self.total_supply.get() + msg::value());
+        self.total_supply
+            .set(self.total_supply.get() + msg::value());
 
         // Emitting the transfer event
         evm::log(Transfer {
             from: Address::ZERO,
             to: msg::sender(),
-            value:msg::value(),
+            value: msg::value(),
         });
 
-    true
+        true
     }
 
+    pub fn swap(&mut self, amount: U256) -> Result<bool, ATONError> {
+        let sender = msg::sender();
 
-pub fn swap(&mut self, amount: U256) -> Result<bool, ATONError> {
-    let sender = msg::sender();
+        let contract_balance = contract::balance();
 
-    let contract_balance = contract::balance();
-
-    if amount == U256::from(0) || self.balances.get(sender) < amount || contract_balance < amount {
-            return Err(ATONError::Zero(Zero {account: sender})); // Add the error struct
-
-    }
+        if amount == U256::from(0)
+            || self.balances.get(sender) < amount
+            || contract_balance < amount
+        {
+            return Err(ATONError::Zero(Zero { account: sender })); // Add the error struct
+        }
         let _ = transfer_eth(sender, amount);
 
-    Ok(true)
-}
+        Ok(true)
+    }
 
-  /// Allows the owner to update the status of `arenaton_engine` for a specific address.
+    /// Allows the owner to update the status of `arenaton_engine` for a specific address.
     pub fn update_engine(&mut self, account: Address, status: bool) -> Result<(), ATONError> {
         // Ensure only the owner can call this function
         self.only_owner()?;
@@ -233,28 +259,21 @@ pub fn swap(&mut self, amount: U256) -> Result<bool, ATONError> {
         engine.set(status);
 
         // Emit an event (optional, but recommended for transparency)
-        evm::log(EngineUpdated {
-            account,
-            status,
-        });
+        evm::log(EngineUpdated { account, status });
 
         Ok(())
     }
-
-
-
 }
 
 // Private Functions
-impl ATON { 
-    
-    // Ownable 
+impl ATON {
+    // Ownable
     pub fn only_owner(&self) -> Result<(), ATONError> {
         let account = msg::sender();
         if self.owner.get() != account {
-            return Err(ATONError::UnauthorizedAccount(
-                UnauthorizedAccount { account },
-            ));
+            return Err(ATONError::UnauthorizedAccount(UnauthorizedAccount {
+                account,
+            }));
         }
 
         Ok(())
@@ -287,41 +306,37 @@ impl ATON {
         }
     }
 
-
-
-  
-
     /// Pays out the unclaimed commission to the given player (or to owner if player == contract).
-pub fn distribute_commission(&mut self, player: Address) {
-    // let unclaimed = self._player_commission(player);
+    pub fn distribute_commission(&mut self, player: Address) {
+        // let unclaimed = self._player_commission(player);
 
-    // if unclaimed > U256::ZERO {
-    //     let pay_to = if player == contract::address() {
-    //         self.owner.get()
-    //     } else {
-    //         player
-    //     };
+        // if unclaimed > U256::ZERO {
+        //     let pay_to = if player == contract::address() {
+        //         self.owner.get()
+        //     } else {
+        //         player
+        //     };
 
-    //     // Check balance and perform transfer in a separate block
-    //     if self.balances.get(contract::address()) >= unclaimed {
-    //         // Perform the transfer
-    //         if let Ok(_) = self._transfer(contract::address(), pay_to, unclaimed) {
-    //             // Update claimed commissions in a separate scope to avoid mutable borrow overlap
-    //             {
-    //                 let mut claimed_commissions = self.claimed_commissions.setter(player);
-    //                 let _claimed = claimed_commissions.get();
-    //                 claimed_commissions.set(unclaimed + _claimed);
-    //             }
-    //         }
-    //     }
-    // }
+        //     // Check balance and perform transfer in a separate block
+        //     if self.balances.get(contract::address()) >= unclaimed {
+        //         // Perform the transfer
+        //         if let Ok(_) = self._transfer(contract::address(), pay_to, unclaimed) {
+        //             // Update claimed commissions in a separate scope to avoid mutable borrow overlap
+        //             {
+        //                 let mut claimed_commissions = self.claimed_commissions.setter(player);
+        //                 let _claimed = claimed_commissions.get();
+        //                 claimed_commissions.set(unclaimed + _claimed);
+        //             }
+        //         }
+        //     }
+        // }
 
-    // // Update last_commission_per_token after mutable borrows are dropped
-    // self.last_commission_per_token.setter(player)
-    //     .set(self.accumulated_commission_per_token.get());
-}
+        // // Update last_commission_per_token after mutable borrows are dropped
+        // self.last_commission_per_token.setter(player)
+        //     .set(self.accumulated_commission_per_token.get());
+    }
 
-// Token Management   
+    // Token Management
     pub fn _transfer(&mut self, from: Address, to: Address, value: U256) -> Result<(), ATONError> {
         // Decreasing sender balance
         let mut sender_balance = self.balances.setter(from);
@@ -344,6 +359,4 @@ pub fn distribute_commission(&mut self, player: Address) {
         evm::log(Transfer { from, to, value });
         Ok(())
     }
-
-
 }

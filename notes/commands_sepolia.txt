@@ -4,3 +4,5 @@ cargo stylus deploy --private-key 9dc8c652a16755e58fe2ffae9991c895174f3746022b2a
 cargo stylus verify --deployment-tx 0xf5724716e7f70831958f01df977073bd8dd7ec452af5664b9708491ab3894e4f -e https://sepolia-rollup.arbitrum.io/rpc    
 
  cargo stylus cache bid d8ec21a01d75d003aff86d445c3361f2f0b2ee03 0 --private-key 9dc8c652a16755e58fe2ffae9991c895174f3746022b2a474f8d89694b4dc312 -e https://sepolia-rollup.arbitrum.io/rpc
+
+sudo chown -R "$USER":"$USER" target
