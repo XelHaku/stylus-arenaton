@@ -309,7 +309,7 @@ pub fn pay_event(&mut self, _event_id: String, _batch_size: U256) -> Result<bool
         let player_stake = e.stake_player.get(player_address);
 
         if player_stake > U256::ZERO && !e.paid_player.get(player_address) {
-            // self.distribute_and_finalize(
+            // self.calculate_earnings(
             //     player_address,
             //     total_staked,
             //     commission,
@@ -339,32 +339,33 @@ pub fn pay_event(&mut self, _event_id: String, _batch_size: U256) -> Result<bool
 
 impl ArenatonEngine {
 
-    //  pub  fn distribute_and_finalize(
-    //     &mut self,
-    //     player_address: Address,
-    //     total_staked: U256,
-    //     commission: U256,
-    //     waive_commission: bool,
-    //     event_id_bytes: [u8; 8],
-    //     winner: u8,
-    // ) -> Result<(), ATONError> {
-    //     // Logic for calculating and distributing player rewards
-    //     if winner == e.team_player.get(player_address) {
-    //         let player_reward = if waive_commission {
-    //             e.stake_player.get(player_address)
-    //         } else {
-    //             // Apply proportional rewards minus commission
-    //             (e.stake_player.get(player_address) * (total_staked - commission)) / total_staked
-    //         };
+     pub  fn calculate_earnings(
+        &mut self,
+        player_address: Address,
+        player_stake: U256,
+        player_team: u8,
+        total_staked: U256,
+        commission: U256,
+        waive_commission: bool,
+        event_id_bytes: FixedBytes<8>,
+        winner: u8,
 
-    //         // Transfer the calculated reward to the player
-    //     }
+    ) -> Result<(), ATONError> {
+        // Logic for calculating and distributing player rewards
+        if winner == player_team {
+            let player_reward = if waive_commission {
+                player_stake
+            } else {
+                // Apply proportional rewards minus commission
+                (player_stake * (total_staked - commission)) / total_staked
+            };
 
-    //     // Mark the player's stake as finalized
-    //     e.paid_player.insert(player_address, true);
+            // Transfer the calculated reward to the player
+        }
 
-    //     Ok(())
-    // }
+
+        Ok(())
+    }
     pub fn _add_stake(
         &mut self,
         _event_id: String,
