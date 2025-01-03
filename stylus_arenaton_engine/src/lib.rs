@@ -15,13 +15,12 @@ use alloy_sol_types::sol;
 
 // --- Use standard String ---
 use alloy_primitives::FixedBytes;
-use alloy_primitives::Signed;
 use alloy_primitives::Uint;
-use alloy_primitives::{ Address, B256, U256 };
+use alloy_primitives::{ Address, U256 };
 use std::string::String;
 use stylus_sdk::prelude::*;
 use stylus_sdk::{
-    call::{ call, transfer_eth, Call },
+    call::{ call, Call },
     contract,
     evm,
     msg,
