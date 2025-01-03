@@ -1,0 +1,56 @@
+[package]
+name = "stylus_erc20aton"
+version = "0.1.9"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+homepage = "https://github.com/OffchainLabs/stylus-hello-world"
+repository = "https://github.com/OffchainLabs/stylus-hello-world"
+keywords = ["arbitrum", "ethereum", "stylus", "alloy"]
+description = "Stylus hello world example"
+
+
+
+
+
+
+[dependencies]
+# stylus-sdk = "0.6.0"
+
+stylus-sdk = "=0.7.0-beta.1"
+
+hex = "0.4.3"
+dotenv = "0.15.0"
+alloy-primitives = {version = "=0.8.13",default-features = false}
+alloy-sol-types = {version = "=0.8.13",default-features = false}
+alloy-sol-macro = {version = "=0.8.13",default-features = false}
+cfg-if = "^1.0.0"
+stylus-proc = "=0.7.0-beta.1"
+derivative = "^2.2.0"
+
+
+
+[dev-dependencies]
+ethers = "2.0"
+eyre = "0.6.8"
+
+[features]
+export-abi = ["stylus-sdk/export-abi"]
+debug = ["stylus-sdk/debug"]
+
+[[bin]]
+name = "stylus-arenaton"
+path = "src/main.rs"
+
+[lib]
+crate-type = ["lib", "cdylib"]
+
+[profile.release]
+codegen-units = 1        # prefer efficiency to compile time
+panic = "abort"          # use simple panics
+opt-level = "z"          # optimize for size ("s" may also work)
+strip = true             # remove debug info
+lto = true               # link time optimization
+debug = false            # no debug data
+rpath = false            # no run-time search path
+debug-assertions = false # prune debug assertions
+incremental = false      # no incremental builds
