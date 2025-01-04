@@ -211,18 +211,19 @@ impl Vault {
         }
     }
 
+
     pub fn distribute_commission(&mut self, player: Address) -> Result<(), VaultError> {
         let unclaimed = self.player_commission(player);
-let _aton_address = self.aton_address.get();
+
         if unclaimed > U256::ZERO {
             let pay_to = if player == contract::address() {
-                _aton_address
+                self.aton_address.get()
             } else {
                 player
             };
 
             // Instantiate the ATON contract interface
-            let aton_contract = IATON::new(_aton_address);
+            let aton_contract = IATON::new(self.aton_address.get());
 
             // Check contract's ATON balance
             let contract_aton_balance = aton_contract
@@ -233,7 +234,30 @@ let _aton_address = self.aton_address.get();
                     })
                 })?;
 
-       
+            // Perform transfer if balance is sufficient
+            if contract_aton_balance >= unclaimed {
+                aton_contract
+                    .transfer(Call::new_in(self), pay_to, unclaimed)
+                    .map_err(|_| {
+                        VaultError::Zero(Zero {
+                            account: msg::sender(),
+                        })
+                    })?;
+            }
+        }
+
+        // Update last_commission_per_token after operations
+        self.last_commission_per_token
+            .setter(player)
+            .set(self.accumulated_commission_per_token.get());
+
+        Ok(())
+    }
+
+
+        pub fn calculate_commission(&mut self, player: Address) -> Result<U256,U256, VaultError> {
+        let unclaimed = self.player_commission(player);
+
         }
 
         // Update last_commission_per_token after operations
