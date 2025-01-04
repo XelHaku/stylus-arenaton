@@ -191,7 +191,7 @@ impl ATON {
         let config = Call::new_in(self);
 
         // Convert the error returned by `is_oracle` to `ATONError`
-        let is_oracle = vault_contract
+        let _ = vault_contract
             .handle_commissions(config, msg::sender(), to)
             .map_err(|_| ATONError::Zero(Zero { account: to }))?;
 
